@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import unquote
+
 from flask import Blueprint, current_app, render_template
 
 ui_bp = Blueprint("ui", __name__)
@@ -21,4 +23,23 @@ def dashboard():
         app_debug=app_settings.debug,
         has_sender_identity=has_sender_identity,
         has_whatsapp_sender=bool(twilio_settings.whatsapp_from),
+    )
+
+
+@ui_bp.get("/chat/<path:participant>")
+def chat_view(participant: str):
+    app_settings = current_app.config["APP_SETTINGS"]
+    twilio_settings = current_app.config["TWILIO_SETTINGS"]
+
+    normalized = unquote(participant).strip()
+    is_whatsapp = normalized.startswith("whatsapp:")
+    display_number = normalized.replace("whatsapp:", "", 1) if is_whatsapp else normalized
+
+    return render_template(
+        "chat.html",
+        participant=normalized,
+        display_number=display_number,
+        is_whatsapp=is_whatsapp,
+        has_whatsapp_sender=bool(twilio_settings.whatsapp_from),
+        app_env=app_settings.env,
     )

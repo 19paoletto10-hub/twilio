@@ -192,22 +192,85 @@ def update_message_status_by_sid(
     return cursor.rowcount > 0
 
 
-def list_messages(limit: int = 50, direction: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_messages(
+    limit: int = 50,
+    direction: Optional[str] = None,
+    participant: Optional[str] = None,
+    ascending: bool = False,
+) -> List[Dict[str, Any]]:
     conn = _get_connection()
     query = (
         "SELECT id, sid, direction, to_number, from_number, body, status, error, created_at, updated_at "
         "FROM messages"
     )
     params: List[Any] = []
+    clauses = []
 
     if direction in {"inbound", "outbound"}:
-        query += " WHERE direction = ?"
+        clauses.append("direction = ?")
         params.append(direction)
 
-    query += " ORDER BY created_at DESC LIMIT ?"
+    if participant:
+        clauses.append("(to_number = ? OR from_number = ?)")
+        params.extend([participant, participant])
+
+    if clauses:
+        query += " WHERE " + " AND ".join(clauses)
+
+    order = "ASC" if ascending else "DESC"
+    query += f" ORDER BY datetime(created_at) {order}, id {order} LIMIT ?"
     params.append(limit)
 
     rows = conn.execute(query, params).fetchall()
+    return [_row_to_dict(row) for row in rows]
+
+
+def list_conversations(limit: int = 30) -> List[Dict[str, Any]]:
+    """Return distinct participants with latest message metadata."""
+
+    conn = _get_connection()
+    query = (
+        """
+        WITH normalized AS (
+            SELECT
+                id,
+                CASE WHEN direction = 'inbound' THEN from_number ELSE to_number END AS participant,
+                direction,
+                body,
+                status,
+                error,
+                created_at,
+                updated_at
+            FROM messages
+        ),
+        filtered AS (
+            SELECT * FROM normalized
+             WHERE participant IS NOT NULL AND TRIM(participant) <> ''
+        ),
+        ranked AS (
+            SELECT
+                *,
+                ROW_NUMBER() OVER (PARTITION BY participant ORDER BY datetime(created_at) DESC, id DESC) AS rownum,
+                COUNT(*) OVER (PARTITION BY participant) AS total_messages
+            FROM filtered
+        )
+        SELECT
+            participant,
+            body AS last_body,
+            direction AS last_direction,
+            status AS last_status,
+            error AS last_error,
+            created_at AS last_created_at,
+            updated_at AS last_updated_at,
+            total_messages
+        FROM ranked
+        WHERE rownum = 1
+        ORDER BY datetime(last_created_at) DESC, participant
+        LIMIT ?
+        """
+    )
+
+    rows = conn.execute(query, (limit,)).fetchall()
     return [_row_to_dict(row) for row in rows]
 
 

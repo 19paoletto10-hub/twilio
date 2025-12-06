@@ -18,6 +18,8 @@
   const tableBody = document.querySelector('#messages-table tbody');
   const toastWrapper = document.getElementById('toast-wrapper');
   const filterButtons = document.querySelectorAll('[data-filter]');
+  const conversationList = document.getElementById('conversation-list');
+  const refreshConversationsBtn = document.getElementById('refresh-conversations-btn');
 
   let currentFilter = 'all';
   let refreshTimer = null;
@@ -63,9 +65,19 @@
   };
 
   const formatDirectionBadge = (direction) => {
-    const label = direction === 'inbound' ? 'Przychodząca' : 'Wychodząca';
-    const badgeClass = direction === 'inbound' ? 'bg-success-subtle text-success-emphasis' : 'bg-info-subtle text-info-emphasis';
+    const normalized = direction === 'inbound' ? 'inbound' : 'outbound';
+    const label = normalized === 'inbound' ? 'Przychodząca' : 'Wychodząca';
+    const badgeClass = normalized === 'inbound' ? 'bg-success-subtle text-success-emphasis' : 'bg-info-subtle text-info-emphasis';
     return `<span class="badge ${badgeClass} text-uppercase fw-semibold">${label}</span>`;
+  };
+
+  const encodeParticipantForUrl = (value) => encodeURIComponent(value || '');
+
+  const buildChatLink = (participant) => {
+    if (!participant) {
+      return null;
+    }
+    return `/chat/${encodeParticipantForUrl(participant)}`;
   };
 
   const formatStatusBadge = (status) => {
@@ -106,26 +118,32 @@
 
   const renderMessages = (items) => {
     if (!items.length) {
-      tableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Brak wiadomości do wyświetlenia.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Brak wiadomości do wyświetlenia.</td></tr>';
       return;
     }
 
     const rows = items.map((item) => {
       const directionCell = formatDirectionBadge(item.direction);
-      const participant = item.direction === 'inbound' ? item.from_number || '—' : item.to_number || '—';
+      const participantRaw = item.direction === 'inbound' ? item.from_number : item.to_number;
+      const participantLabel = participantRaw || '—';
       const statusCell = formatStatusBadge(item.status);
       const timestamp = formatDateTime(item.created_at);
       const errorLine = item.error ? `<div class="text-danger small mt-1 text-truncate-2">${item.error}</div>` : '';
+      const chatUrl = buildChatLink(participantRaw);
+      const chatCell = chatUrl
+        ? `<a class="btn btn-outline-primary btn-sm" href="${chatUrl}">Otwórz</a>`
+        : '—';
 
       return `
         <tr>
           <td class="text-nowrap">${directionCell}</td>
-          <td class="text-nowrap">${participant}</td>
+          <td class="text-nowrap">${participantLabel}</td>
           <td>
             <div class="text-truncate-2">${item.body || ''}</div>
             ${errorLine}
           </td>
           <td class="text-nowrap">${statusCell}</td>
+          <td class="text-nowrap">${chatCell}</td>
           <td class="text-nowrap">${timestamp}</td>
         </tr>
       `;
@@ -167,6 +185,7 @@
     refreshTimer = setInterval(() => {
       refreshMessages();
       refreshStats();
+      refreshConversations();
     }, 15000);
   };
 
@@ -177,6 +196,63 @@
     } else {
       sendButton.removeAttribute('disabled');
       buttonSpinner.classList.add('d-none');
+    }
+  };
+
+  const renderConversations = (items) => {
+    if (!conversationList) {
+      return;
+    }
+
+    if (!items.length) {
+      conversationList.innerHTML = '<div class="text-center text-muted py-4">Brak aktywnych rozmów.</div>';
+      return;
+    }
+
+    const cards = items.map((item) => {
+      const participant = item.participant;
+      const readableNumber = participant?.replace(/^whatsapp:/i, '') || 'Nieznany numer';
+      const channel = participant?.startsWith('whatsapp:') ? 'WhatsApp' : 'SMS / MMS';
+      const directionBadge = formatDirectionBadge(item.last_direction);
+      const chatUrl = buildChatLink(participant);
+      const messageSnippet = item.last_body || '(brak treści)';
+      const lastTimestamp = formatDateTime(item.last_created_at);
+      const total = item.total_messages ?? 0;
+
+      return `
+        <div class="conversation-item">
+          <div class="conversation-item__top">
+            <div>
+              <p class="conversation-item__number mb-0">${readableNumber}</p>
+              <small class="text-muted">Kanał: ${channel}</small>
+            </div>
+            <div class="text-end">
+              <div>${directionBadge}</div>
+              <small class="text-muted">${lastTimestamp}</small>
+            </div>
+          </div>
+          <p class="conversation-item__body text-truncate-2 mb-2">${messageSnippet}</p>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-muted">Wiadomości: <strong>${total}</strong></small>
+            ${chatUrl ? `<a class="btn btn-sm btn-primary" href="${chatUrl}">Przejdź do czatu</a>` : ''}
+          </div>
+        </div>
+      `;
+    });
+
+    conversationList.innerHTML = cards.join('');
+  };
+
+  const refreshConversations = async () => {
+    if (!conversationList) {
+      return;
+    }
+
+    try {
+      const data = await fetchJSON('/api/conversations?limit=30');
+      renderConversations(data.items || []);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -274,6 +350,7 @@
 
     refreshMessages();
     refreshStats();
+    refreshConversations();
     startAutoRefresh();
   };
 
@@ -285,8 +362,13 @@
     } else {
       refreshMessages();
       refreshStats();
+      refreshConversations();
       startAutoRefresh();
     }
+  });
+
+  refreshConversationsBtn?.addEventListener('click', () => {
+    refreshConversations();
   });
 
   document.addEventListener('DOMContentLoaded', init);

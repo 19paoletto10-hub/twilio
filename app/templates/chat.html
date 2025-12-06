@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Rozmowa z {{ display_number or 'kontaktem' }} | Twilio{% endblock %}
+
+{% block content %}
+  <div
+    class="container"
+    id="chat-root"
+    data-participant="{{ participant|e }}"
+    data-is-whatsapp="{{ 'true' if is_whatsapp else 'false' }}"
+    data-has-whatsapp="{{ 'true' if has_whatsapp_sender else 'false' }}"
+  >    <div class="row align-items-center mb-4">
+      <div class="col-md-8">
+        <a class="btn btn-link px-0 text-decoration-none mb-2" href="/">&larr; Powrót do panelu</a>
+        <h1 class="display-6 fw-semibold text-primary mb-1">Rozmowa z {{ display_number or 'Nieznany numer' }}</h1>
+        <p class="text-muted mb-0">Przeglądaj pełną historię i odpowiadaj bezpośrednio.</p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2">
+          Środowisko: <strong class="ms-1">{{ app_env|upper }}</strong>
+        </span>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Szczegóły rozmowy</h2>
+            <ul class="list-unstyled small text-muted mb-4 conversation-meta">
+              <li>
+                <span class="conversation-meta__label">Numer</span>
+                <span class="conversation-meta__value">{{ display_number or 'Nieznany numer' }}</span>
+              </li>
+              <li>
+                <span class="conversation-meta__label">Kanał</span>
+                <span class="conversation-meta__value">{{ 'WhatsApp' if is_whatsapp else 'SMS / MMS' }}</span>
+              </li>
+              <li>
+                <span class="conversation-meta__label">Ostatnia aktywność</span>
+                <span class="conversation-meta__value" id="chat-last-updated">—</span>
+              </li>
+            </ul>
+            <div class="alert alert-info small mb-4" role="alert">
+              Wątek odświeża się automatycznie co kilka sekund. Użyj przycisku, aby wymusić natychmiastową aktualizację.
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="btn btn-outline-secondary" id="chat-refresh-btn">Odśwież</button>
+              <a class="btn btn-outline-primary" href="https://console.twilio.com/" target="_blank" rel="noreferrer">Twilio Console</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mt-4">
+          <div class="card-body">
+            <p class="text-uppercase text-muted fs-6 mb-1">Wiadomości w wątku</p>
+            <h2 class="fw-bold mb-0" id="chat-total-messages">0</h2>
+            <small class="text-muted">Liczba wpisów w lokalnej bazie.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card shadow-sm border-0 chat-shell h-100">
+          <div class="card-body p-0 d-flex flex-column h-100">
+            <div class="chat-thread" id="chat-thread">
+              <div class="text-center text-muted py-4">Wczytywanie historii...</div>
+            </div>
+            <div class="chat-composer border-top">
+              <form id="chat-send-form" class="p-3" novalidate>
+                <div class="row g-2 align-items-end">
+                  <div class="col-md-4">
+                    <label for="chat-channel-select" class="form-label">Kanał odpowiedzi</label>
+                    <select id="chat-channel-select" class="form-select">
+                      <option value="sms" {% if not is_whatsapp %}selected{% endif %}>SMS / MMS</option>
+                      <option value="whatsapp" {% if is_whatsapp %}selected{% endif %} {% if not has_whatsapp_sender %}disabled{% endif %}>WhatsApp</option>
+                    </select>
+                    {% if not has_whatsapp_sender %}
+                      <div class="form-text">Dodaj <code>TWILIO_WHATSAPP_FROM</code>, aby wysyłać WhatsApp.</div>
+                    {% endif %}
+                  </div>
+                  <div class="col-md-8">
+                    <label for="chat-message-input" class="form-label">Twoja odpowiedź</label>
+                    <textarea class="form-control" id="chat-message-input" rows="2" maxlength="1000" placeholder="Napisz wiadomość..." required></textarea>
+                    <div class="invalid-feedback">Treść wiadomości jest wymagana.</div>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                  <small class="text-muted">Odbiorca: <strong>{{ participant }}</strong></small>
+                  <button type="submit" class="btn btn-primary" id="chat-send-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    Wyślij odpowiedź
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="chat-toast-wrapper"></div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/chat.js') }}" defer></script>
+{% endblock %}

@@ -39,3 +39,141 @@ body {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+
+.conversation-list {
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.conversation-item {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(242, 47, 70, 0.05), rgba(124, 64, 255, 0.05));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.conversation-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.75rem 1.5rem rgba(18, 38, 63, 0.1);
+}
+
+.conversation-item__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.conversation-item__number {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.conversation-item__body {
+  font-size: 0.95rem;
+  color: #343a40;
+}
+
+.conversation-meta {
+  padding: 0;
+  margin: 0;
+}
+
+.conversation-meta li {
+  margin-bottom: 1rem;
+}
+
+.conversation-meta__label {
+  display: block;
+  font-weight: 600;
+  color: #212529;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.conversation-meta__value {
+  display: block;
+  font-size: 0.95rem;
+}
+
+.chat-shell {
+  min-height: 480px;
+}
+
+.chat-thread {
+  flex: 1;
+  padding: 1.5rem;
+  background: #fdfcfe;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.chat-composer {
+  background: #fff;
+}
+
+.chat-bubble {
+  max-width: 75%;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0.5rem 1rem rgba(18, 38, 63, 0.08);
+}
+
+.chat-bubble--inbound {
+  background: #ffffff;
+  border-bottom-left-radius: 0.5rem;
+}
+
+.chat-bubble--outbound {
+  background: linear-gradient(135deg, #7c40ff, #f22f46);
+  color: #fff;
+  margin-left: auto;
+  border-bottom-right-radius: 0.5rem;
+}
+
+.chat-bubble__meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.5rem;
+  opacity: 0.7;
+}
+
+.chat-bubble--outbound .chat-bubble__meta,
+.chat-bubble--outbound .chat-bubble__status {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.chat-bubble__body {
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+.chat-bubble__status {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.chat-bubble__error {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #dc3545;
+}
+
+@media (max-width: 767px) {
+  .chat-thread {
+    max-height: none;
+  }
+
+  .chat-bubble {
+    max-width: 100%;
+  }
+}

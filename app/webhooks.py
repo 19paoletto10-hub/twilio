@@ -4,6 +4,7 @@ import json
 import time
 from datetime import datetime, timezone
 from typing import Optional, Any, Dict, List
+from urllib.parse import unquote
 
 from flask import Blueprint, current_app, request, Response, jsonify
 from twilio.twiml.messaging_response import MessagingResponse
@@ -17,6 +18,7 @@ from .database import (
     get_message_stats,
     upsert_message,
     delete_message_by_sid,
+    list_conversations,
 )
 
 webhooks_bp = Blueprint("webhooks", __name__)
@@ -290,6 +292,41 @@ def api_messages():
     _maybe_sync_messages(limit=limit)
     messages = list_messages(limit=limit, direction=direction)
     return jsonify({"items": messages, "count": len(messages)})
+
+
+@webhooks_bp.get("/api/conversations")
+def api_conversations():
+    limit_raw = request.args.get("limit", "30")
+    try:
+        limit = max(1, min(int(limit_raw), 200))
+    except ValueError:
+        limit = 30
+
+    conversations = list_conversations(limit=limit)
+    return jsonify({"items": conversations, "count": len(conversations)})
+
+
+@webhooks_bp.get("/api/conversations/<path:participant>")
+def api_conversation_detail(participant: str):
+    limit_raw = request.args.get("limit", "200")
+    try:
+        limit = max(1, min(int(limit_raw), 500))
+    except ValueError:
+        limit = 200
+
+    normalized_participant = unquote(participant).strip()
+    if not normalized_participant:
+        return jsonify({"error": "Participant is required."}), 400
+
+    _maybe_sync_messages(limit=limit)
+    messages = list_messages(limit=limit, participant=normalized_participant, ascending=True)
+    return jsonify(
+        {
+            "participant": normalized_participant,
+            "items": messages,
+            "count": len(messages),
+        }
+    )
 
 
 @webhooks_bp.get("/api/messages/stats")
