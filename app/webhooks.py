@@ -205,7 +205,7 @@ def inbound_message():
                 to_number=from_number,
                 from_number=to_number,
                 body=reply_text,
-                status="queued",
+                status="auto-reply",
             )
             app.logger.info("Auto-reply queued for %s", from_number)
         except Exception as exc:  # noqa: BLE001
