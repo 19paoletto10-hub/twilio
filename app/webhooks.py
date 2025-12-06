@@ -142,43 +142,68 @@ def inbound_message():
     message_sid = request.form.get("MessageSid")
     message_status = request.form.get("SmsStatus")
 
-    chat_engine = build_chat_engine()
-    reply_text = chat_engine.build_reply(from_number, body)
-
-    if message_sid:
-        upsert_message(
-            sid=message_sid,
-            direction="inbound",
-            to_number=to_number,
-            from_number=from_number,
-            body=body,
-            status=message_status,
-            error=None,
-            created_at=None,
-            updated_at=None,
+    # Store the incoming message
+    try:
+        if message_sid:
+            upsert_message(
+                sid=message_sid,
+                direction="inbound",
+                to_number=to_number,
+                from_number=from_number,
+                body=body,
+                status=message_status,
+                error=None,
+                created_at=None,
+                updated_at=None,
+            )
+        else:
+            insert_message(
+                direction="inbound",
+                sid=None,
+                to_number=to_number,
+                from_number=from_number,
+                body=body,
+                status=message_status,
+            )
+        app.logger.info(
+            "Stored inbound message from %s to %s (SID: %s)", 
+            from_number, to_number, message_sid or "N/A"
         )
-    else:
-        insert_message(
-            direction="inbound",
-            sid=None,
-            to_number=to_number,
-            from_number=from_number,
-            body=body,
-            status=message_status,
-        )
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to store inbound message: %s", exc)
 
+    # Generate auto-reply
+    reply_text = None
+    try:
+        chat_engine = build_chat_engine()
+        reply_text = chat_engine.build_reply(from_number, body)
+        if reply_text:
+            app.logger.info(
+                "Generated auto-reply to %s: %s", 
+                from_number, reply_text[:50] + ("..." if len(reply_text) > 50 else "")
+            )
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to generate auto-reply: %s", exc)
+        reply_text = None
+
+    # Create TwiML response
     resp = MessagingResponse()
-    resp.message(reply_text)
-
     if reply_text:
-        insert_message(
-            direction="outbound",
-            sid=None,
-            to_number=from_number,
-            from_number=to_number,
-            body=reply_text,
-            status="generated",
-        )
+        resp.message(reply_text)
+        
+        # Store the outbound auto-reply message for tracking
+        try:
+            insert_message(
+                direction="outbound",
+                sid=None,
+                to_number=from_number,
+                from_number=to_number,
+                body=reply_text,
+                status="queued",
+            )
+            app.logger.info("Auto-reply queued for %s", from_number)
+        except Exception as exc:  # noqa: BLE001
+            app.logger.exception("Failed to store auto-reply message: %s", exc)
 
     return Response(str(resp), mimetype="application/xml")
 
