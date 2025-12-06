@@ -136,11 +136,17 @@ def inbound_message():
     app = current_app
     app.logger.info("Received inbound hook: %s", request.form.to_dict())
 
-    from_number = request.form.get("From", "")
-    to_number = request.form.get("To", "")
-    body = request.form.get("Body", "")
-    message_sid = request.form.get("MessageSid")
-    message_status = request.form.get("SmsStatus")
+    # Extract and validate webhook parameters
+    from_number = (request.form.get("From") or "").strip()
+    to_number = (request.form.get("To") or "").strip()
+    body = (request.form.get("Body") or "").strip()
+    message_sid = (request.form.get("MessageSid") or "").strip() or None
+    message_status = (request.form.get("SmsStatus") or "").strip() or None
+
+    # Validate required parameters
+    if not from_number or not to_number:
+        app.logger.warning("Missing required webhook parameters: From=%s, To=%s", from_number, to_number)
+        return Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", mimetype="application/xml")
 
     # Store the incoming message
     try:
@@ -213,34 +219,52 @@ def message_status():
     app = current_app
     data = request.form.to_dict()
     app.logger.info("Message status update: %s", data)
-    message_sid = data.get("MessageSid") or data.get("SmsSid")
-    status = data.get("MessageStatus") or data.get("SmsStatus")
+    
+    message_sid = (data.get("MessageSid") or data.get("SmsSid") or "").strip() or None
+    status = (data.get("MessageStatus") or data.get("SmsStatus") or "").strip() or None
 
+    # Build error message if present
     error: str | None = None
     if data.get("ErrorMessage"):
-        error = data["ErrorMessage"]
+        error = str(data["ErrorMessage"]).strip()
     elif data.get("ErrorCode"):
         error = f"Error code: {data['ErrorCode']}"
 
-    if message_sid:
+    if not message_sid:
+        app.logger.warning("Received status update without MessageSid: %s", data)
+        return jsonify({"status": "error", "message": "Missing MessageSid"}), 400
+
+    if not status:
+        app.logger.warning("Received status update without status for SID %s", message_sid)
+        return jsonify({"status": "error", "message": "Missing status"}), 400
+
+    try:
         updated = update_message_status_by_sid(sid=message_sid, status=status, error=error)
-        if not updated:
+        if updated:
+            app.logger.info("Updated status for message %s to %s", message_sid, status)
+        else:
             app.logger.warning("Received status for unknown message SID: %s", message_sid)
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to update message status for SID %s: %s", message_sid, exc)
+        return jsonify({"status": "error", "message": str(exc)}), 500
 
     return jsonify({"status": "ok"})
 
 
 @webhooks_bp.post("/api/send-message")
 def api_send_message():
-    """REST endpoint do wysyłania SMS/MMS oraz WhatsApp."""
+    """REST endpoint for sending SMS/MMS messages via Twilio API."""
 
     payload = request.get_json(force=True, silent=True) or {}
-    to = payload.get("to")
-    body = payload.get("body")
-    channel = (payload.get("channel") or "sms").lower()
+    
+    # Validate and sanitize input parameters
+    to = (payload.get("to") or "").strip()
+    body = payload.get("body")  # Can be None for MMS-only
+    channel = (payload.get("channel") or "sms").lower().strip()
+    
     allowed_channels = {"sms", "whatsapp"}
     if channel not in allowed_channels:
-        return jsonify({"error": "Unsupported channel."}), 400
+        return jsonify({"error": f"Unsupported channel '{channel}'. Use 'sms' or 'whatsapp'."}), 400
 
     content_sid = payload.get("content_sid")
     content_variables = _encode_content_variables(payload.get("content_variables"))
@@ -254,7 +278,7 @@ def api_send_message():
         return jsonify({"error": "Field 'to' is required."}), 400
 
     if not any([body, content_sid, media_urls]):
-        return jsonify({"error": "Provide 'body', 'content_sid' or 'media_urls'."}), 400
+        return jsonify({"error": "Provide at least one of: 'body', 'content_sid', or 'media_urls'."}), 400
 
     twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
 
