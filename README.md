@@ -4,6 +4,7 @@ Zaawansowany, modułowy serwer czatu oparty o Flask + Twilio.
 
 ## Funkcje
 
+- **Automatyczne odpowiedzi SMS** – Wbudowany system auto-reply dla wiadomości przychodzących
 - Webhook dla wiadomości przychodzących z Twilio (`/twilio/inbound`)
 - Webhook statusu dostarczenia (`/twilio/status`)
 - REST API do wysyłania wiadomości z Twojej aplikacji (`POST /api/send-message`)
@@ -38,6 +39,7 @@ Uzupełnij wartości:
 - `TWILIO_DEFAULT_FROM` – numer nadawcy (np. +48..., lub whatsapp:+48...)
 - `TWILIO_MESSAGING_SERVICE_SID` – opcjonalnie SID usługi Messaging Service
 - `TWILIO_WHATSAPP_FROM` – pełny adres nadawcy WhatsApp (`whatsapp:+48...`) dla wysyłki przez ten kanał
+- `CHAT_MODE` – tryb automatycznych odpowiedzi: `echo` (domyślnie) lub `keywords`
 - `APP_ENV`, `APP_DEBUG`, `APP_HOST`, `APP_PORT` – sterują środowiskiem oraz portem/hostem serwera
 - `DB_PATH` – lokalizacja bazy SQLite, domyślnie `data/app.db`
 - `PUBLIC_BASE_URL` – publiczny adres używany przy webhookach (opcjonalnie)
@@ -50,6 +52,77 @@ python run.py
 ```
 
 Domyślnie aplikacja działa na `http://0.0.0.0:3000`.
+
+## Automatyczne odpowiedzi SMS (Auto-Reply)
+
+Aplikacja obsługuje automatyczne odpowiedzi na przychodzące wiadomości SMS przez webhook `/twilio/inbound`.
+
+### Tryby działania
+
+Aplikacja oferuje dwa tryby automatycznych odpowiedzi, konfigurowane przez zmienną środowiskową `CHAT_MODE`:
+
+#### 1. Echo Mode (domyślny)
+```bash
+CHAT_MODE=echo
+```
+- Odbija otrzymaną wiadomość z prefiksem "Echo: "
+- Odpowiedź na pustą wiadomość: "Received your message."
+- Idealny do testowania i debugowania
+
+**Przykład:**
+```
+SMS przychodzący: "Hello"
+Auto-reply: "Echo: Hello"
+```
+
+#### 2. Keyword Mode
+```bash
+CHAT_MODE=keywords
+```
+- Reaguje na określone słowa kluczowe
+- Dostępne komendy:
+  - `HELP` – wyświetla listę dostępnych komend
+  - `START` – aktywuje bota
+  - `STOP` – dezaktywuje bota (do zaimplementowania)
+- Pozostałe wiadomości otrzymują domyślną odpowiedź
+
+**Przykład:**
+```
+SMS przychodzący: "HELP"
+Auto-reply: "Dostępne komendy: HELP, START, STOP."
+```
+
+### Funkcje auto-reply
+
+- ✅ **Automatyczne przetwarzanie** – każda przychodząca wiadomość jest automatycznie zapisywana w bazie danych
+- ✅ **Odpowiedź przez TwiML** – wykorzystuje Twilio Messaging Response do natychmiastowej odpowiedzi
+- ✅ **Obsługa błędów** – kompleksowa obsługa wyjątków z logowaniem błędów
+- ✅ **Walidacja danych** – sprawdzanie i sanityzacja parametrów webhooka
+- ✅ **Śledzenie statusu** – każda wiadomość wychodząca jest zapisywana ze statusem "queued"
+- ✅ **Szczegółowe logowanie** – wszystkie zdarzenia są logowane dla łatwego debugowania
+
+### Tworzenie własnego silnika odpowiedzi
+
+Możesz łatwo stworzyć własny tryb auto-reply edytując plik `app/chat_logic.py`:
+
+```python
+from app.chat_logic import BaseChatEngine
+from dataclasses import dataclass
+
+@dataclass
+class MyCustomEngine(BaseChatEngine):
+    def build_reply(self, from_number: str, body: str) -> str:
+        # Twoja logika odpowiedzi
+        return f"Odpowiedź dla {from_number}: {body}"
+```
+
+Następnie zmodyfikuj funkcję `build_chat_engine()` aby zwracała Twój silnik.
+
+### Bezpieczeństwo
+
+- Auto-reply obsługuje walidację wszystkich parametrów wejściowych
+- Wszystkie błędy są przechwytywane i logowane bez przerywania działania
+- Możliwość włączenia weryfikacji podpisu Twilio przez `TWILIO_VALIDATE_SIGNATURE=true`
 
 ## Interfejs webowy
 
