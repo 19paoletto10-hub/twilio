@@ -3,6 +3,8 @@ from .config import get_settings
 from .twilio_client import TwilioService
 from .webhooks import webhooks_bp
 from .logger import configure_logging
+from .database import init_app as init_database
+from .ui import ui_bp
 
 
 def create_app() -> Flask:
@@ -18,11 +20,13 @@ def create_app() -> Flask:
     twilio_service = TwilioService(twilio_settings)
     app.config["TWILIO_SERVICE"] = twilio_service
 
-    # Blueprint z webhookami
+    # Baza danych + blueprinty
+    init_database(app)
     app.register_blueprint(webhooks_bp)
+    app.register_blueprint(ui_bp)
 
-    @app.get("/")
-    def index():
+    @app.get("/api/health")
+    def api_health():
         return {
             "status": "ok",
             "message": "Twilio Chat App running",

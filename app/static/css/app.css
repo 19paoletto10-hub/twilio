@@ -1,0 +1,41 @@
+body {
+  background-color: #f8f9fb;
+}
+
+.navbar {
+  background: linear-gradient(135deg, #f22f46, #7c40ff);
+}
+
+.card {
+  border-radius: 1rem;
+}
+
+.card-header {
+  border-top-left-radius: 1rem !important;
+  border-top-right-radius: 1rem !important;
+}
+
+.table > :not(caption) > * > * {
+  vertical-align: middle;
+}
+
+.badge.bg-secondary-subtle {
+  background-color: rgba(108, 117, 125, 0.15);
+  color: #495057;
+}
+
+.toast-success {
+  border-left: 4px solid #198754;
+}
+
+.toast-error {
+  border-left: 4px solid #dc3545;
+}
+
+.text-truncate-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}

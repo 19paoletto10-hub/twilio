@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,6 +11,7 @@ class TwilioSettings:
     account_sid: str
     auth_token: str
     default_from: str
+    whatsapp_from: str | None = None
     messaging_service_sid: str | None = None
 
 
@@ -19,6 +21,7 @@ class AppSettings:
     debug: bool
     host: str
     port: int
+    db_path: str
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -41,17 +44,25 @@ def get_settings() -> tuple[AppSettings, TwilioSettings]:
             "Uzupełnij plik .env lub ustaw zmienne środowiskowe."
         )
 
+    project_root = Path(__file__).resolve().parent.parent
+    db_path_value = os.getenv("DB_PATH", "data/app.db")
+    db_path = Path(db_path_value)
+    if not db_path.is_absolute():
+        db_path = project_root / db_path
+
     app_settings = AppSettings(
         env=os.getenv("APP_ENV", "dev"),
         debug=_env_bool("APP_DEBUG", True),
         host=os.getenv("APP_HOST", "0.0.0.0"),
         port=int(os.getenv("APP_PORT", "3000")),
+        db_path=str(db_path),
     )
 
     twilio_settings = TwilioSettings(
         account_sid=os.environ["TWILIO_ACCOUNT_SID"],
         auth_token=os.environ["TWILIO_AUTH_TOKEN"],
         default_from=os.getenv("TWILIO_DEFAULT_FROM", "").strip(),
+        whatsapp_from=os.getenv("TWILIO_WHATSAPP_FROM", "").strip() or None,
         messaging_service_sid=os.getenv("TWILIO_MESSAGING_SERVICE_SID"),
     )
 
