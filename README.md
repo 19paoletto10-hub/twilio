@@ -263,6 +263,51 @@ cp .env.example .env
   - Możesz wygenerować silny klucz lokalnie np. `openssl rand -hex 32` lub `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
   - Ustaw tę wartość w `.env` i nigdy jej nie umieszczaj w repo.
 
+#### Generowanie `APP_API_KEY`
+
+`APP_API_KEY` chroni wszystkie administracyjne endpointy (nagłówek `X-API-KEY`). Wygeneruj go raz i trzymaj poza repozytorium. Przykładowe komendy:
+
+```bash
+# Linux / macOS z OpenSSL
+openssl rand -hex 32
+
+# Dowolna platforma z Pythonem
+python - <<'PY'
+import secrets
+print(secrets.token_urlsafe(48))
+PY
+```
+
+Skopiuj otrzymaną wartość do pola `APP_API_KEY` w `.env` (lub w menedżerze sekretów) i przekazuj ją jako nagłówek `X-API-KEY` w żądaniach do API.
+
+### Tworzenie `APP_API_KEY` krok po kroku
+
+1. Wygeneruj silny klucz lokalnie (przykłady):
+
+```bash
+# OpenSSL (Linux/macOS)
+openssl rand -hex 32
+
+# Python (dowolna platforma)
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
+
+2. Otwórz plik `.env` w katalogu projektu i wstaw wygenerowany klucz:
+
+```dotenv
+APP_API_KEY=tu_wklej_wygenerowany_klucz
+```
+
+3. Zrestartuj aplikację / odbuduj kontener, żeby zmienne środowiskowe zostały załadowane.
+
+4. Przykład użycia curl z nagłówkiem `X-API-KEY`:
+
+```bash
+curl -X GET "https://your-host/api/messages" -H "X-API-KEY: $APP_API_KEY"
+```
+
+Uwaga: traktuj `APP_API_KEY` jak hasło — nie umieszczaj go w repozytorium. Przechowuj w menedżerze sekretów lub CI/CD secrets.
+
 - 5) `RATELIMIT_STORAGE_URL` (Redis dla limiter):
   - Jeżeli uruchamiasz lokalny Redis przez `docker-compose` (w `docker-compose.production.yml` mamy serwis `redis`), użyj `redis://redis:6379/0`.
   - Dla zdalnego Redis (managed) podaj pełny URL, np. `redis://:PASSWORD@redis-host.example.com:6379/0`.
