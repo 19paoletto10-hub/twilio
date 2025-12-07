@@ -1,0 +1,15 @@
+deacc29 chore(demo): add demo_send script, Makefile demo targets and save workspace changes for demo
+275d952 chore: add demo_send script and Makefile demo targets
+d3884d5 chore: add Makefile and production docker-compose with nginx proxy
+4d460f0 chore: add docker-compose, .env.example, non-root Dockerfile and VS Code launch config
+ac2c82a chore: add Dockerfile and devcontainer for Codespaces; update README with Docker/Codespaces docs
+789e14a Merge pull request #4 from 19paoletto10-hub/revert-3-copilot/add-message-response-feature
+7c12040 Revert "[WIP] Add message response feature to application"
+8bdaaf2 Merge pull request #3 from 19paoletto10-hub/copilot/add-message-response-feature
+b74637c Initial plan
+f02b06d Merge pull request #1 from 19paoletto10-hub/copilot/implement-sms-management-program
+1c9f72b Fix auto-reply message status to be more accurate
+bde085b Add comprehensive documentation for SMS auto-reply functionality
+5713d97 Add input validation and sanitization for webhooks and API
+f2c0c90 Improve SMS auto-reply with robust error handling and logging
+3376bf5 Initial plan

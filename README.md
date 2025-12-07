@@ -26,6 +26,49 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+## 1a. Instalacja git-lfs (Alpine Linux)
+
+**Wymagane do obsługi dużych plików w repozytorium (np. media, modele ML).**
+
+### Diagnostyka środowiska
+
+Sprawdź uprawnienia i dostępność menedżera pakietów:
+
+```bash
+id -u   # powinno zwrócić 0 (root) lub 1000 (user)
+cat /etc/os-release   # sprawdź czy to Alpine Linux
+command -v apk        # powinno zwrócić /sbin/apk
+command -v sudo       # powinno zwrócić /usr/bin/sudo
+```
+
+### Instalacja globalna (zalecana)
+
+```bash
+sudo apk add --no-cache git-lfs
+git lfs install --force
+git lfs version
+```
+
+### Typowe błędy i rozwiązania
+
+- **Brak uprawnień do sudo/apk:**
+  - Skontaktuj się z administratorem lub użyj instalacji per-user (patrz dokumentacja git-lfs).
+- **Błąd 'Unable to lock database: Permission denied':**
+  - Uruchom terminal jako root lub w kontenerze z uprawnieniami do instalacji pakietów.
+- **Brak git-lfs po instalacji:**
+  - Sprawdź ścieżkę: `command -v git-lfs` powinno zwrócić `/usr/bin/git-lfs`.
+- **Hook pre-push nadal blokuje push:**
+  - Upewnij się, że wykonałeś `git lfs install --force` w katalogu repozytorium.
+  - Sprawdź czy `.git/hooks/pre-push` zawiera wywołanie git-lfs.
+
+### FAQ
+
+- **Czy muszę używać --no-verify przy push?**
+  - Po poprawnej instalacji i konfiguracji git-lfs nie powinno być takiej potrzeby.
+- **Jak sprawdzić wersję git-lfs?**
+  - `git lfs version`
+
+Więcej: https://github.com/git-lfs/git-lfs/blob/main/INSTALLING.md
 ## 2. Konfiguracja środowiska
 
 Utwórz plik `.env` na podstawie `.env.example`:
