@@ -27,6 +27,12 @@ compose-up:
 compose-prod:
 	docker compose -f docker-compose.production.yml up --build -d
 
+compose-demo:
+	docker compose -f docker-compose.yml up --build -d
+
+demo-send:
+	./scripts/demo_send.sh
+
 logs:
 	docker compose logs -f
 
