@@ -14,6 +14,7 @@ from .twilio_client import TwilioService
 from .auto_reply import enqueue_auto_reply
 from .database import get_auto_reply_config
 from .auth import require_api_key
+from .limiter import limiter
 from .database import (
     insert_message,
     list_messages,
@@ -314,6 +315,7 @@ def message_status():
 
 @webhooks_bp.post("/api/send-message")
 @require_api_key
+@limiter.limit("10 per minute")
 def api_send_message():
     """REST endpoint for sending SMS/MMS messages via Twilio API."""
 
@@ -377,6 +379,7 @@ def api_send_message():
 
 @webhooks_bp.get("/api/messages")
 @require_api_key
+@limiter.limit("20 per minute")
 def api_messages():
     limit_raw = request.args.get("limit", "50")
     try:
@@ -392,6 +395,7 @@ def api_messages():
 
 @webhooks_bp.get("/api/conversations")
 @require_api_key
+@limiter.limit("20 per minute")
 def api_conversations():
     limit_raw = request.args.get("limit", "30")
     try:
@@ -405,6 +409,7 @@ def api_conversations():
 
 @webhooks_bp.get("/api/conversations/<path:participant>")
 @require_api_key
+@limiter.limit("60 per minute")
 def api_conversation_detail(participant: str):
     limit_raw = request.args.get("limit", "200")
     try:
@@ -429,6 +434,7 @@ def api_conversation_detail(participant: str):
 
 @webhooks_bp.get("/api/messages/stats")
 @require_api_key
+@limiter.limit("30 per minute")
 def api_messages_stats():
     _maybe_sync_messages(limit=50)
     stats = get_message_stats()
@@ -437,6 +443,7 @@ def api_messages_stats():
 
 @webhooks_bp.get("/api/messages/remote")
 @require_api_key
+@limiter.limit("5 per minute")
 def api_remote_messages():
     limit_raw = request.args.get("limit", "20")
     try:

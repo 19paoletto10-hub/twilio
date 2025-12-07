@@ -11,7 +11,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt || true
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
 COPY . /app
@@ -19,6 +19,11 @@ COPY . /app
 # Create non-root user
 RUN groupadd -r app && useradd -r -g app -d /app -s /sbin/nologin app \
  && chown -R app:app /app
+
+# Remove build deps to reduce image size
+RUN apt-get remove -y gcc make build-essential musl-dev || true \
+ && apt-get autoremove -y || true \
+ && rm -rf /var/lib/apt/lists/* /tmp/*
 
 ENV APP_HOST=0.0.0.0 \
     APP_PORT=3000
