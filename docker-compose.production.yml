@@ -5,6 +5,8 @@ services:
     image: twilio-chat:latest
     env_file:
       - .env
+    environment:
+      - RATELIMIT_STORAGE_URL=redis://redis:6379/0
     volumes:
       - ./data:/app/data
     expose:
@@ -25,3 +27,12 @@ services:
     depends_on:
       - web
     restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

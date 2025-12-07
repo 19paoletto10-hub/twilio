@@ -7,6 +7,8 @@ services:
       - "3000:3000"
     env_file:
       - .env
+    environment:
+      - RATELIMIT_STORAGE_URL=redis://redis:6379/0
     volumes:
       - ./data:/app/data
     restart: unless-stopped
@@ -15,3 +17,11 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
