@@ -21,6 +21,8 @@ class AppSettings:
     host: str
     port: int
     db_path: str
+    api_key: str | None = None
+    validate_twilio_signature: bool = True
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -55,6 +57,8 @@ def get_settings() -> tuple[AppSettings, TwilioSettings]:
         host=os.getenv("APP_HOST", "0.0.0.0"),
         port=int(os.getenv("APP_PORT", "3000")),
         db_path=str(db_path),
+        api_key=os.getenv("APP_API_KEY"),
+        validate_twilio_signature=_env_bool("TWILIO_VALIDATE_SIGNATURE", True),
     )
 
     twilio_settings = TwilioSettings(

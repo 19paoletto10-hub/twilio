@@ -13,6 +13,7 @@ from .chat_logic import build_chat_engine
 from .twilio_client import TwilioService
 from .auto_reply import enqueue_auto_reply
 from .database import get_auto_reply_config
+from .auth import require_api_key
 from .database import (
     insert_message,
     list_messages,
@@ -61,6 +62,10 @@ def _persist_twilio_message(message) -> None:
 
 def _validate_twilio_signature(req) -> bool:
     settings = current_app.config.get("TWILIO_SETTINGS")
+    app_settings = current_app.config.get("APP_SETTINGS")
+    if app_settings and getattr(app_settings, "validate_twilio_signature", True) is False:
+        # Signature validation disabled via config
+        return True
     if not settings or not settings.auth_token:
         current_app.logger.error("Missing Twilio auth token; cannot validate signature")
         return False
@@ -70,7 +75,8 @@ def _validate_twilio_signature(req) -> bool:
 
     # Flask preserves the raw URL including query string; Twilio expects exactly that
     url = req.url
-    params = req.form.to_dict(flat=False) or req.form.to_dict() or {}
+    # Normalize params to single-value dict for validator
+    params = req.form.to_dict()
 
     is_valid = validator.validate(url, params, signature)
     if not is_valid:
@@ -158,7 +164,16 @@ def inbound_message():
     if not _validate_twilio_signature(request):
         return Response("Forbidden", status=403)
 
-    app.logger.info("Received inbound hook: %s", request.form.to_dict())
+    # Log webhook metadata but redact sensitive fields
+    raw_data = request.form.to_dict()
+    redacted = {}
+    sensitive_keys = {"body", "message", "messagebody", "from", "from_number", "from_"}
+    for k, v in raw_data.items():
+        if k.lower() in sensitive_keys:
+            redacted[k] = "[REDACTED]"
+        else:
+            redacted[k] = v
+    app.logger.info("Received inbound hook: %s", redacted)
 
     # Extract and validate webhook parameters
     from_number = (request.form.get("From") or "").strip()
@@ -298,6 +313,7 @@ def message_status():
 
 
 @webhooks_bp.post("/api/send-message")
+@require_api_key
 def api_send_message():
     """REST endpoint for sending SMS/MMS messages via Twilio API."""
 
@@ -349,9 +365,10 @@ def api_send_message():
             from_number=origin,
             body=body or "",
             status="failed",
-            error=str(exc),
+            error="internal_error",
         )
-        return jsonify({"error": str(exc)}), 500
+        # Do not leak internal error details to clients
+        return jsonify({"error": "Internal server error"}), 500
 
     _persist_twilio_message(message)
 
@@ -359,6 +376,7 @@ def api_send_message():
 
 
 @webhooks_bp.get("/api/messages")
+@require_api_key
 def api_messages():
     limit_raw = request.args.get("limit", "50")
     try:
@@ -373,6 +391,7 @@ def api_messages():
 
 
 @webhooks_bp.get("/api/conversations")
+@require_api_key
 def api_conversations():
     limit_raw = request.args.get("limit", "30")
     try:
@@ -385,6 +404,7 @@ def api_conversations():
 
 
 @webhooks_bp.get("/api/conversations/<path:participant>")
+@require_api_key
 def api_conversation_detail(participant: str):
     limit_raw = request.args.get("limit", "200")
     try:
@@ -408,6 +428,7 @@ def api_conversation_detail(participant: str):
 
 
 @webhooks_bp.get("/api/messages/stats")
+@require_api_key
 def api_messages_stats():
     _maybe_sync_messages(limit=50)
     stats = get_message_stats()
@@ -415,6 +436,7 @@ def api_messages_stats():
 
 
 @webhooks_bp.get("/api/messages/remote")
+@require_api_key
 def api_remote_messages():
     limit_raw = request.args.get("limit", "20")
     try:
