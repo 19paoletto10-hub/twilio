@@ -49,10 +49,42 @@ def create_app() -> Flask:
 
     @app.get("/api/health")
     def api_health():
-        return {
+        # Basic app info
+        payload = {
             "status": "ok",
             "message": "Twilio Chat App running",
             "env": app_settings.env,
         }
+
+        # Database health
+        try:
+            from .database import health_check
+
+            db_health = health_check()
+            payload["database"] = db_health
+            if not db_health.get("ok"):
+                payload["status"] = "degraded"
+        except Exception as exc:  # noqa: BLE001
+            app.logger.exception("Error checking DB health: %s", exc)
+            payload["database"] = {"ok": False, "details": str(exc)}
+            payload["status"] = "degraded"
+
+        # Redis health (optional)
+        redis_url = app.config.get("RATELIMIT_STORAGE_URL") or None
+        if redis_url and (redis_url.startswith("redis://") or redis_url.startswith("rediss://")):
+            try:
+                import redis as _redis  # type: ignore
+
+                r = _redis.from_url(redis_url, socket_connect_timeout=2)
+                pong = r.ping()
+                payload["redis"] = {"ok": bool(pong), "url": redis_url}
+                if not pong:
+                    payload["status"] = "degraded"
+            except Exception as exc:  # noqa: BLE001
+                app.logger.exception("Redis health check failed: %s", exc)
+                payload["redis"] = {"ok": False, "details": str(exc)}
+                payload["status"] = "degraded"
+
+        return payload
 
     return app

@@ -191,6 +191,95 @@ Poniżej zbiór praktycznych kroków i wymagań, które warto wdrożyć przed wy
   - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` — nie udostępniaj publicznie.
   - `RATELIMIT_STORAGE_URL` — np. `redis://redis:6379/0` (używane przez `Flask-Limiter`).
 
+  ### Redis — dlaczego i jak wdrożyć
+
+  Redis jest rekomendowanym backendem dla `Flask-Limiter` w środowisku produkcyjnym.
+  Użycie Redis pozwala bezpiecznie i spójnie śledzić limity połączeń w wielu instancjach
+  aplikacji (skala pozioma). Poniżej krok po kroku jak dodać Redis lokalnie i w `docker-compose`.
+
+  1) Prosty `docker-compose` fragment dodający Redis:
+
+  ```yaml
+  services:
+    redis:
+      image: redis:7-alpine
+      restart: unless-stopped
+      ports:
+        - "6379:6379"
+      volumes:
+        - redis-data:/data
+
+  volumes:
+    redis-data:
+  ```
+
+  2) Ustaw w `.env` adres pamięci podręcznej dla limiter:
+
+  ```dotenv
+  RATELIMIT_STORAGE_URL=redis://redis:6379/0
+  ```
+
+  3) W aplikacji `app/limiter.py` inicjalizacja wygląda poprawnie — limiter jest inicjalizowany
+     w `create_app()` i automatycznie użyje `RATELIMIT_STORAGE_URL` z environmentu.
+
+  4) Test redis ping z poziomu aplikacji (przykład):
+
+  ```python
+  import redis
+  r = redis.from_url("redis://redis:6379/0")
+  print(r.ping())
+  ```
+
+  5) Monitorowanie i bezpieczeństwo:
+   - W production używaj zabezpieczonej sieci (VPC) i, jeśli to możliwe, redisa chronionego hasłem/ACL.
+   - Przy zarządzanym Redisie ustaw adres, port i credentials w `RATELIMIT_STORAGE_URL` jak np.
+     `redis://:PASSWORD@redis-host.example.com:6379/0`.
+
+  6) Upewnij się, że `RATELIMIT_STORAGE_URL` jest poprawnie ustawiony zanim włączysz restrykcyjne limity —
+     błędna konfiguracja może spowodować, że limiter nie zadziała lub wywoła wyjątki.
+
+  ### Healthcheck endpoint
+
+  Dodano `/api/health`, który zwraca:
+  - `status`: `ok` lub `degraded` (jeżeli DB/Redis wykryto problem),
+  - `env`: aktualne środowisko aplikacji,
+  - `database`: wynik kontroli bazy (ok / details),
+  - `redis`: wynik kontroli Redis (ok / details) gdy `RATELIMIT_STORAGE_URL` wskazuje Redis.
+
+  Przykładowa odpowiedź (JSON):
+
+  ```json
+  {
+    "status": "ok",
+    "message": "Twilio Chat App running",
+    "env": "development",
+    "database": {"ok": true, "details": "file=data/app.db"},
+    "redis": {"ok": true, "url": "redis://redis:6379/0"}
+  }
+  ```
+
+  Używaj tego endpointu jako prostego healthchecku w systemach orkiestracji (Docker Swarm, Kubernetes) lub
+  do integracji z zewnętrznym monitorem.
+
+  ### Walidacja numerów telefonu
+
+  Wprowadziliśmy centralną walidację numerów (`app/validators.py`) która:
+  - próbuje użyć biblioteki `phonenumbers` jeśli jest zainstalowana (zalecane),
+  - w przeciwnym razie stosuje prosty, rygorystyczny regex `^\\+\\d{11}$` (plus i 11 cyfr),
+    zgodnie z wymaganiem projektu.
+
+  Endpointy sprawdzające numery:
+  - `/twilio/inbound` — waliduje `From` i `To` przed przetworzeniem (jeżeli numer jest nieprawidłowy webhook zwraca pustą odpowiedź),
+  - `/api/send-message` — waliduje pole `to` i odrzuca żądanie z HTTP 400 z opisem.
+
+  Jeżeli chcesz aby akceptować pełniejsze spektrum numerów E.164, zainstaluj bibliotekę `phonenumbers`:
+
+  ```bash
+  pip install phonenumbers
+  ```
+
+  Po zainstalowaniu `phonenumbers` walidator będzie używał jej automatycznie.
+
 - **Rate limiting (ochrona przed nadużyciami)**: aplikacja korzysta z `Flask-Limiter`. W środowisku produkcyjnym ustaw `RATELIMIT_STORAGE_URL` (Redis) i dopasuj limity do swojej polityki (np. `POST /api/send-message` 10/min per API key).
 
 - **Walidacja podpisów Twilio**: włącz `TWILIO_VALIDATE_SIGNATURE=true` w produkcji (domyślnie walidacja bierze token z `TWILIO_AUTH_TOKEN`). To zapobiega podszywaniu się pod Twilio.

@@ -14,6 +14,7 @@ from .twilio_client import TwilioService
 # Type alias for queued inbound payloads
 InboundPayload = Dict[str, Any]
 ALLOWED_NUMBER_RE = re.compile(r"^\+\d{11}$")
+from .validators import is_valid_number
 
 
 def start_auto_reply_worker(app: Flask) -> None:
@@ -61,7 +62,7 @@ def start_auto_reply_worker(app: Flask) -> None:
                         continue
 
                     from_number: Optional[str] = payload.get("from_number")
-                    if not from_number or not ALLOWED_NUMBER_RE.match(from_number):
+                    if not from_number or not is_valid_number(from_number):
                         app.logger.info("Skipping auto-reply: unsupported sender %s", from_number)
                         continue
 

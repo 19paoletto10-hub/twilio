@@ -108,42 +108,48 @@ def _ensure_schema() -> None:
     db_path = Path(current_app.config["APP_SETTINGS"].db_path)
     _assert_db_writable(db_path)
 
-    conn = sqlite3.connect(db_path)
+    conn = sqlite3.connect(str(db_path))
     try:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sid TEXT,
-                direction TEXT NOT NULL CHECK(direction IN ('inbound', 'outbound')),
-                to_number TEXT,
-                from_number TEXT,
-                body TEXT NOT NULL,
-                status TEXT,
-                error TEXT,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_messages_sid ON messages(sid);
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_sid_unique
-                ON messages(sid)
-             WHERE sid IS NOT NULL;
-
-            CREATE TABLE IF NOT EXISTS auto_reply_config (
-                id INTEGER PRIMARY KEY CHECK(id = 1),
-                enabled INTEGER NOT NULL DEFAULT 0,
-                message TEXT NOT NULL DEFAULT ''
-            );
-            INSERT OR IGNORE INTO auto_reply_config (id, enabled, message)
-                 VALUES (1, 0, '');
-            """
-        )
+        conn.executescript(SCHEMA_SQL)
         conn.commit()
     except sqlite3.OperationalError as exc:  # noqa: BLE001
         _raise_readonly_hint(db_path, exc)
     finally:
         conn.close()
+
+
+def health_check() -> Dict[str, Any]:
+    """Perform a lightweight health check for the database.
+
+    Returns a dict with `ok: bool` and `details: str` which can be used by
+    the application health endpoint.
+    """
+    result = {"ok": False, "details": ""}
+    try:
+        # When in-memory DB is used for fallback, report it as healthy but note ephemeral
+        if current_app.config.get("DB_IN_MEMORY"):
+            result.update({"ok": True, "details": "in-memory database (ephemeral)"})
+            return result
+
+        db_path = Path(current_app.config["APP_SETTINGS"].db_path)
+        if not db_path.exists():
+            result["details"] = f"database file not found: {db_path}"
+            return result
+
+        # Quick read query
+        conn = sqlite3.connect(str(db_path), timeout=5)
+        try:
+            conn.row_factory = sqlite3.Row
+            cur = conn.execute("SELECT 1")
+            _ = cur.fetchone()
+            result.update({"ok": True, "details": f"file={db_path}"})
+        finally:
+            conn.close()
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Database health check failed: %s", exc)
+        result["details"] = str(exc)
+
+    return result
 
 
 def _assert_db_writable(db_path: Path) -> None:

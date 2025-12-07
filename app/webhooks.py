@@ -15,6 +15,7 @@ from .auto_reply import enqueue_auto_reply
 from .database import get_auto_reply_config
 from .auth import require_api_key
 from .limiter import limiter
+from .validators import is_valid_number
 from .database import (
     insert_message,
     list_messages,
@@ -208,6 +209,11 @@ def inbound_message():
         app.logger.warning("Missing required webhook parameters: From=%s, To=%s", from_number, to_number)
         return Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", mimetype="application/xml")
 
+    # Validate number formats (strict E.164 or phonenumbers when available)
+    if not is_valid_number(from_number) or not is_valid_number(to_number):
+        app.logger.warning("Invalid phone number format in webhook: From=%s, To=%s", from_number, to_number)
+        return Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", mimetype="application/xml")
+
     # Store the incoming message
     try:
         if message_sid:
@@ -358,6 +364,9 @@ def api_send_message():
 
     if not to:
         return jsonify({"error": "Field 'to' is required."}), 400
+
+    if not is_valid_number(to):
+        return jsonify({"error": "Field 'to' must be E.164 formatted (e.g. +48123456789)"}), 400
 
     if not any([body, content_sid, media_urls]):
         return jsonify({"error": "Provide at least one of: 'body', 'content_sid', or 'media_urls'."}), 400
