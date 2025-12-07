@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Release v1.1.2 — Twilio Chat App</title>
+  <style>
+    body{font-family:Inter,Segoe UI,Helvetica,Arial,sans-serif;margin:24px;color:#222}
+    h1,h2{color:#0b57a4}
+    pre{background:#f6f8fa;padding:12px;border-radius:6px;overflow:auto}
+    .meta{color:#555;font-size:0.95rem}
+    li{margin-bottom:6px}
+    .section{margin-top:18px}
+  </style>
+</head>
+<body>
+  <h1>Release v1.1.2</h1>
+  <p class="meta">Data: 2025-12-07</p>
+  <div class="section">
+    <h2>Podsumowanie</h2>
+    <p>Release v1.1.2 skupia się na stabilizacji webhooków, limiterze, poprawkach Twilio (REST-only), dokumentacji git-lfs oraz automatycznym workflow release.</p>
+  </div>
+
+  <div class="section">
+    <h2>Wybrane zmiany</h2>
+    <ul>
+      <li>Poprawiony parser limitów (Flask-Limiter)</li>
+      <li>Instrukcja instalacji git-lfs (Alpine) w README</li>
+      <li>GitHub Action: release-on-tag</li>
+      <li>Stabilizacja webhooków i defensywna walidacja numerów</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Analiza (dwie perspektywy)</h2>
+    <h3>Inżynier A — Optymista</h3>
+    <ul>
+      <li>Uproszczone uruchamianie lokalne</li>
+      <li>Automatyczne release przy tagowaniu</li>
+    </ul>
+    <h3>Inżynier B — Analityk Ryzyka</h3>
+    <ul>
+      <li>Fallback do pamięci dla limiter wymaga monitoringu w prod</li>
+      <li>Zalecane testy podpisów Twilio przed produkcją</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>Instrukcje uruchomienia (lokalnie)</h2>
+    <pre>python -m venv venv
+source venv/bin/activate
+pip install -r &lt;(grep -vE '^\s*#|git-lfs' requirements.txt)
+export TWILIO_VALIDATE_SIGNATURE=false
+export RATELIMIT_STORAGE_URL=''
+python run.py</pre>
+  </div>
+
+  <div class="section">
+    <h2>Healthcheck</h2>
+    <pre>curl http://127.0.0.1:3000/api/health</pre>
+  </div>
+
+  <div class="section">
+    <h2>Uwagi końcowe</h2>
+    <p>Przed wdrożeniem na produkcję:<br>- ustaw `APP_API_KEY`, `TWILIO_*` i `RATELIMIT_STORAGE_URL` (Redis).<br>- uruchom testy smoke i integracyjne.</p>
+  </div>
+
+  <footer style="margin-top:28px;color:#666;font-size:0.9rem">Generated: 2025-12-07 — Twilio Chat App</footer>
+</body>
+</html>
