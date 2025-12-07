@@ -239,6 +239,58 @@ Jeżeli używasz GitHub Actions / CI, umieść `APP_API_KEY`, `TWILIO_AUTH_TOKEN
 
 ---
 
+## Skąd brać sekrety i jak je wprowadzić
+
+Kroki krok po kroku, aby zdobyć wszystkie wymagane wartości i uruchomić aplikację produkcyjnie.
+
+- 1) Skopiuj plik przykładowy i wypełnij go:
+
+```bash
+cp .env.example .env
+# Edytuj .env i wypełnij poniższe wartości
+```
+
+- 2) `TWILIO_ACCOUNT_SID` i `TWILIO_AUTH_TOKEN` — pobierz z konsoli Twilio:
+  - Zaloguj się do https://www.twilio.com/console
+  - W sekcji **Project Info / Account SID** skopiuj `ACCOUNT SID` (to `TWILIO_ACCOUNT_SID`).
+  - W sekcji **API Keys & Tokens** (Account > Settings lub bezpośrednio https://www.twilio.com/console/project/settings) skopiuj `Auth Token` (to `TWILIO_AUTH_TOKEN`).
+
+- 3) `TWILIO_DEFAULT_FROM` / `TWILIO_MESSAGING_SERVICE_SID`:
+  - Jeżeli chcesz wysyłać z numeru SMS — zakup i użyj numeru SMS w Twilio (Console > Phone Numbers).
+  - Alternatywnie skonfiguruj Messaging Service w Twilio i skopiuj `Messaging Service SID` (zalecane przy większych projektach).
+
+- 4) `APP_API_KEY` — klucz do ochrony API (własny sekret):
+  - Możesz wygenerować silny klucz lokalnie np. `openssl rand -hex 32` lub `python -c "import secrets; print(secrets.token_urlsafe(32))"`.
+  - Ustaw tę wartość w `.env` i nigdy jej nie umieszczaj w repo.
+
+- 5) `RATELIMIT_STORAGE_URL` (Redis dla limiter):
+  - Jeżeli uruchamiasz lokalny Redis przez `docker-compose` (w `docker-compose.production.yml` mamy serwis `redis`), użyj `redis://redis:6379/0`.
+  - Dla zdalnego Redis (managed) podaj pełny URL, np. `redis://:PASSWORD@redis-host.example.com:6379/0`.
+
+- 6) TLS / certyfikaty (nginx):
+  - Dla testów możesz użyć self-signed certów, ale w production użyj Let's Encrypt lub zarządzanego certyfikatu.
+  - Przy Let's Encrypt: użyj `certbot` na serwerze proxy (nginx) lub skorzystaj z integracji w platformie hostingowej.
+
+- 7) Uruchomienie (production) — przykład z `.env`:
+
+```bash
+# Upewnij się, że .env jest w katalogu repozytorium (nie commituj go)
+docker compose -f docker-compose.production.yml up --build -d
+
+# Sprawdź logi
+docker compose -f docker-compose.production.yml logs -f web
+docker compose -f docker-compose.production.yml logs -f proxy
+```
+
+### Najczęstsze problemy i jak je naprawić
+
+- Brak `gunicorn`: dodaj `gunicorn` do `requirements.txt` (już dodane). Jeśli `gunicorn` nie znajduje się na PATH, upewnij się że obraz został odbudowany: `docker compose build --no-cache web`.
+- Błędy pip/wheels: jeżeli builder używa `pip wheel --no-deps`, zależności mogą być brakujące. Obraz teraz buduje koło zależności — jeżeli masz błędy instalacji, uruchom build lokalnie i sprawdź szczegóły błędów pip.
+- Brak zmiennych środowiskowych: aplikacja wymaga `TWILIO_ACCOUNT_SID` i `TWILIO_AUTH_TOKEN` — w `app/config.py` jest twarde sprawdzenie. Upewnij się, że `.env` jest dostępny podczas startu (docker-compose automatycznie ładuje `.env` w tym katalogu) lub zdefiniuj zmienne w `docker-compose`.
+- `ImportError: cannot import name 'limiter'`: występuje, gdy moduł `limiter` nie eksportuje obiektu `limiter` używanego przez dekoratory — naprawiono przez eksport modułowego `limiter` i inicjalizację w `create_app()`.
+- `502` od nginx / Connection refused: najczęściej backend nie uruchomił się (sprawdź logi `web` i logi aplikacji — zwykle brak env, błąd migracji DB lub wyjątek przy imporcie).
+
+
 
 ## 11. GitHub Codespaces / Dev Container
 
