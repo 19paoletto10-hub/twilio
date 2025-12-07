@@ -58,6 +58,14 @@ def _ensure_schema() -> None:
             CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_sid_unique
                 ON messages(sid)
              WHERE sid IS NOT NULL;
+
+            CREATE TABLE IF NOT EXISTS auto_reply_config (
+                id INTEGER PRIMARY KEY CHECK(id = 1),
+                enabled INTEGER NOT NULL DEFAULT 0,
+                message TEXT NOT NULL DEFAULT ''
+            );
+            INSERT OR IGNORE INTO auto_reply_config (id, enabled, message)
+                 VALUES (1, 0, '');
             """
         )
         conn.commit()
@@ -272,6 +280,57 @@ def list_conversations(limit: int = 30) -> List[Dict[str, Any]]:
 
     rows = conn.execute(query, (limit,)).fetchall()
     return [_row_to_dict(row) for row in rows]
+
+
+def get_last_inbound_id() -> int:
+    conn = _get_connection()
+    row = conn.execute(
+        "SELECT MAX(id) AS max_id FROM messages WHERE direction = 'inbound'"
+    ).fetchone()
+    return int(row["max_id"]) if row and row["max_id"] is not None else 0
+
+
+def list_inbound_after(last_id: int, limit: int = 50) -> List[Dict[str, Any]]:
+    conn = _get_connection()
+    rows = conn.execute(
+        """
+        SELECT id, sid, direction, to_number, from_number, body, status, error, created_at, updated_at
+          FROM messages
+         WHERE direction = 'inbound' AND id > ?
+      ORDER BY id ASC
+         LIMIT ?
+        """,
+        (last_id, limit),
+    ).fetchall()
+    return [_row_to_dict(row) for row in rows]
+
+
+def get_auto_reply_config() -> Dict[str, Any]:
+    conn = _get_connection()
+    row = conn.execute(
+        "SELECT id, enabled, message FROM auto_reply_config WHERE id = 1"
+    ).fetchone()
+    if row is None:
+        # Fallback to defaults if somehow missing
+        conn.execute(
+            "INSERT OR IGNORE INTO auto_reply_config (id, enabled, message) VALUES (1, 0, '')"
+        )
+        conn.commit()
+        return {"enabled": False, "message": ""}
+
+    return {
+        "enabled": bool(row["enabled"]),
+        "message": row["message"] or "",
+    }
+
+
+def set_auto_reply_config(*, enabled: bool, message: str) -> None:
+    conn = _get_connection()
+    conn.execute(
+        "UPDATE auto_reply_config SET enabled = ?, message = ? WHERE id = 1",
+        (1 if enabled else 0, message or ""),
+    )
+    conn.commit()
 
 
 def get_message_stats() -> Dict[str, Any]:

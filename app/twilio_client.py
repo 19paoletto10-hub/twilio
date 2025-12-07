@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
-from typing import Optional, Dict, Any, Iterable
+from typing import Optional, Dict, Any
 
 from twilio.rest import Client
 
@@ -57,36 +57,35 @@ class TwilioService:
         message = self.client.messages.create(**params)
         return message
 
-    def send_whatsapp_message(
-        self,
-        *,
-        to: str,
-        body: Optional[str] = None,
-        media_urls: Optional[Iterable[str]] = None,
-        messaging_service_sid: Optional[str] = None,
-        content_sid: Optional[str] = None,
-        content_variables: Optional[Dict[str, Any] | str] = None,
-    ):
-        from_number = self._normalize_whatsapp_address(self.settings.whatsapp_from)
-        to_number = self._normalize_whatsapp_address(to)
+    def send_reply_to_inbound(self, *, inbound_from: str, inbound_to: str, body: str):
+        """Send an SMS back to the sender of an inbound message.
 
-        params: Dict[str, Any] = {
-            "from_": from_number,
-            "to": to_number,
-        }
+        Prefers the messaging service when configured; otherwise uses the
+        Twilio number that received the inbound message (``inbound_to``) as the
+        origin to mirror the conversation thread.
+        """
 
-        if messaging_service_sid:
-            params["messaging_service_sid"] = messaging_service_sid
-        if body:
-            params["body"] = body
-        if media_urls:
-            params["media_url"] = list(media_urls)
-        if content_sid:
-            params["content_sid"] = content_sid
-        if content_variables:
-            params["content_variables"] = self._encode_content_variables(content_variables)
+        sender_number = (inbound_from or "").strip()
+        origin_number = (inbound_to or "").strip() or self.settings.default_from
+        reply_text = body or ""
 
-        message = self.client.messages.create(**params)
+        if not sender_number:
+            raise ValueError("Missing inbound sender number")
+        if not origin_number:
+            raise RuntimeError(
+                "Brak numeru nadawcy Twilio. Ustaw TWILIO_DEFAULT_FROM lub Messaging Service SID."
+            )
+
+        extra_params: Dict[str, Any] = {}
+        if not self.settings.messaging_service_sid:
+            extra_params["from_"] = origin_number
+
+        message = self.send_message(
+            to=sender_number,
+            body=reply_text,
+            extra_params=extra_params,
+        )
+
         return message
 
     def fetch_message(self, sid: str):
@@ -100,14 +99,6 @@ class TwilioService:
 
     def delete_message(self, sid: str) -> None:
         self.client.messages(sid).delete()
-
-    def _normalize_whatsapp_address(self, value: Optional[str]) -> str:
-        if not value:
-            raise RuntimeError(
-                "Brak TWILIO_WHATSAPP_FROM. Ustaw whatsappowy numer nadawcy w .env."
-            )
-        trimmed = value.strip()
-        return trimmed if trimmed.startswith("whatsapp:") else f"whatsapp:{trimmed}"
 
     @staticmethod
     def _encode_content_variables(value: Dict[str, Any] | str) -> str:

@@ -7,10 +7,12 @@ from typing import Optional, Any, Dict, List
 from urllib.parse import unquote
 
 from flask import Blueprint, current_app, request, Response, jsonify
-from twilio.twiml.messaging_response import MessagingResponse
+from twilio.request_validator import RequestValidator
 
 from .chat_logic import build_chat_engine
 from .twilio_client import TwilioService
+from .auto_reply import enqueue_auto_reply
+from .database import get_auto_reply_config
 from .database import (
     insert_message,
     list_messages,
@@ -55,6 +57,25 @@ def _persist_twilio_message(message) -> None:
         created_at=_datetime_to_iso(getattr(message, "date_created", None)),
         updated_at=_datetime_to_iso(getattr(message, "date_updated", None)),
     )
+
+
+def _validate_twilio_signature(req) -> bool:
+    settings = current_app.config.get("TWILIO_SETTINGS")
+    if not settings or not settings.auth_token:
+        current_app.logger.error("Missing Twilio auth token; cannot validate signature")
+        return False
+
+    signature = req.headers.get("X-Twilio-Signature", "")
+    validator = RequestValidator(settings.auth_token)
+
+    # Flask preserves the raw URL including query string; Twilio expects exactly that
+    url = req.url
+    params = req.form.to_dict(flat=False) or req.form.to_dict() or {}
+
+    is_valid = validator.validate(url, params, signature)
+    if not is_valid:
+        current_app.logger.warning("Invalid Twilio signature for %s", req.path)
+    return is_valid
 
 
 def _twilio_message_to_dict(message) -> Dict[str, Any]:
@@ -134,6 +155,9 @@ def _maybe_sync_messages(limit: int = 50) -> None:
 @webhooks_bp.post("/twilio/inbound")
 def inbound_message():
     app = current_app
+    if not _validate_twilio_signature(request):
+        return Response("Forbidden", status=403)
+
     app.logger.info("Received inbound hook: %s", request.form.to_dict())
 
     # Extract and validate webhook parameters
@@ -178,45 +202,67 @@ def inbound_message():
     except Exception as exc:  # noqa: BLE001
         app.logger.exception("Failed to store inbound message: %s", exc)
 
-    # Generate auto-reply
+    twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
+
+    # Generate auto-reply using chat engine
+    cfg = get_auto_reply_config()
+
+    # If DB-driven auto-reply is enabled, enqueue for background worker
+    if cfg.get("enabled"):
+        enqueue_auto_reply(
+            app,
+            sid=message_sid,
+            from_number=from_number,
+            to_number=to_number,
+            body=body,
+        )
+        return Response("OK", mimetype="text/plain")
+
+    # Otherwise, fall back to chat-engine based reply (synchronous send)
     reply_text = None
     try:
         chat_engine = build_chat_engine()
         reply_text = chat_engine.build_reply(from_number, body)
         if reply_text:
             app.logger.info(
-                "Generated auto-reply to %s: %s", 
-                from_number, reply_text[:50] + ("..." if len(reply_text) > 50 else "")
+                "Generated auto-reply to %s: %s",
+                from_number,
+                reply_text[:50] + ("..." if len(reply_text) > 50 else ""),
             )
     except Exception as exc:  # noqa: BLE001
         app.logger.exception("Failed to generate auto-reply: %s", exc)
         reply_text = None
 
-    # Create TwiML response
-    resp = MessagingResponse()
     if reply_text:
-        resp.message(reply_text)
-        
-        # Store the outbound auto-reply message for tracking
         try:
+            message = twilio_service.send_reply_to_inbound(
+                inbound_from=from_number,
+                inbound_to=to_number,
+                body=reply_text,
+            )
+            _persist_twilio_message(message)
+            app.logger.info("Sent auto-reply via API to %s (SID: %s)", from_number, message.sid)
+        except Exception as exc:  # noqa: BLE001
+            app.logger.exception("Failed to send auto-reply via API: %s", exc)
             insert_message(
                 direction="outbound",
                 sid=None,
                 to_number=from_number,
                 from_number=to_number,
                 body=reply_text,
-                status="auto-reply",
+                status="failed",
+                error=str(exc),
             )
-            app.logger.info("Auto-reply queued for %s", from_number)
-        except Exception as exc:  # noqa: BLE001
-            app.logger.exception("Failed to store auto-reply message: %s", exc)
 
-    return Response(str(resp), mimetype="application/xml")
+    return Response("OK", mimetype="text/plain")
 
 
 @webhooks_bp.post("/twilio/status")
 def message_status():
     app = current_app
+    if not _validate_twilio_signature(request):
+        return jsonify({"status": "forbidden", "message": "Invalid signature"}), 403
+
     data = request.form.to_dict()
     app.logger.info("Message status update: %s", data)
     
@@ -257,14 +303,9 @@ def api_send_message():
 
     payload = request.get_json(force=True, silent=True) or {}
     
-    # Validate and sanitize input parameters
+    # Validate and sanitize input parameters (SMS only)
     to = (payload.get("to") or "").strip()
     body = payload.get("body")  # Can be None for MMS-only
-    channel = (payload.get("channel") or "sms").lower().strip()
-    
-    allowed_channels = {"sms", "whatsapp"}
-    if channel not in allowed_channels:
-        return jsonify({"error": f"Unsupported channel '{channel}'. Use 'sms' or 'whatsapp'."}), 400
 
     content_sid = payload.get("content_sid")
     content_variables = _encode_content_variables(payload.get("content_variables"))
@@ -283,36 +324,24 @@ def api_send_message():
     twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
 
     try:
-        if channel == "whatsapp":
-            message = twilio_service.send_whatsapp_message(
-                to=to,
-                body=body,
-                media_urls=media_urls,
-                messaging_service_sid=messaging_service_sid,
-                content_sid=content_sid,
-                content_variables=content_variables,
-            )
-        else:
-            extra_params: Dict[str, Any] = {}
-            if media_urls:
-                extra_params["media_url"] = media_urls
-            if content_sid:
-                extra_params["content_sid"] = content_sid
-            if content_variables:
-                extra_params["content_variables"] = content_variables
+        extra_params: Dict[str, Any] = {}
+        if media_urls:
+            extra_params["media_url"] = media_urls
+        if content_sid:
+            extra_params["content_sid"] = content_sid
+        if content_variables:
+            extra_params["content_variables"] = content_variables
 
-            message = twilio_service.send_message(
-                to=to,
-                body=body or "",
-                use_messaging_service=use_ms,
-                messaging_service_sid=messaging_service_sid,
-                extra_params=extra_params,
-            )
+        message = twilio_service.send_message(
+            to=to,
+            body=body or "",
+            use_messaging_service=use_ms,
+            messaging_service_sid=messaging_service_sid,
+            extra_params=extra_params,
+        )
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Error while sending message")
         origin = twilio_service.settings.default_from
-        if channel == "whatsapp":
-            origin = twilio_service.settings.whatsapp_from or origin
         insert_message(
             direction="outbound",
             sid=None,

@@ -11,7 +11,8 @@ def configure_logging(app: Flask) -> None:
 
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(handler)
+    if not any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers):
+        root_logger.addHandler(handler)
 
     @app.before_request
     def log_request():

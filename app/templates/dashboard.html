@@ -2,11 +2,11 @@
 {% block title %}Panel czatu | Twilio{% endblock %}
 
 {% block content %}
-  <div class="container" id="dashboard-root" data-app-env="{{ app_env }}" data-app-debug="{{ 'true' if app_debug else 'false' }}" data-has-whatsapp="{{ 'true' if has_whatsapp_sender else 'false' }}">
+  <div class="container" id="dashboard-root" data-app-env="{{ app_env }}" data-app-debug="{{ 'true' if app_debug else 'false' }}">
     <div class="row align-items-center mb-4">
       <div class="col-lg-8">
         <h1 class="display-6 fw-semibold text-primary mb-1">Panel czatu</h1>
-        <p class="text-muted mb-0">Zarządzaj rozmowami SMS / WhatsApp z jednego miejsca.</p>
+        <p class="text-muted mb-0">Zarządzaj rozmowami SMS z jednego miejsca.</p>
       </div>
       <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
         <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2">
@@ -62,16 +62,6 @@
           <div class="card-body">
             <form id="send-message-form" novalidate>
               <div class="mb-3">
-                <label for="message-channel" class="form-label">Kanał</label>
-                <select id="message-channel" class="form-select">
-                  <option value="sms" selected>SMS / MMS</option>
-                  <option value="whatsapp" {% if not has_whatsapp_sender %}disabled{% endif %}>WhatsApp</option>
-                </select>
-                {% if not has_whatsapp_sender %}
-                  <div class="form-text">Skonfiguruj <code>TWILIO_WHATSAPP_FROM</code>, aby wysyłać wiadomości WhatsApp.</div>
-                {% endif %}
-              </div>
-              <div class="mb-3">
                 <label for="recipient-input" class="form-label">Numer odbiorcy</label>
                 <input type="tel" class="form-control" id="recipient-input" placeholder="np. +48123456789" required>
                 <div class="invalid-feedback">Podaj poprawny numer odbiorcy.</div>
@@ -122,29 +112,6 @@
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-4 mt-1">
-      <div class="col-12">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-            <div>
-              <h2 class="h5 mb-0">Aktywne rozmowy</h2>
-              <small class="text-muted">Ostatnie numery uporządkowane według aktualności.</small>
-            </div>
-            <div class="d-flex gap-2">
-              <button type="button" class="btn btn-outline-secondary btn-sm" id="refresh-conversations-btn">
-                Odśwież listę
-              </button>
-            </div>
-          </div>
-          <div class="card-body p-0">
-            <div id="conversation-list" class="conversation-list">
-              <div class="text-center text-muted py-4">Brak danych o rozmowach.</div>
             </div>
           </div>
         </div>

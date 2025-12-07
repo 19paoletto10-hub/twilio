@@ -6,9 +6,8 @@
     class="container"
     id="chat-root"
     data-participant="{{ participant|e }}"
-    data-is-whatsapp="{{ 'true' if is_whatsapp else 'false' }}"
-    data-has-whatsapp="{{ 'true' if has_whatsapp_sender else 'false' }}"
-  >    <div class="row align-items-center mb-4">
+  >
+    <div class="row align-items-center mb-4">
       <div class="col-md-8">
         <a class="btn btn-link px-0 text-decoration-none mb-2" href="/">&larr; Powrót do panelu</a>
         <h1 class="display-6 fw-semibold text-primary mb-1">Rozmowa z {{ display_number or 'Nieznany numer' }}</h1>
@@ -33,7 +32,7 @@
               </li>
               <li>
                 <span class="conversation-meta__label">Kanał</span>
-                <span class="conversation-meta__value">{{ 'WhatsApp' if is_whatsapp else 'SMS / MMS' }}</span>
+                <span class="conversation-meta__value">SMS / MMS</span>
               </li>
               <li>
                 <span class="conversation-meta__label">Ostatnia aktywność</span>
@@ -68,17 +67,7 @@
             <div class="chat-composer border-top">
               <form id="chat-send-form" class="p-3" novalidate>
                 <div class="row g-2 align-items-end">
-                  <div class="col-md-4">
-                    <label for="chat-channel-select" class="form-label">Kanał odpowiedzi</label>
-                    <select id="chat-channel-select" class="form-select">
-                      <option value="sms" {% if not is_whatsapp %}selected{% endif %}>SMS / MMS</option>
-                      <option value="whatsapp" {% if is_whatsapp %}selected{% endif %} {% if not has_whatsapp_sender %}disabled{% endif %}>WhatsApp</option>
-                    </select>
-                    {% if not has_whatsapp_sender %}
-                      <div class="form-text">Dodaj <code>TWILIO_WHATSAPP_FROM</code>, aby wysyłać WhatsApp.</div>
-                    {% endif %}
-                  </div>
-                  <div class="col-md-8">
+                  <div class="col-md-12">
                     <label for="chat-message-input" class="form-label">Twoja odpowiedź</label>
                     <textarea class="form-control" id="chat-message-input" rows="2" maxlength="1000" placeholder="Napisz wiadomość..." required></textarea>
                     <div class="invalid-feedback">Treść wiadomości jest wymagana.</div>

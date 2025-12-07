@@ -22,7 +22,6 @@ def dashboard():
         app_env=app_settings.env,
         app_debug=app_settings.debug,
         has_sender_identity=has_sender_identity,
-        has_whatsapp_sender=bool(twilio_settings.whatsapp_from),
     )
 
 
@@ -32,14 +31,11 @@ def chat_view(participant: str):
     twilio_settings = current_app.config["TWILIO_SETTINGS"]
 
     normalized = unquote(participant).strip()
-    is_whatsapp = normalized.startswith("whatsapp:")
-    display_number = normalized.replace("whatsapp:", "", 1) if is_whatsapp else normalized
+    display_number = normalized.replace("whatsapp:", "", 1)
 
     return render_template(
         "chat.html",
         participant=normalized,
         display_number=display_number,
-        is_whatsapp=is_whatsapp,
-        has_whatsapp_sender=bool(twilio_settings.whatsapp_from),
         app_env=app_settings.env,
     )

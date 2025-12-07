@@ -5,6 +5,7 @@ from .webhooks import webhooks_bp
 from .logger import configure_logging
 from .database import init_app as init_database
 from .ui import ui_bp
+from .auto_reply import start_auto_reply_worker
 
 
 def create_app() -> Flask:
@@ -24,6 +25,9 @@ def create_app() -> Flask:
     init_database(app)
     app.register_blueprint(webhooks_bp)
     app.register_blueprint(ui_bp)
+
+    # Background worker: auto-reply on inbound messages (SMS-only)
+    start_auto_reply_worker(app)
 
     @app.get("/api/health")
     def api_health():

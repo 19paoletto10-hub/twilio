@@ -147,6 +147,9 @@ python manage.py send \
 
 Poniżej przykładowy `Dockerfile` dla tej aplikacji (znajdziesz go w repozytorium). Obraz buduje się z Pythona 3.12-slim, instaluje zależności i uruchamia aplikację przez `gunicorn` na porcie `3000`.
 
+
+docker compose -f docker-compose.production.yml up --build
+
 Budowa obrazu i uruchomienie (lokalnie):
 
 ```bash

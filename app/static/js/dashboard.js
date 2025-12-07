@@ -9,17 +9,13 @@
       }
     : { env: 'dev', debug: false };
   window.APP_CONTEXT = appContext;
-  const hasWhatsApp = (root?.dataset.hasWhatsapp || '').toLowerCase() === 'true';
 
   const form = document.getElementById('send-message-form');
   const sendButton = document.getElementById('send-message-btn');
   const buttonSpinner = sendButton.querySelector('.spinner-border');
-  const channelSelect = document.getElementById('message-channel');
   const tableBody = document.querySelector('#messages-table tbody');
   const toastWrapper = document.getElementById('toast-wrapper');
   const filterButtons = document.querySelectorAll('[data-filter]');
-  const conversationList = document.getElementById('conversation-list');
-  const refreshConversationsBtn = document.getElementById('refresh-conversations-btn');
 
   let currentFilter = 'all';
   let refreshTimer = null;
@@ -185,7 +181,6 @@
     refreshTimer = setInterval(() => {
       refreshMessages();
       refreshStats();
-      refreshConversations();
     }, 15000);
   };
 
@@ -196,63 +191,6 @@
     } else {
       sendButton.removeAttribute('disabled');
       buttonSpinner.classList.add('d-none');
-    }
-  };
-
-  const renderConversations = (items) => {
-    if (!conversationList) {
-      return;
-    }
-
-    if (!items.length) {
-      conversationList.innerHTML = '<div class="text-center text-muted py-4">Brak aktywnych rozmów.</div>';
-      return;
-    }
-
-    const cards = items.map((item) => {
-      const participant = item.participant;
-      const readableNumber = participant?.replace(/^whatsapp:/i, '') || 'Nieznany numer';
-      const channel = participant?.startsWith('whatsapp:') ? 'WhatsApp' : 'SMS / MMS';
-      const directionBadge = formatDirectionBadge(item.last_direction);
-      const chatUrl = buildChatLink(participant);
-      const messageSnippet = item.last_body || '(brak treści)';
-      const lastTimestamp = formatDateTime(item.last_created_at);
-      const total = item.total_messages ?? 0;
-
-      return `
-        <div class="conversation-item">
-          <div class="conversation-item__top">
-            <div>
-              <p class="conversation-item__number mb-0">${readableNumber}</p>
-              <small class="text-muted">Kanał: ${channel}</small>
-            </div>
-            <div class="text-end">
-              <div>${directionBadge}</div>
-              <small class="text-muted">${lastTimestamp}</small>
-            </div>
-          </div>
-          <p class="conversation-item__body text-truncate-2 mb-2">${messageSnippet}</p>
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <small class="text-muted">Wiadomości: <strong>${total}</strong></small>
-            ${chatUrl ? `<a class="btn btn-sm btn-primary" href="${chatUrl}">Przejdź do czatu</a>` : ''}
-          </div>
-        </div>
-      `;
-    });
-
-    conversationList.innerHTML = cards.join('');
-  };
-
-  const refreshConversations = async () => {
-    if (!conversationList) {
-      return;
-    }
-
-    try {
-      const data = await fetchJSON('/api/conversations?limit=30');
-      renderConversations(data.items || []);
-    } catch (error) {
-      console.error(error);
     }
   };
 
@@ -272,27 +210,11 @@
 
     setLoadingState(true);
 
-    const channel = (channelSelect?.value || 'sms').toLowerCase();
-    if (channel === 'whatsapp' && !hasWhatsApp) {
-      showToast({
-        title: 'Konfiguracja wymagana',
-        message: 'Dodaj TWILIO_WHATSAPP_FROM zanim wyślesz wiadomość WhatsApp.',
-        type: 'error'
-      });
-      setLoadingState(false);
-      return;
-    }
-
-    const rawRecipient = document.getElementById('recipient-input').value.trim();
-    const normalizedRecipient =
-      channel === 'whatsapp' && rawRecipient && !rawRecipient.startsWith('whatsapp:')
-        ? `whatsapp:${rawRecipient}`
-        : rawRecipient;
+    const normalizedRecipient = document.getElementById('recipient-input').value.trim();
 
     const payload = {
       to: normalizedRecipient,
-      body: document.getElementById('message-body').value.trim(),
-      channel
+      body: document.getElementById('message-body').value.trim()
     };
 
     try {
@@ -350,7 +272,6 @@
 
     refreshMessages();
     refreshStats();
-    refreshConversations();
     startAutoRefresh();
   };
 
@@ -362,13 +283,8 @@
     } else {
       refreshMessages();
       refreshStats();
-      refreshConversations();
       startAutoRefresh();
     }
-  });
-
-  refreshConversationsBtn?.addEventListener('click', () => {
-    refreshConversations();
   });
 
   document.addEventListener('DOMContentLoaded', init);

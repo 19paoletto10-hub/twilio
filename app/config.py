@@ -11,7 +11,6 @@ class TwilioSettings:
     account_sid: str
     auth_token: str
     default_from: str
-    whatsapp_from: str | None = None
     messaging_service_sid: str | None = None
 
 
@@ -62,7 +61,6 @@ def get_settings() -> tuple[AppSettings, TwilioSettings]:
         account_sid=os.environ["TWILIO_ACCOUNT_SID"],
         auth_token=os.environ["TWILIO_AUTH_TOKEN"],
         default_from=os.getenv("TWILIO_DEFAULT_FROM", "").strip(),
-        whatsapp_from=os.getenv("TWILIO_WHATSAPP_FROM", "").strip() or None,
         messaging_service_sid=os.getenv("TWILIO_MESSAGING_SERVICE_SID"),
     )
 

@@ -7,8 +7,6 @@
   }
 
   const participant = root.dataset.participant || '';
-  const isWhatsAppConversation = (root.dataset.isWhatsapp || '').toLowerCase() === 'true';
-  const hasWhatsAppSender = (root.dataset.hasWhatsapp || '').toLowerCase() === 'true';
   const participantParam = encodeURIComponent(participant);
 
   const threadEl = document.getElementById('chat-thread');
@@ -17,7 +15,6 @@
   const refreshBtn = document.getElementById('chat-refresh-btn');
   const form = document.getElementById('chat-send-form');
   const messageInput = document.getElementById('chat-message-input');
-  const channelSelect = document.getElementById('chat-channel-select');
   const sendBtn = document.getElementById('chat-send-btn');
   const sendSpinner = sendBtn?.querySelector('.spinner-border');
   const toastWrapper = document.getElementById('chat-toast-wrapper');
@@ -150,25 +147,7 @@
     }
   };
 
-  const normalizeRecipient = (channel) => {
-    if (!participant) {
-      return '';
-    }
-    if (channel === 'whatsapp') {
-      if (participant.startsWith('whatsapp:')) {
-        return participant;
-      }
-      if (participant.startsWith('+')) {
-        return `whatsapp:${participant}`;
-      }
-      const sanitized = participant.replace(/^whatsapp:/i, '').replace(/[^+\d]/g, '');
-      if (!sanitized) {
-        return '';
-      }
-      return sanitized.startsWith('+') ? `whatsapp:${sanitized}` : `whatsapp:+${sanitized}`;
-    }
-    return participant.replace(/^whatsapp:/i, '');
-  };
+  const normalizeRecipient = () => participant.replace(/^whatsapp:/i, '');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -179,13 +158,7 @@
       return;
     }
 
-    const channel = (channelSelect?.value || (isWhatsAppConversation ? 'whatsapp' : 'sms')).toLowerCase();
-    if (channel === 'whatsapp' && !hasWhatsAppSender) {
-      showToast({ title: 'Konfiguracja wymagana', message: 'Dodaj TWILIO_WHATSAPP_FROM, aby wysyłać WhatsApp.', type: 'error' });
-      return;
-    }
-
-    const to = normalizeRecipient(channel);
+    const to = normalizeRecipient();
     const body = messageInput.value.trim();
     if (!body) {
       form.classList.add('was-validated');
@@ -197,7 +170,7 @@
     try {
       await fetchJSON('/api/send-message', {
         method: 'POST',
-        body: JSON.stringify({ to, body, channel })
+        body: JSON.stringify({ to, body })
       });
       messageInput.value = '';
       form.classList.remove('was-validated');
@@ -219,16 +192,8 @@
   };
 
   const init = () => {
-    if (!form || !messageInput || !channelSelect || !threadEl) {
+    if (!form || !messageInput || !threadEl) {
       return;
-    }
-
-    if (isWhatsAppConversation) {
-      if (hasWhatsAppSender) {
-        channelSelect.value = 'whatsapp';
-      } else {
-        channelSelect.value = 'sms';
-      }
     }
 
     refreshBtn?.addEventListener('click', () => refreshThread());
