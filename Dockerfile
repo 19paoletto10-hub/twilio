@@ -15,7 +15,7 @@ RUN apt-get update \
 COPY requirements.txt /tmp/requirements.txt
 
 # Build wheels for all dependencies in an isolated directory
-RUN pip install --upgrade pip setuptools wheel && pip wheel --no-cache-dir --no-deps -r /tmp/requirements.txt -w /wheels
+RUN pip install --upgrade pip setuptools wheel && pip wheel --no-cache-dir -r /tmp/requirements.txt -w /wheels
 
 
 FROM python:3.12-slim
