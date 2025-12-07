@@ -8,8 +8,8 @@ load_dotenv()
 
 @dataclass
 class TwilioSettings:
-    account_sid: str
-    auth_token: str
+    account_sid: str | None
+    auth_token: str | None
     default_from: str
     messaging_service_sid: str | None = None
 
@@ -33,17 +33,9 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 
 def get_settings() -> tuple[AppSettings, TwilioSettings]:
-    missing = []
-    for key in ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN"]:
-        if not os.getenv(key):
-            missing.append(key)
-
-    if missing:
-        joined = ", ".join(missing)
-        raise RuntimeError(
-            f"Missing required environment variables: {joined}. "
-            "Uzupełnij plik .env lub ustaw zmienne środowiskowe."
-        )
+    # Note: TWILIO credentials are optional at startup to allow running the
+    # application in a degraded/demo mode without real Twilio keys. Parts of
+    # the app that require Twilio will be disabled and will log warnings.
 
     project_root = Path(__file__).resolve().parent.parent
     db_path_value = os.getenv("DB_PATH", "data/app.db")
@@ -62,8 +54,8 @@ def get_settings() -> tuple[AppSettings, TwilioSettings]:
     )
 
     twilio_settings = TwilioSettings(
-        account_sid=os.environ["TWILIO_ACCOUNT_SID"],
-        auth_token=os.environ["TWILIO_AUTH_TOKEN"],
+        account_sid=os.getenv("TWILIO_ACCOUNT_SID") or None,
+        auth_token=os.getenv("TWILIO_AUTH_TOKEN") or None,
         default_from=os.getenv("TWILIO_DEFAULT_FROM", "").strip(),
         messaging_service_sid=os.getenv("TWILIO_MESSAGING_SERVICE_SID"),
     )

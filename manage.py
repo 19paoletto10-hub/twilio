@@ -20,7 +20,11 @@ def main():
 
     app = create_app()
     with app.app_context():
-        twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
+        twilio_service: TwilioService | None = app.config.get("TWILIO_SERVICE")
+
+        if not twilio_service:
+            print("TWILIO_SERVICE not configured. Set TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in .env")
+            return
 
         if args.command == "send":
             message = twilio_service.send_message(

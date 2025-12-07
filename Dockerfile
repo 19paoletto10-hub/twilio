@@ -1,20 +1,18 @@
 FROM python:3.12-slim AS builder
 
-FROM python:3.12-slim AS builder
-
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 WORKDIR /wheels
 
-# Install build dependencies to compile wheels
+# Build dependencies for compiling wheels
 RUN apt-get update \
  && apt-get install -y --no-install-recommends build-essential gcc libffi-dev make curl \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /tmp/requirements.txt
 
-# Build wheels for all dependencies in an isolated directory
+# Build wheels for all dependencies
 RUN pip install --upgrade pip setuptools wheel && pip wheel --no-cache-dir -r /tmp/requirements.txt -w /wheels
 
 
@@ -54,4 +52,3 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 CMD curl 
 
 # Run with gunicorn for production; `run.py` exposes `app` as module-level variable
 CMD ["gunicorn", "--bind", "0.0.0.0:3000", "run:app", "--workers", "2", "--threads", "4"]
-ENV PYTHONDONTWRITEBYTECODE=1 \

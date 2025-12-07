@@ -27,6 +27,15 @@ from .database import (
 
 webhooks_bp = Blueprint("webhooks", __name__)
 
+"""
+Webhook and API endpoints for handling Twilio inbound webhooks, status callbacks
+and admin REST API for sending messages and listing stored messages.
+
+Endpoints are protected by `APP_API_KEY` and rate-limited where appropriate.
+Twilio-related features will be disabled if Twilio credentials are not configured;
+the application logs warnings in that case.
+"""
+
 
 def _datetime_to_iso(value: Optional[datetime]) -> Optional[str]:
     if value is None:
@@ -145,7 +154,11 @@ def _maybe_sync_messages(limit: int = 50) -> None:
     if now - cache.get("last_sync", 0.0) < 10:
         return
 
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = current_app.config.get("TWILIO_SERVICE")
+    if not twilio_service:
+        current_app.logger.debug("Skipping remote sync: TWILIO_SERVICE not configured")
+        return
+
     try:
         remote_messages = twilio_service.client.messages.list(limit=limit)
     except Exception as exc:  # noqa: BLE001
@@ -161,6 +174,13 @@ def _maybe_sync_messages(limit: int = 50) -> None:
 
 @webhooks_bp.post("/twilio/inbound")
 def inbound_message():
+    """Twilio inbound message webhook.
+
+    Validates the Twilio signature (if enabled), persists the inbound message
+    and optionally sends an auto-reply (either queued or synchronous).
+    If Twilio is not configured the webhook will still persist the message
+    but will not attempt to send replies.
+    """
     app = current_app
     if not _validate_twilio_signature(request):
         return Response("Forbidden", status=403)
@@ -218,7 +238,7 @@ def inbound_message():
     except Exception as exc:  # noqa: BLE001
         app.logger.exception("Failed to store inbound message: %s", exc)
 
-    twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = app.config.get("TWILIO_SERVICE")
 
     # Generate auto-reply using chat engine
     cfg = get_auto_reply_config()
@@ -250,25 +270,28 @@ def inbound_message():
         reply_text = None
 
     if reply_text:
-        try:
-            message = twilio_service.send_reply_to_inbound(
-                inbound_from=from_number,
-                inbound_to=to_number,
-                body=reply_text,
-            )
-            _persist_twilio_message(message)
-            app.logger.info("Sent auto-reply via API to %s (SID: %s)", from_number, message.sid)
-        except Exception as exc:  # noqa: BLE001
-            app.logger.exception("Failed to send auto-reply via API: %s", exc)
-            insert_message(
-                direction="outbound",
-                sid=None,
-                to_number=from_number,
-                from_number=to_number,
-                body=reply_text,
-                status="failed",
-                error=str(exc),
-            )
+        if not twilio_service:
+            app.logger.warning("Auto-reply available but Twilio not configured; skipping send")
+        else:
+            try:
+                message = twilio_service.send_reply_to_inbound(
+                    inbound_from=from_number,
+                    inbound_to=to_number,
+                    body=reply_text,
+                )
+                _persist_twilio_message(message)
+                app.logger.info("Sent auto-reply via API to %s (SID: %s)", from_number, message.sid)
+            except Exception as exc:  # noqa: BLE001
+                app.logger.exception("Failed to send auto-reply via API: %s", exc)
+                insert_message(
+                    direction="outbound",
+                    sid=None,
+                    to_number=from_number,
+                    from_number=to_number,
+                    body=reply_text,
+                    status="failed",
+                    error=str(exc),
+                )
 
     return Response("OK", mimetype="text/plain")
 
@@ -339,7 +362,10 @@ def api_send_message():
     if not any([body, content_sid, media_urls]):
         return jsonify({"error": "Provide at least one of: 'body', 'content_sid', or 'media_urls'."}), 400
 
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = current_app.config.get("TWILIO_SERVICE")
+    if not twilio_service:
+        current_app.logger.warning("Attempt to send message via API but Twilio not configured")
+        return jsonify({"error": "Twilio not configured"}), 503
 
     try:
         extra_params: Dict[str, Any] = {}
@@ -469,7 +495,10 @@ def api_remote_messages():
     if date_sent_after:
         filters["date_sent_after"] = date_sent_after
 
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = current_app.config.get("TWILIO_SERVICE")
+    if not twilio_service:
+        current_app.logger.warning("Attempt to access remote messages but Twilio not configured")
+        return jsonify({"error": "Twilio not configured"}), 503
     try:
         remote_messages = twilio_service.list_messages(**filters)
     except Exception as exc:  # noqa: BLE001
@@ -486,7 +515,11 @@ def api_remote_messages():
 
 @webhooks_bp.get("/api/messages/<sid>")
 def api_message_detail(sid: str):
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = current_app.config.get("TWILIO_SERVICE")
+    if not twilio_service:
+        current_app.logger.warning("Attempt to fetch remote message but Twilio not configured")
+        return jsonify({"error": "Twilio not configured"}), 503
+
     try:
         message = twilio_service.fetch_message(sid)
     except Exception as exc:  # noqa: BLE001
@@ -499,7 +532,11 @@ def api_message_detail(sid: str):
 
 @webhooks_bp.post("/api/messages/<sid>/redact")
 def api_redact_message(sid: str):
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = current_app.config.get("TWILIO_SERVICE")
+    if not twilio_service:
+        current_app.logger.warning("Attempt to redact remote message but Twilio not configured")
+        return jsonify({"error": "Twilio not configured"}), 503
+
     try:
         message = twilio_service.redact_message(sid)
     except Exception as exc:  # noqa: BLE001
@@ -512,7 +549,11 @@ def api_redact_message(sid: str):
 
 @webhooks_bp.delete("/api/messages/<sid>")
 def api_delete_message(sid: str):
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_service: TwilioService | None = current_app.config.get("TWILIO_SERVICE")
+    if not twilio_service:
+        current_app.logger.warning("Attempt to delete remote message but Twilio not configured")
+        return jsonify({"error": "Twilio not configured"}), 503
+
     try:
         twilio_service.delete_message(sid)
     except Exception as exc:  # noqa: BLE001

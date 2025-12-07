@@ -28,6 +28,11 @@ def start_auto_reply_worker(app: Flask) -> None:
     if app.config.get("AUTO_REPLY_WORKER_STARTED"):
         return
 
+    # If Twilio is not configured, do not start the worker
+    if not app.config.get("TWILIO_SERVICE"):
+        app.logger.info("Auto-reply worker skipped: TWILIO_SERVICE not configured")
+        return
+
     queue: SimpleQueue[InboundPayload] = app.config.setdefault("AUTO_REPLY_QUEUE", SimpleQueue())
     processed_sids: deque[str] = deque(maxlen=1000)  # simple dedupe within process lifetime
 
@@ -40,7 +45,10 @@ def start_auto_reply_worker(app: Flask) -> None:
                     continue
 
                 with app.app_context():
-                    twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
+                    twilio_service: TwilioService | None = app.config.get("TWILIO_SERVICE")
+                    if not twilio_service:
+                        app.logger.debug("Worker: TWILIO_SERVICE not configured; skipping processing")
+                        continue
                     cfg = get_auto_reply_config()
 
                     if not cfg.get("enabled"):
