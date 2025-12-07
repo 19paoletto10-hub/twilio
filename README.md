@@ -261,6 +261,17 @@ Poniżej zbiór praktycznych kroków i wymagań, które warto wdrożyć przed wy
   Używaj tego endpointu jako prostego healthchecku w systemach orkiestracji (Docker Swarm, Kubernetes) lub
   do integracji z zewnętrznym monitorem.
 
+  ### Webhook behavior for invalid requests
+
+  The inbound webhook (`/twilio/inbound`) now returns HTTP 200 with an empty body when the
+  request is missing required parameters or when phone numbers are invalid. This is intentional:
+
+  - Twilio will only retry webhook delivery when it receives non-2xx responses or a network error.
+  - Returning 200 acknowledges receipt and prevents repeated delivery attempts for malformed requests.
+
+  If you prefer TwiML responses, modify `app/webhooks.py` accordingly — but for malformed input
+  returning 200 reduces unnecessary retries and log noise.
+
   ### Walidacja numerów telefonu
 
   Wprowadziliśmy centralną walidację numerów (`app/validators.py`) która:

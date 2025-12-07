@@ -207,12 +207,15 @@ def inbound_message():
     # Validate required parameters
     if not from_number or not to_number:
         app.logger.warning("Missing required webhook parameters: From=%s, To=%s", from_number, to_number)
-        return Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", mimetype="application/xml")
+        # Return 200 OK with empty body to avoid Twilio retrying the webhook.
+        # Twilio accepts 200 responses; sending empty TwiML is optional.
+        return Response("", status=200)
 
     # Validate number formats (strict E.164 or phonenumbers when available)
     if not is_valid_number(from_number) or not is_valid_number(to_number):
         app.logger.warning("Invalid phone number format in webhook: From=%s, To=%s", from_number, to_number)
-        return Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", mimetype="application/xml")
+        # Return 200 OK to acknowledge receipt and avoid Twilio retrying.
+        return Response("", status=200)
 
     # Store the incoming message
     try:
