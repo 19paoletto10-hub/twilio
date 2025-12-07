@@ -147,8 +147,11 @@ python manage.py send \
 
 Poniżej przykładowy `Dockerfile` dla tej aplikacji (znajdziesz go w repozytorium). Obraz buduje się z Pythona 3.12-slim, instaluje zależności i uruchamia aplikację przez `gunicorn` na porcie `3000`.
 
+## ################
 
 docker compose -f docker-compose.production.yml up --build
+
+### ##############
 
 Budowa obrazu i uruchomienie (lokalnie):
 
@@ -176,6 +179,66 @@ APP_PORT=3000
 ```
 
 Jeżeli chcesz uruchomić w trybie produkcyjnym za pomocą systemu procesów, dostosuj polecenie `CMD` w `Dockerfile` lub użyj orchestratora (docker-compose / Kubernetes).
+
+## 12. Production & Security (zalecane)
+
+Poniżej zbiór praktycznych kroków i wymagań, które warto wdrożyć przed wystawieniem aplikacji na produkcję.
+
+- **Sekrety i zmienne środowiskowe**: nie przechowuj `.env` w repo; użyj platformy do przechowywania sekretów (GitHub Secrets, AWS Parameter Store, Vault). W `README` jest plik `.env.example` — skopiuj go i wypełnij lokalnie.
+- **Wymagane zmienne produkcyjne**:
+  - `APP_ENV=production`
+  - `APP_API_KEY` — wartość API key używana przez `X-API-KEY` do ochrony REST API (obowiązkowe w prod).
+  - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` — nie udostępniaj publicznie.
+  - `RATELIMIT_STORAGE_URL` — np. `redis://redis:6379/0` (używane przez `Flask-Limiter`).
+
+- **Rate limiting (ochrona przed nadużyciami)**: aplikacja korzysta z `Flask-Limiter`. W środowisku produkcyjnym ustaw `RATELIMIT_STORAGE_URL` (Redis) i dopasuj limity do swojej polityki (np. `POST /api/send-message` 10/min per API key).
+
+- **Walidacja podpisów Twilio**: włącz `TWILIO_VALIDATE_SIGNATURE=true` w produkcji (domyślnie walidacja bierze token z `TWILIO_AUTH_TOKEN`). To zapobiega podszywaniu się pod Twilio.
+
+- **Uwierzytelnianie API**: chronione endpointy (np. `/api/send-message`, `/api/messages`) wymagają `X-API-KEY` (implementacja jest w `app/auth.py`). Ustaw `APP_API_KEY` jako tajny klucz w środowisku produkcyjnym.
+
+- **TLS / reverse proxy**: wystaw aplikację przez reverse proxy (nginx / load balancer) z terminacją TLS. W `docker-compose.production.yml` dostarczamy przykładowy `proxy` (nginx). W production użyj certyfikatów (Let's Encrypt lub managed TLS) i wymuś HTTPS.
+
+- **Content Security Policy (CSP)**: ustaw politykę CSP w nagłówkach serwera (nginx lub aplikacja) aby zredukować ryzyko XSS.
+
+- **Logowanie i ochrona danych w logach**: nie loguj pełnych treści wiadomości ani tokenów. Aplikacja maskuje wrażliwe pola w webhookach, ale pamiętaj o rotacji tokenów.
+
+- **Baza danych i backup**: SQLite (`data/app.db`) jest ok do demo i małych instalacji. Dla produkcji rozważ przeniesienie do PostgreSQL i skonfiguruj regularne backupy oraz szyfrowanie kopii.
+
+- **Hardening obrazu Docker**: projekt wykorzystuje multi-stage Dockerfile (buduje wheels w etapie `builder`) aby obraz był mniejszy i deterministyczny. Upewnij się, że `pip` nie ignoruje błędów instalacji (w naszym Dockerfile instalacja jest bez `|| true`).
+
+- **Monitoring i alerty**: monitoruj zużycie API Twilio (koszty) i logi aplikacji; skonfiguruj alerty (np. Sentry + cost alerts w Twilio).
+
+- **Rate-limit & webhooks**: nie nakładaj zbyt agresywnych limitów na endpointy webhook (Twilio może wysyłać callbacki w krótkich odstępach). Ustaw limity per API key / per IP tylko dla administracyjnych endpointów.
+
+### Szybkie komendy produkcyjne
+
+Budowa obrazu i uruchomienie produkcyjne (docker-compose):
+
+```bash
+docker compose -f docker-compose.production.yml up --build -d
+```
+
+Sprawdź logi nginx i aplikacji:
+
+```bash
+docker compose -f docker-compose.production.yml logs -f proxy
+docker compose -f docker-compose.production.yml logs -f web
+```
+
+Jeżeli używasz GitHub Actions / CI, umieść `APP_API_KEY`, `TWILIO_AUTH_TOKEN` i inne sekrety w GitHub Secrets i wstrzykuj je do środowiska podczas deploymentu.
+
+### Checklist bezpieczeństwa (przed prezentacją klientowi)
+
+- [ ] Ustaw `APP_ENV=production` i `APP_API_KEY` w środowisku produkcyjnym.
+- [ ] Włącz `TWILIO_VALIDATE_SIGNATURE=true` i przetestuj podpisy webhooków.
+- [ ] Skonfiguruj Redis i `RATELIMIT_STORAGE_URL` dla `Flask-Limiter`.
+- [ ] Uruchom aplikację za nginx z TLS (Let's Encrypt lub inny certyfikat).
+- [ ] Upewnij się, że `.env` nie jest w repo (`.gitignore`).
+- [ ] Przetestuj limity i obserwuj 429 responses przy przekroczeniu.
+
+---
+
 
 ## 11. GitHub Codespaces / Dev Container
 
