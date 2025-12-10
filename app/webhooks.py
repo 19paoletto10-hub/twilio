@@ -6,13 +6,15 @@ from datetime import datetime, timezone
 from typing import Optional, Any, Dict, List
 from urllib.parse import unquote
 
+import os
+
 from flask import Blueprint, current_app, request, Response, jsonify
 from twilio.request_validator import RequestValidator
 
 from .chat_logic import build_chat_engine
 from .twilio_client import TwilioService
 from .auto_reply import enqueue_auto_reply
-from .database import get_auto_reply_config
+from .database import get_auto_reply_config, set_auto_reply_config
 from .database import (
     insert_message,
     list_messages,
@@ -60,6 +62,11 @@ def _persist_twilio_message(message) -> None:
 
 
 def _validate_twilio_signature(req) -> bool:
+    # Allow disabling validation for local testing (e.g., ngrok) via env flag
+    if os.getenv("TWILIO_VALIDATE_SIGNATURE", "true").lower() in {"0", "false", "no", "off"}:
+        current_app.logger.warning("Skipping Twilio signature validation (TWILIO_VALIDATE_SIGNATURE disabled)")
+        return True
+
     settings = current_app.config.get("TWILIO_SETTINGS")
     if not settings or not settings.auth_token:
         current_app.logger.error("Missing Twilio auth token; cannot validate signature")
@@ -74,8 +81,41 @@ def _validate_twilio_signature(req) -> bool:
 
     is_valid = validator.validate(url, params, signature)
     if not is_valid:
-        current_app.logger.warning("Invalid Twilio signature for %s", req.path)
+        current_app.logger.warning(
+            "Invalid Twilio signature for %s (sig=%s, url=%s, params=%s)",
+            req.path,
+            signature,
+            url,
+            params,
+        )
+    else:
+        current_app.logger.debug("Twilio signature validated for %s", req.path)
     return is_valid
+
+
+def _maybe_enqueue_auto_reply_for_message(message) -> None:
+    """Queue auto-reply for a Twilio message when feature is enabled and inbound."""
+
+    cfg = get_auto_reply_config()
+    if not cfg.get("enabled"):
+        return
+
+    direction = getattr(message, "direction", "") or ""
+    if not direction.startswith("inbound"):
+        return
+
+    from_number = (getattr(message, "from_", "") or "").strip()
+    to_number = (getattr(message, "to", "") or "").strip()
+    body = getattr(message, "body", "") or ""
+    sid = getattr(message, "sid", None)
+
+    enqueue_auto_reply(
+        current_app,
+        sid=sid,
+        from_number=from_number,
+        to_number=to_number,
+        body=body,
+    )
 
 
 def _twilio_message_to_dict(message) -> Dict[str, Any]:
@@ -146,8 +186,12 @@ def _maybe_sync_messages(limit: int = 50) -> None:
         cache["last_sync"] = now
         return
 
+    first_inbound_enqueued = False
     for message in remote_messages:
         _persist_twilio_message(message)
+        if not first_inbound_enqueued and (getattr(message, "direction", "") or "").startswith("inbound"):
+            _maybe_enqueue_auto_reply_for_message(message)
+            first_inbound_enqueued = True
 
     cache["last_sync"] = now
 
@@ -155,6 +199,8 @@ def _maybe_sync_messages(limit: int = 50) -> None:
 @webhooks_bp.post("/twilio/inbound")
 def inbound_message():
     app = current_app
+    app.logger.info("Inbound webhook hit: %s", request.path)
+
     if not _validate_twilio_signature(request):
         return Response("Forbidden", status=403)
 
@@ -255,6 +301,33 @@ def inbound_message():
             )
 
     return Response("OK", mimetype="text/plain")
+
+
+@webhooks_bp.get("/api/auto-reply/config")
+def api_get_auto_reply_config():
+    """Expose current auto-reply configuration."""
+
+    cfg = get_auto_reply_config()
+    return jsonify({"enabled": bool(cfg.get("enabled")), "message": cfg.get("message", "")})
+
+
+@webhooks_bp.post("/api/auto-reply/config")
+def api_update_auto_reply_config():
+    """Update auto-reply toggle and message template."""
+
+    payload = request.get_json(force=True, silent=True) or {}
+    enabled = bool(payload.get("enabled", False))
+    message = (payload.get("message") or "").strip()
+
+    if enabled and not message:
+        return jsonify({"error": "Treść auto-odpowiedzi jest wymagana gdy funkcja jest włączona."}), 400
+
+    if len(message) > 640:
+        return jsonify({"error": "Treść auto-odpowiedzi nie może przekraczać 640 znaków."}), 400
+
+    set_auto_reply_config(enabled=enabled, message=message)
+    cfg = get_auto_reply_config()
+    return jsonify({"enabled": bool(cfg.get("enabled")), "message": cfg.get("message", "")})
 
 
 @webhooks_bp.post("/twilio/status")
@@ -448,8 +521,15 @@ def api_remote_messages():
         return jsonify({"error": str(exc)}), 500
 
     items = []
+    first_inbound_enqueued = False
     for message in remote_messages:
         _persist_twilio_message(message)
+
+        # Enqueue auto-reply for the newest inbound message only (remote list is newest-first)
+        if not first_inbound_enqueued and (getattr(message, "direction", "") or "").startswith("inbound"):
+            _maybe_enqueue_auto_reply_for_message(message)
+            first_inbound_enqueued = True
+
         items.append(_twilio_message_to_dict(message))
 
     return jsonify({"items": items, "count": len(items)})

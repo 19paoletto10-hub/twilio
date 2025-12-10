@@ -17,6 +17,14 @@
   const toastWrapper = document.getElementById('toast-wrapper');
   const filterButtons = document.querySelectorAll('[data-filter]');
 
+  const autoReplyForm = document.getElementById('auto-reply-form');
+  const autoReplyToggle = document.getElementById('auto-reply-enabled');
+  const autoReplyMessage = document.getElementById('auto-reply-message');
+  const autoReplySaveButton = document.getElementById('auto-reply-save-btn');
+  const autoReplySpinner = autoReplySaveButton?.querySelector('.spinner-border');
+  const autoReplyBadge = document.getElementById('auto-reply-status-badge');
+  const autoReplyLastUpdated = document.getElementById('auto-reply-last-updated');
+
   let currentFilter = 'all';
   let refreshTimer = null;
 
@@ -30,7 +38,15 @@
     });
 
     if (!response.ok) {
-      const errorMessage = `Nie udało się pobrać danych (${response.status})`;
+      let errorMessage = `Nie udało się pobrać danych (${response.status})`;
+      try {
+        const payload = await response.json();
+        if (payload && payload.error) {
+          errorMessage = payload.error;
+        }
+      } catch (parseError) {
+        console.debug('Nie można sparsować odpowiedzi błędu', parseError);
+      }
       throw new Error(errorMessage);
     }
 
@@ -58,6 +74,116 @@
     const toastInstance = bootstrap.Toast.getOrCreateInstance(toast, { delay: 5000 });
     toastInstance.show();
     toast.addEventListener('hidden.bs.toast', () => toast.remove());
+  };
+
+  const setAutoReplyBadge = (enabled) => {
+    if (!autoReplyBadge) {
+      return;
+    }
+    autoReplyBadge.className = enabled
+      ? 'badge bg-success-subtle text-success-emphasis'
+      : 'badge bg-secondary-subtle text-secondary-emphasis';
+    autoReplyBadge.textContent = enabled ? 'Auto-odpowiedź włączona' : 'Auto-odpowiedź wyłączona';
+  };
+
+  const setAutoReplyLoading = (isLoading) => {
+    if (!autoReplySaveButton) {
+      return;
+    }
+    if (isLoading) {
+      autoReplySaveButton.setAttribute('disabled', 'true');
+      autoReplyToggle?.setAttribute('disabled', 'true');
+      autoReplyMessage?.setAttribute('disabled', 'true');
+      autoReplySpinner?.classList.remove('d-none');
+    } else {
+      autoReplySaveButton.removeAttribute('disabled');
+      autoReplyToggle?.removeAttribute('disabled');
+      autoReplyMessage?.removeAttribute('disabled');
+      autoReplySpinner?.classList.add('d-none');
+    }
+  };
+
+  const syncAutoReplyMessageRequirement = () => {
+    if (!autoReplyMessage || !autoReplyToggle) {
+      return;
+    }
+    const enabled = autoReplyToggle.checked;
+    autoReplyMessage.required = enabled;
+    if (enabled) {
+      autoReplyMessage.setAttribute('aria-required', 'true');
+    } else {
+      autoReplyMessage.removeAttribute('aria-required');
+    }
+  };
+
+  const renderAutoReplyConfig = (config) => {
+    if (!autoReplyForm || !autoReplyToggle || !autoReplyMessage) {
+      return;
+    }
+
+    const enabled = Boolean(config?.enabled);
+    autoReplyToggle.checked = enabled;
+    autoReplyMessage.value = config?.message || '';
+    setAutoReplyBadge(enabled);
+    syncAutoReplyMessageRequirement();
+
+    if (autoReplyLastUpdated) {
+      autoReplyLastUpdated.textContent = `Ostatnia aktualizacja: ${new Date().toLocaleString()}`;
+    }
+  };
+
+  const loadAutoReplyConfig = async () => {
+    if (!autoReplyForm) {
+      return;
+    }
+    setAutoReplyLoading(true);
+    try {
+      const config = await fetchJSON('/api/auto-reply/config');
+      renderAutoReplyConfig(config);
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać konfiguracji.', type: 'error' });
+    } finally {
+      setAutoReplyLoading(false);
+    }
+  };
+
+  const submitAutoReplyConfig = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!autoReplyForm) {
+      return;
+    }
+
+    const enabled = !!autoReplyToggle?.checked;
+    const message = (autoReplyMessage?.value || '').trim();
+
+    if (enabled && !message) {
+      autoReplyForm.classList.add('was-validated');
+      return;
+    }
+
+    setAutoReplyLoading(true);
+
+    try {
+      const config = await fetchJSON('/api/auto-reply/config', {
+        method: 'POST',
+        body: JSON.stringify({ enabled, message })
+      });
+      renderAutoReplyConfig(config);
+      autoReplyForm.classList.remove('was-validated');
+      showToast({
+        title: 'Zapisano',
+        message: enabled ? 'Auto-odpowiedź włączona.' : 'Auto-odpowiedź wyłączona.',
+        type: 'success'
+      });
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się zapisać ustawień.', type: 'error' });
+    } finally {
+      setAutoReplyLoading(false);
+    }
   };
 
   const formatDirectionBadge = (direction) => {
@@ -263,16 +389,20 @@
   };
 
   const init = () => {
-    if (!form || !sendButton || !tableBody) {
-      return;
+    if (form && sendButton && tableBody) {
+      form.addEventListener('submit', submitForm);
+      filterButtons.forEach((button) => button.addEventListener('click', handleFilterClick));
+      refreshMessages();
+      refreshStats();
+      startAutoRefresh();
     }
 
-    form.addEventListener('submit', submitForm);
-    filterButtons.forEach((button) => button.addEventListener('click', handleFilterClick));
-
-    refreshMessages();
-    refreshStats();
-    startAutoRefresh();
+    if (autoReplyForm) {
+      syncAutoReplyMessageRequirement();
+      autoReplyForm.addEventListener('submit', submitAutoReplyConfig);
+      autoReplyToggle?.addEventListener('change', syncAutoReplyMessageRequirement);
+      loadAutoReplyConfig();
+    }
   };
 
   document.addEventListener('visibilitychange', () => {

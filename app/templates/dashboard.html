@@ -15,103 +15,176 @@
       </div>
     </div>
 
-    {% if not has_sender_identity %}
-      <div class="alert alert-warning d-flex align-items-center" role="alert">
-        <div>
-          <strong>Brak nadawcy.</strong> Uzupełnij <code>TWILIO_DEFAULT_FROM</code> lub <code>TWILIO_MESSAGING_SERVICE_SID</code>, aby wysyłać wiadomości.
-        </div>
-      </div>
-    {% endif %}
+    <ul class="nav nav-pills gap-2 mb-4" id="dashboard-tabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tab-messages-btn" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="true">
+          Wiadomości
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-auto-reply-btn" data-bs-toggle="tab" data-bs-target="#tab-auto-reply" type="button" role="tab" aria-controls="tab-auto-reply" aria-selected="false">
+          Auto-odpowiedź
+        </button>
+      </li>
+    </ul>
 
-    <div class="row g-3 mb-4" id="stats-cards">
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100 border-0">
-          <div class="card-body">
-            <p class="text-uppercase text-muted fs-6 mb-1">Wszystkie wiadomości</p>
-            <h2 class="fw-bold mb-0" id="stat-total">0</h2>
-            <small class="text-muted">Łączna liczba wiadomości w bazie.</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100 border-0">
-          <div class="card-body">
-            <p class="text-uppercase text-muted fs-6 mb-1">Przychodzące</p>
-            <h2 class="fw-bold mb-0 text-success" id="stat-inbound">0</h2>
-            <small class="text-muted">Otrzymane od klientów.</small>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-4">
-        <div class="card shadow-sm h-100 border-0">
-          <div class="card-body">
-            <p class="text-uppercase text-muted fs-6 mb-1">Wychodzące</p>
-            <h2 class="fw-bold mb-0 text-info" id="stat-outbound">0</h2>
-            <small class="text-muted">Wysłane z aplikacji.</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-4">
-      <div class="col-lg-4">
-        <div class="card shadow-sm border-0 h-100">
-          <div class="card-header bg-white border-0 pb-0">
-            <h2 class="h5 mb-0">Wyślij nową wiadomość</h2>
-          </div>
-          <div class="card-body">
-            <form id="send-message-form" novalidate>
-              <div class="mb-3">
-                <label for="recipient-input" class="form-label">Numer odbiorcy</label>
-                <input type="tel" class="form-control" id="recipient-input" placeholder="np. +48123456789" required>
-                <div class="invalid-feedback">Podaj poprawny numer odbiorcy.</div>
-              </div>
-              <div class="mb-3">
-                <label for="message-body" class="form-label">Treść wiadomości</label>
-                <textarea class="form-control" id="message-body" rows="3" maxlength="1000" placeholder="Wpisz wiadomość..." required></textarea>
-                <div class="invalid-feedback">Wiadomość nie może być pusta.</div>
-              </div>
-              <button type="submit" class="btn btn-primary w-100" id="send-message-btn">
-                <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
-                Wyślij wiadomość
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-8">
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="tab-messages" role="tabpanel" aria-labelledby="tab-messages-btn" tabindex="0">
+        {% if not has_sender_identity %}
+          <div class="alert alert-warning d-flex align-items-center" role="alert">
             <div>
-              <h2 class="h5 mb-0">Historia wiadomości</h2>
-              <small class="text-muted">Ostatnie 50 pozycji (auto-odświeżanie co 15 sek.)</small>
-            </div>
-            <div class="btn-group" role="group" aria-label="Filtruj">
-              <button type="button" class="btn btn-outline-secondary active" data-filter="all">Wszystkie</button>
-              <button type="button" class="btn btn-outline-secondary" data-filter="inbound">Przychodzące</button>
-              <button type="button" class="btn btn-outline-secondary" data-filter="outbound">Wychodzące</button>
+              <strong>Brak nadawcy.</strong> Uzupełnij <code>TWILIO_DEFAULT_FROM</code> lub <code>TWILIO_MESSAGING_SERVICE_SID</code>, aby wysyłać wiadomości.
             </div>
           </div>
-          <div class="card-body p-0">
-            <div class="table-responsive">
-              <table class="table table-hover mb-0" id="messages-table">
-                <thead class="table-light">
-                  <tr>
-                    <th scope="col" class="text-nowrap">Kierunek</th>
-                    <th scope="col" class="text-nowrap">Odbiorca / Nadawca</th>
-                    <th scope="col">Treść</th>
-                    <th scope="col" class="text-nowrap">Status</th>
-                    <th scope="col" class="text-nowrap">Czat</th>
-                    <th scope="col" class="text-nowrap">Czas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="6" class="text-center text-muted py-4">Brak danych. Wczytywanie...</td>
-                  </tr>
-                </tbody>
-              </table>
+        {% endif %}
+
+        <div class="row g-3 mb-4" id="stats-cards">
+          <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-0">
+              <div class="card-body">
+                <p class="text-uppercase text-muted fs-6 mb-1">Wszystkie wiadomości</p>
+                <h2 class="fw-bold mb-0" id="stat-total">0</h2>
+                <small class="text-muted">Łączna liczba wiadomości w bazie.</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-0">
+              <div class="card-body">
+                <p class="text-uppercase text-muted fs-6 mb-1">Przychodzące</p>
+                <h2 class="fw-bold mb-0 text-success" id="stat-inbound">0</h2>
+                <small class="text-muted">Otrzymane od klientów.</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card shadow-sm h-100 border-0">
+              <div class="card-body">
+                <p class="text-uppercase text-muted fs-6 mb-1">Wychodzące</p>
+                <h2 class="fw-bold mb-0 text-info" id="stat-outbound">0</h2>
+                <small class="text-muted">Wysłane z aplikacji.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <h2 class="h5 mb-0">Wyślij nową wiadomość</h2>
+              </div>
+              <div class="card-body">
+                <form id="send-message-form" novalidate>
+                  <div class="mb-3">
+                    <label for="recipient-input" class="form-label">Numer odbiorcy</label>
+                    <input type="tel" class="form-control" id="recipient-input" placeholder="np. +48123456789" required>
+                    <div class="invalid-feedback">Podaj poprawny numer odbiorcy.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="message-body" class="form-label">Treść wiadomości</label>
+                    <textarea class="form-control" id="message-body" rows="3" maxlength="1000" placeholder="Wpisz wiadomość..." required></textarea>
+                    <div class="invalid-feedback">Wiadomość nie może być pusta.</div>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100" id="send-message-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    Wyślij wiadomość
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-white border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+                <div>
+                  <h2 class="h5 mb-0">Historia wiadomości</h2>
+                  <small class="text-muted">Ostatnie 50 pozycji (auto-odświeżanie co 15 sek.)</small>
+                </div>
+                <div class="btn-group" role="group" aria-label="Filtruj">
+                  <button type="button" class="btn btn-outline-secondary active" data-filter="all">Wszystkie</button>
+                  <button type="button" class="btn btn-outline-secondary" data-filter="inbound">Przychodzące</button>
+                  <button type="button" class="btn btn-outline-secondary" data-filter="outbound">Wychodzące</button>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0" id="messages-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col" class="text-nowrap">Kierunek</th>
+                        <th scope="col" class="text-nowrap">Odbiorca / Nadawca</th>
+                        <th scope="col">Treść</th>
+                        <th scope="col" class="text-nowrap">Status</th>
+                        <th scope="col" class="text-nowrap">Czat</th>
+                        <th scope="col" class="text-nowrap">Czas</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Brak danych. Wczytywanie...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-auto-reply" role="tabpanel" aria-labelledby="tab-auto-reply-btn" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-8">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Auto-odpowiedź SMS</p>
+                  <h2 class="h5 mb-0">Ustaw wiadomość automatyczną</h2>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis" id="auto-reply-status-badge">Ładowanie...</span>
+              </div>
+              <div class="card-body">
+                <form id="auto-reply-form" novalidate>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="auto-reply-enabled">
+                    <label class="form-check-label" for="auto-reply-enabled">Włącz automatyczne odpowiadanie na nowe wiadomości</label>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="auto-reply-message" class="form-label">Treść wysyłanej wiadomości</label>
+                    <textarea class="form-control" id="auto-reply-message" rows="3" maxlength="640" placeholder="Np. Dziękujemy za wiadomość! Wracamy z odpowiedzią wkrótce." required></textarea>
+                    <div class="invalid-feedback">Podaj treść auto-odpowiedzi (maks. 640 znaków).</div>
+                  </div>
+
+                  <div class="alert alert-info small" role="alert" id="auto-reply-helper">
+                    Włączona funkcja wyśle SMS na numer nadawcy każdej nowej wiadomości. Obsługiwane są numery w formacie <code>+48XXXXXXXXX</code>.
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button type="submit" class="btn btn-primary" id="auto-reply-save-btn">
+                      <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                      Zapisz ustawienia
+                    </button>
+                    <small class="text-muted" id="auto-reply-last-updated">&nbsp;</small>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body">
+                <h2 class="h6 mb-3">Jak to działa?</h2>
+                <ul class="list-unstyled small text-muted mb-0">
+                  <li class="mb-2">- Aplikacja zapisuje przychodzące wiadomości i wysyła SMS zwrotny, gdy funkcja jest włączona.</li>
+                  <li class="mb-2">- Wiadomość jest wysyłana z numeru domyślnego lub Messaging Service (jeśli skonfigurowano).</li>
+                  <li class="mb-2">- Kolejka w tle chroni przed duplikatami i obsługuje maks. 1000 ostatnich SID.</li>
+                  <li>- Wyłączenie auto-odpowiedzi przywraca tryb odpowiedzi generowanej przez silnik czatu.</li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>

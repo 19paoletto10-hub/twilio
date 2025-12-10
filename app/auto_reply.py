@@ -13,7 +13,8 @@ from .twilio_client import TwilioService
 
 # Type alias for queued inbound payloads
 InboundPayload = Dict[str, Any]
-ALLOWED_NUMBER_RE = re.compile(r"^\+\d{11}$")
+# Accept standard E.164 numbers (+country up to 15 digits). Reject empties/short.
+ALLOWED_NUMBER_RE = re.compile(r"^\+[1-9]\d{6,14}$")
 
 
 def start_auto_reply_worker(app: Flask) -> None:
@@ -21,12 +22,15 @@ def start_auto_reply_worker(app: Flask) -> None:
 
     The worker waits on an in-memory queue fed by webhook `/twilio/inbound`.
     It sends a configured auto-reply SMS when `auto_reply_config.enabled` is true
-    and the sender number matches the +48 pattern.
+    and the sender number is valid E.164.
     """
 
     # Avoid spawning multiple workers if create_app is called more than once
     if app.config.get("AUTO_REPLY_WORKER_STARTED"):
+        app.logger.debug("Auto-reply worker already running; skipping startup")
         return
+
+    app.logger.info("Starting auto-reply worker thread")
 
     queue: SimpleQueue[InboundPayload] = app.config.setdefault("AUTO_REPLY_QUEUE", SimpleQueue())
     processed_sids: deque[str] = deque(maxlen=1000)  # simple dedupe within process lifetime
@@ -43,8 +47,10 @@ def start_auto_reply_worker(app: Flask) -> None:
                     twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
                     cfg = get_auto_reply_config()
 
+                    app.logger.info("Auto-reply worker received payload: %s", payload)
+
                     if not cfg.get("enabled"):
-                        app.logger.debug("Auto-reply disabled; skipping message")
+                        app.logger.info("Auto-reply disabled; skipping message")
                         continue
 
                     message_body = (cfg.get("message") or "").strip()
@@ -52,7 +58,7 @@ def start_auto_reply_worker(app: Flask) -> None:
                         app.logger.warning("Auto-reply enabled but message template is empty; skipping")
                         continue
 
-                    from_number: Optional[str] = payload.get("from_number")
+                    from_number: Optional[str] = (payload.get("from_number") or "").strip()
                     if not from_number or not ALLOWED_NUMBER_RE.match(from_number):
                         app.logger.info("Skipping auto-reply: unsupported sender %s", from_number)
                         continue
@@ -63,9 +69,20 @@ def start_auto_reply_worker(app: Flask) -> None:
                         continue
 
                     try:
+                        origin_number = (twilio_service.settings.default_from or "").strip()
+                        if not origin_number:
+                            app.logger.error(
+                                "Auto-reply enabled but TWILIO_DEFAULT_FROM is unset. Configure sender number to send replies."
+                            )
+                            continue
+
+                        app.logger.info(
+                            "Auto-reply: sending to %s from %s", from_number, origin_number
+                        )
                         message = twilio_service.send_message(
                             to=from_number,
                             body=message_body,
+                            extra_params={"from_": origin_number},
                         )
                         processed_sids.append(sid) if sid else None
                         insert_message(
@@ -76,7 +93,9 @@ def start_auto_reply_worker(app: Flask) -> None:
                             body=message_body,
                             status=getattr(message, "status", "auto-reply"),
                         )
-                        app.logger.info("Auto-reply sent to %s", from_number)
+                        app.logger.info(
+                            "Auto-reply sent to %s with SID=%s", from_number, getattr(message, "sid", "unknown")
+                        )
                     except Exception as exc:  # noqa: BLE001
                         app.logger.exception("Auto-reply send failed: %s", exc)
                         insert_message(
@@ -109,4 +128,5 @@ def enqueue_auto_reply(app: Flask, *, sid: Optional[str], from_number: Optional[
         "to_number": to_number,
         "body": body,
     }
+    app.logger.info("Enqueue auto-reply payload: %s", payload)
     queue.put(payload)

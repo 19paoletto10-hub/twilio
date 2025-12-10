@@ -24,7 +24,7 @@ class TwilioService:
         messaging_service_sid: Optional[str] = None,
         extra_params: Optional[Dict[str, Any]] = None,
     ):
-        extra_params = extra_params or {}
+        extra_params = dict(extra_params or {})
 
         params: Dict[str, Any] = {
             "to": to,
@@ -45,12 +45,15 @@ class TwilioService:
         if resolved_ms_sid:
             params["messaging_service_sid"] = resolved_ms_sid
         else:
-            if not self.settings.default_from:
+            # Allow explicit from_ passed in extra_params to unblock cases where
+            # default_from is not set but inbound To number is available.
+            origin = extra_params.pop("from_", None) or self.settings.default_from
+            if not origin:
                 raise RuntimeError(
                     "Brak TWILIO_DEFAULT_FROM. Ustaw numer nadawcy w .env "
                     "lub użyj TWILIO_MESSAGING_SERVICE_SID z use_messaging_service=True."
                 )
-            params["from_"] = self.settings.default_from
+            params["from_"] = origin
 
         params.update(extra_params)
 
