@@ -34,7 +34,7 @@ def start_reminder_worker(app: Flask, *, interval_seconds: int = 5) -> None:
             time.sleep(interval_seconds)
             try:
                 with app.app_context():
-                    twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
+                    twilio_client: TwilioService = app.config["TWILIO_CLIENT"]
                     due_items = list_due_scheduled_messages(limit=50)
 
                     for item in due_items:
@@ -42,7 +42,7 @@ def start_reminder_worker(app: Flask, *, interval_seconds: int = 5) -> None:
                         body = (item.get("body") or "").strip()
                         sched_id = int(item["id"])
                         interval = int(item.get("interval_seconds") or 60)
-                        origin_number = (twilio_service.settings.default_from or "").strip()
+                        origin_number = (twilio_client.settings.default_from or "").strip()
 
                         if not to_number or not E164_RE.match(to_number):
                             app.logger.info("Reminder skip invalid number: %s", to_number)
@@ -61,7 +61,7 @@ def start_reminder_worker(app: Flask, *, interval_seconds: int = 5) -> None:
 
                         try:
                             app.logger.info("Reminder: sending to %s (id=%s)", to_number, sched_id)
-                            message = twilio_service.send_message(
+                            message = twilio_client.send_message(
                                 to=to_number,
                                 body=body,
                                 extra_params={"from_": origin_number},

@@ -3,12 +3,15 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
+import os
 from typing import Any, Dict, List, Optional
 
 from flask import current_app, g
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 6
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
+_NORMALIZE_PREFIXES = ("whatsapp:", "sms:", "mms:", "client:", "sip:")
+_NORMALIZE_STRIP_CHARS = (" ", "-", "(", ")", ".", "_")
 
 
 def init_app(app) -> None:
@@ -34,6 +37,49 @@ def _close_connection(_=None) -> None:
     conn = g.pop("db_conn", None)
     if conn is not None:
         conn.close()
+
+
+def normalize_contact(value: Optional[str]) -> str:
+    if not value:
+        return ""
+    cleaned = value.strip()
+    lowered = cleaned.lower()
+    for prefix in _NORMALIZE_PREFIXES:
+        if lowered.startswith(prefix):
+            cleaned = cleaned[len(prefix) :]
+            lowered = lowered[len(prefix) :]
+            break
+
+    normalized = cleaned.strip()
+    for ch in _NORMALIZE_STRIP_CHARS:
+        normalized = normalized.replace(ch, "")
+
+    normalized = normalized.strip()
+    if not normalized:
+        return ""
+
+    lowered_norm = normalized.lower()
+    if lowered_norm.startswith("+00") and len(normalized) > 3:
+        normalized = "+" + normalized[3:]
+    elif lowered_norm.startswith("00") and len(normalized) > 2:
+        normalized = "+" + normalized[2:]
+
+    digits_only = normalized.lstrip("+")
+    if digits_only.isdigit():
+        if not digits_only:
+            return ""
+        return "+" + digits_only
+
+    return normalized.lower()
+
+
+def _normalized_sql(column: str) -> str:
+    expr = f"LOWER({column})"
+    for prefix in _NORMALIZE_PREFIXES:
+        expr = f"REPLACE({expr}, '{prefix}', '')"
+    for ch in _NORMALIZE_STRIP_CHARS:
+        expr = f"REPLACE({expr}, '{ch}', '')"
+    return expr
 
 
 def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
@@ -97,6 +143,21 @@ def _create_base_schema(conn: sqlite3.Connection) -> None:
         );
         CREATE INDEX IF NOT EXISTS idx_scheduled_enabled_next_run
             ON scheduled_messages(enabled, next_run_at);
+
+        CREATE TABLE IF NOT EXISTS ai_config (
+            id INTEGER PRIMARY KEY CHECK(id = 1),
+            enabled INTEGER NOT NULL DEFAULT 0,
+            api_key TEXT,
+            system_prompt TEXT,
+            target_number TEXT,
+            target_number_normalized TEXT,
+            model TEXT NOT NULL DEFAULT 'gpt-4o-mini',
+            temperature REAL NOT NULL DEFAULT 0.7,
+            enabled_source TEXT NOT NULL DEFAULT 'db',
+            updated_at TEXT NOT NULL DEFAULT ''
+        );
+        INSERT OR IGNORE INTO ai_config (id, enabled, model, temperature, enabled_source, updated_at, target_number_normalized)
+             VALUES (1, 0, 'gpt-4o-mini', 0.7, 'db', '', '');
         """
     )
 
@@ -115,6 +176,50 @@ def _migration_add_message_indexes(conn: sqlite3.Connection) -> None:
     )
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_messages_direction_created_at ON messages(direction, created_at)"
+    )
+
+
+def _migration_add_ai_config(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS ai_config (
+            id INTEGER PRIMARY KEY CHECK(id = 1),
+            enabled INTEGER NOT NULL DEFAULT 0,
+            api_key TEXT,
+            system_prompt TEXT,
+            target_number TEXT,
+            target_number_normalized TEXT,
+            model TEXT NOT NULL DEFAULT 'gpt-4o-mini',
+            temperature REAL NOT NULL DEFAULT 0.7,
+            enabled_source TEXT NOT NULL DEFAULT 'db',
+            updated_at TEXT NOT NULL DEFAULT ''
+        );
+        INSERT OR IGNORE INTO ai_config (id, enabled, model, temperature, enabled_source, updated_at, target_number_normalized)
+             VALUES (1, 0, 'gpt-4o-mini', 0.7, 'db', '', '');
+        """
+    )
+
+
+def _migration_add_ai_normalized_target(conn: sqlite3.Connection) -> None:
+    if _column_exists(conn, "ai_config", "target_number_normalized"):
+        return
+
+    conn.execute("ALTER TABLE ai_config ADD COLUMN target_number_normalized TEXT")
+    row = conn.execute("SELECT target_number FROM ai_config WHERE id = 1").fetchone()
+    normalized = normalize_contact(row["target_number"]) if row else ""
+    conn.execute(
+        "UPDATE ai_config SET target_number_normalized = ? WHERE id = 1",
+        (normalized,),
+    )
+
+
+def _migration_add_ai_enabled_source(conn: sqlite3.Connection) -> None:
+    if _column_exists(conn, "ai_config", "enabled_source"):
+        return
+
+    conn.execute("ALTER TABLE ai_config ADD COLUMN enabled_source TEXT NOT NULL DEFAULT 'db'")
+    conn.execute(
+        "UPDATE ai_config SET enabled_source = 'db' WHERE enabled_source IS NULL OR enabled_source = ''"
     )
 
 
@@ -145,6 +250,18 @@ def _ensure_schema() -> None:
             if current_version < 3:
                 _migration_add_message_indexes(conn)
                 current_version = 3
+
+            if current_version < 4:
+                _migration_add_ai_config(conn)
+                current_version = 4
+
+            if current_version < 5:
+                _migration_add_ai_normalized_target(conn)
+                current_version = 5
+
+            if current_version < 6:
+                _migration_add_ai_enabled_source(conn)
+                current_version = 6
 
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()
@@ -373,8 +490,12 @@ def list_messages(
     limit: int = 50,
     direction: Optional[str] = None,
     participant: Optional[str] = None,
+    participant_normalized: Optional[str] = None,
     ascending: bool = False,
 ) -> List[Dict[str, Any]]:
+    if participant and participant_normalized:
+        raise ValueError("Provide either participant or participant_normalized, not both")
+
     conn = _get_connection()
     query = (
         "SELECT id, sid, direction, to_number, from_number, body, status, error, created_at, updated_at "
@@ -390,16 +511,26 @@ def list_messages(
     if participant:
         clauses.append("(to_number = ? OR from_number = ?)")
         params.extend([participant, participant])
+    elif participant_normalized:
+        normalized_value = normalize_contact(participant_normalized)
+        if not normalized_value:
+            return []
+        normalized_to = _normalized_sql("to_number")
+        normalized_from = _normalized_sql("from_number")
+        clauses.append(f"(({normalized_to}) = ? OR ({normalized_from}) = ?)")
+        params.extend([normalized_value, normalized_value])
 
     if clauses:
         query += " WHERE " + " AND ".join(clauses)
 
-    order = "ASC" if ascending else "DESC"
-    query += f" ORDER BY datetime(created_at) {order}, id {order} LIMIT ?"
+    query += " ORDER BY datetime(created_at) DESC, id DESC LIMIT ?"
     params.append(limit)
 
     rows = conn.execute(query, params).fetchall()
-    return [_row_to_dict(row) for row in rows]
+    items = [_row_to_dict(row) for row in rows]
+    if ascending:
+        items.reverse()
+    return items
 
 
 def list_conversations(limit: int = 30) -> List[Dict[str, Any]]:
@@ -551,6 +682,105 @@ def get_message_stats() -> Dict[str, Any]:
     }
 
 
+def get_ai_config() -> Dict[str, Any]:
+    conn = _get_connection()
+    row = conn.execute(
+        """
+        SELECT id,
+               enabled,
+               api_key,
+               system_prompt,
+               target_number,
+               target_number_normalized,
+               model,
+               temperature,
+             enabled_source,
+               updated_at
+          FROM ai_config
+         WHERE id = 1
+        """
+    ).fetchone()
+
+    if row is None:
+        conn.execute(
+            "INSERT OR IGNORE INTO ai_config (id, enabled, model, temperature, updated_at, target_number_normalized) VALUES (1, 0, 'gpt-4o-mini', 0.7, '', '')"
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT id, enabled, api_key, system_prompt, target_number, target_number_normalized, model, temperature, enabled_source, updated_at FROM ai_config WHERE id = 1"
+        ).fetchone()
+
+    target_raw = row["target_number"] or ""
+    normalized_source = row["target_number_normalized"] or target_raw
+    normalized = normalize_contact(normalized_source) or normalize_contact(target_raw)
+    return {
+        "enabled": bool(row["enabled"]),
+        "api_key": row["api_key"],
+        "system_prompt": row["system_prompt"] or "",
+        "target_number": row["target_number"] or "",
+        "target_number_normalized": normalized or "",
+        "model": row["model"] or "gpt-4o-mini",
+        "temperature": float(row["temperature"] or 0.7),
+        "enabled_source": row["enabled_source"] or "db",
+        "updated_at": row["updated_at"] or "",
+    }
+
+
+def set_ai_config(
+    *,
+    enabled: bool,
+    api_key: Optional[str],
+    system_prompt: Optional[str],
+    target_number: Optional[str],
+    model: Optional[str],
+    temperature: Optional[float],
+    enabled_source: Optional[str] = None,
+) -> Dict[str, Any]:
+    conn = _get_connection()
+    current = get_ai_config()
+    resolved_api_key = api_key if api_key is not None else current.get("api_key")
+    resolved_prompt = system_prompt if system_prompt is not None else current.get("system_prompt", "")
+    resolved_target = target_number if target_number is not None else current.get("target_number", "")
+    resolved_target_normalized = normalize_contact(resolved_target)
+    resolved_model = model if model is not None else current.get("model", "gpt-4o-mini")
+    resolved_temperature = (
+        float(temperature)
+        if temperature is not None
+        else float(current.get("temperature", 0.7) or 0.7)
+    )
+    current_source = current.get("enabled_source") or "db"
+    resolved_enabled_source = enabled_source if enabled_source is not None else current_source
+
+    conn.execute(
+        """
+        UPDATE ai_config
+           SET enabled = ?,
+               api_key = ?,
+               system_prompt = ?,
+               target_number = ?,
+               target_number_normalized = ?,
+               model = ?,
+               temperature = ?,
+               enabled_source = ?,
+               updated_at = ?
+         WHERE id = 1
+        """,
+        (
+            1 if enabled else 0,
+            resolved_api_key,
+            resolved_prompt or "",
+            resolved_target or "",
+            resolved_target_normalized,
+            resolved_model or "gpt-4o-mini",
+            resolved_temperature,
+            resolved_enabled_source,
+            _utc_timestamp(),
+        ),
+    )
+    conn.commit()
+    return get_ai_config()
+
+
 def _row_to_dict(row: Optional[sqlite3.Row]) -> Dict[str, Any]:
     if row is None:
         return {}
@@ -674,3 +904,102 @@ def list_due_scheduled_messages(limit: int = 20) -> List[Dict[str, Any]]:
         (now, limit),
     ).fetchall()
     return [_row_to_dict(row) for row in rows]
+
+
+def _env_bool(value: Optional[str]) -> Optional[bool]:
+    if value is None:
+        return None
+    lowered = value.strip().lower()
+    if not lowered:
+        return None
+    if lowered in {"1", "true", "t", "yes", "y"}:
+        return True
+    if lowered in {"0", "false", "f", "no", "n"}:
+        return False
+    return None
+
+
+def _env_float(value: Optional[str]) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _env_str(name: str) -> Optional[str]:
+    value = os.getenv(name)
+    if value is None:
+        return None
+    trimmed = value.strip()
+    return trimmed or None
+
+
+def apply_ai_env_defaults(app) -> None:
+    """Override AI config using environment variables when provided."""
+
+    env_api_key = _env_str("OPENAI_API_KEY")
+    env_model = _env_str("OPENAI_MODEL")
+    env_temp = _env_float(os.getenv("OPENAI_TEMPERATURE"))
+    env_target = _env_str("AI_TARGET_NUMBER")
+    env_prompt = _env_str("AI_SYSTEM_PROMPT")
+    env_enabled = _env_bool(os.getenv("AI_ENABLED"))
+
+    if not any([
+        env_api_key,
+        env_model,
+        env_temp is not None,
+        env_target,
+        env_prompt,
+        env_enabled is not None,
+    ]):
+        return
+
+    with app.app_context():
+        current = get_ai_config()
+        current_enabled = bool(current.get("enabled", False))
+        current_source = current.get("enabled_source") or "db"
+        resolved_enabled = current_enabled
+        resolved_source = current_source
+
+        if env_enabled is not None:
+            env_bool = bool(env_enabled)
+            if current_source == "ui" and env_bool != current_enabled:
+                app.logger.info(
+                    "Skipping AI_ENABLED env override (managed in UI, current=%s, env=%s)",
+                    current_enabled,
+                    env_bool,
+                )
+            elif current_source == "ui" and env_bool == current_enabled:
+                resolved_enabled = current_enabled
+                resolved_source = current_source
+            else:
+                resolved_enabled = env_bool
+                resolved_source = "env"
+
+        updated_cfg = set_ai_config(
+            enabled=bool(resolved_enabled),
+            api_key=env_api_key,
+            system_prompt=env_prompt,
+            target_number=env_target,
+            model=env_model,
+            temperature=env_temp,
+            enabled_source=resolved_source,
+        )
+
+        if updated_cfg.get("enabled"):
+            auto_cfg = get_auto_reply_config()
+            if auto_cfg.get("enabled"):
+                app.logger.info("Disabling auto-reply because AI is enabled via environment")
+                set_auto_reply_config(enabled=False, message=auto_cfg.get("message", ""))
+
+        if updated_cfg == current:
+            app.logger.debug("AI env defaults matched current config; no changes applied")
+        else:
+            app.logger.info(
+                "AI config bootstrapped from env (enabled=%s, model=%s, target=%s)",
+                updated_cfg.get("enabled"),
+                updated_cfg.get("model"),
+                updated_cfg.get("target_number"),
+            )

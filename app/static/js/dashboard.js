@@ -35,6 +35,26 @@
   const remindersTableBody = document.querySelector('#reminders-table tbody');
   const reminderCountBadge = document.getElementById('reminder-count-badge');
 
+  // AI tab
+  const aiForm = document.getElementById('ai-config-form');
+  const aiEnabled = document.getElementById('ai-enabled');
+  const aiTargetNumber = document.getElementById('ai-target-number');
+  const aiSystemPrompt = document.getElementById('ai-system-prompt');
+  const aiModel = document.getElementById('ai-model');
+  const aiTemperature = document.getElementById('ai-temperature');
+  const aiApiKey = document.getElementById('ai-api-key');
+  const aiSaveBtn = document.getElementById('ai-save-btn');
+  const aiSaveSpinner = aiSaveBtn?.querySelector('.spinner-border');
+  const aiStatusBadge = document.getElementById('ai-status-badge');
+  const aiUpdatedAt = document.getElementById('ai-updated-at');
+  const aiApiKeyPreview = document.getElementById('ai-api-key-preview');
+  const aiConversationContainer = document.getElementById('ai-conversation');
+  const aiTestMessage = document.getElementById('ai-test-message');
+  const aiTestBtn = document.getElementById('ai-test-btn');
+  const aiTestSpinner = aiTestBtn?.querySelector('.spinner-border');
+  const aiTestStatus = document.getElementById('ai-test-status');
+  const aiTestResult = document.getElementById('ai-test-result');
+
   let currentFilter = 'all';
   let refreshTimer = null;
 
@@ -86,6 +106,12 @@
     toast.addEventListener('hidden.bs.toast', () => toast.remove());
   };
 
+  const escapeHtml = (value = '') =>
+    String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
   // Reminders helpers
   const setReminderSaving = (isSaving) => {
     if (!reminderSaveBtn) return;
@@ -95,6 +121,28 @@
     } else {
       reminderSaveBtn.removeAttribute('disabled');
       reminderSaveSpinner?.classList.add('d-none');
+    }
+  };
+
+  const setAiSaving = (isSaving) => {
+    if (!aiSaveBtn) return;
+    if (isSaving) {
+      aiSaveBtn.setAttribute('disabled', 'true');
+      aiSaveSpinner?.classList.remove('d-none');
+    } else {
+      aiSaveBtn.removeAttribute('disabled');
+      aiSaveSpinner?.classList.add('d-none');
+    }
+  };
+
+  const setAiTestLoading = (isLoading) => {
+    if (!aiTestBtn) return;
+    if (isLoading) {
+      aiTestBtn.setAttribute('disabled', 'true');
+      aiTestSpinner?.classList.remove('d-none');
+    } else {
+      aiTestBtn.removeAttribute('disabled');
+      aiTestSpinner?.classList.add('d-none');
     }
   };
 
@@ -136,6 +184,136 @@
     reminderCountBadge && (reminderCountBadge.textContent = String(items.length));
   };
 
+  const renderAiConfig = (config) => {
+    if (!config) return;
+
+    if (aiEnabled) aiEnabled.checked = !!config.enabled;
+    if (aiTargetNumber) aiTargetNumber.value = config.target_number || '';
+    if (aiSystemPrompt) aiSystemPrompt.value = config.system_prompt || '';
+    if (aiModel) aiModel.value = config.model || '';
+    if (aiTemperature) {
+      aiTemperature.value =
+        typeof config.temperature === 'number' ? config.temperature : '';
+    }
+
+    if (aiStatusBadge) {
+      const enabled = !!config.enabled;
+      aiStatusBadge.textContent = enabled ? 'Włączone' : 'Wyłączone';
+      aiStatusBadge.className = enabled
+        ? 'badge bg-success-subtle text-success-emphasis'
+        : 'badge bg-secondary-subtle text-secondary-emphasis';
+    }
+
+    if (aiApiKeyPreview) {
+      if (config.api_key_preview) {
+        aiApiKeyPreview.textContent = `Zapisany klucz: ${config.api_key_preview}`;
+      } else if (config.has_api_key) {
+        aiApiKeyPreview.textContent = 'Zapisany jest klucz API.';
+      } else {
+        aiApiKeyPreview.textContent = 'Brak zapisanego klucza.';
+      }
+    }
+
+    if (aiUpdatedAt) {
+      aiUpdatedAt.textContent = config.updated_at
+        ? `Ostatnia aktualizacja: ${config.updated_at}`
+        : '';
+    }
+  };
+
+  const renderAiConversation = (items = []) => {
+    if (!aiConversationContainer) return;
+
+    if (!items.length) {
+      aiConversationContainer.innerHTML = '<p class="text-muted mb-0">Brak wiadomości w rozmowie z wybranym numerem.</p>';
+      return;
+    }
+
+    aiConversationContainer.innerHTML = items
+      .map((msg) => {
+        const isInbound = msg.direction === 'inbound';
+        const badgeClass = isInbound
+          ? 'bg-primary-subtle text-primary-emphasis'
+          : 'bg-success-subtle text-success-emphasis';
+        const who = isInbound ? 'Użytkownik' : 'AI / my';
+        const created = msg.created_at || '';
+        const safeBody = (msg.body || '')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        return `
+          <div class="mb-2">
+            <div class="d-flex justify-content-between align-items-baseline mb-1">
+              <span class="badge ${badgeClass}">${who}</span>
+              <small class="text-muted">${created}</small>
+            </div>
+            <div class="p-2 rounded bg-white border">
+              <div class="small">${safeBody}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+  };
+
+  const renderAiTestResult = (payload) => {
+    if (!aiTestResult) return;
+
+    if (!payload) {
+      aiTestResult.classList.add('d-none');
+      aiTestResult.innerHTML = '';
+      return;
+    }
+
+    const reply = escapeHtml(payload.reply || '');
+    const input = escapeHtml(payload.input || '');
+    const modelParts = [];
+    if (payload.model) {
+      modelParts.push(String(payload.model));
+    }
+    if (typeof payload.temperature === 'number') {
+      modelParts.push(`temp ${payload.temperature}`);
+    }
+    const modelInfo = escapeHtml(modelParts.join(' • '));
+
+    const sourceType = payload.used_latest_message
+      ? 'Ostatnia wiadomość z historii'
+      : payload.fallback_used
+        ? 'Domyślny prompt testowy'
+        : 'Własna wiadomość testowa';
+    const sourceBadgeClass = payload.used_latest_message
+      ? 'bg-primary-subtle text-primary-emphasis'
+      : payload.fallback_used
+        ? 'bg-secondary-subtle text-secondary-emphasis'
+        : 'bg-info-subtle text-info-emphasis';
+    const latest = payload.latest_message || null;
+    const latestPreview = latest
+      ? `
+        <div class="small text-muted mt-2">
+          Ostatnia wiadomość (${escapeHtml(latest.created_at || '')}):
+          <span class="d-block">${escapeHtml(latest.body || '')}</span>
+        </div>
+      `
+      : '';
+
+    aiTestResult.innerHTML = `
+      <p class="small text-muted mb-2">Model: ${modelInfo || 'nieznany'}</p>
+      <div class="mb-2">
+        <span class="badge ${sourceBadgeClass}">${escapeHtml(sourceType)}</span>
+      </div>
+      <div class="mb-2">
+        <div class="fw-semibold small text-muted text-uppercase mb-1">Wiadomość testowa</div>
+        <div class="p-2 bg-white border rounded">${input || '<span class="text-muted">—</span>'}</div>
+        ${latestPreview}
+      </div>
+      <div>
+        <div class="fw-semibold small text-muted text-uppercase mb-1">Odpowiedź AI</div>
+        <div class="p-2 bg-white border rounded">${reply}</div>
+      </div>
+    `;
+    aiTestResult.classList.remove('d-none');
+  };
+
   const loadReminders = async () => {
     try {
       const data = await fetchJSON('/api/reminders');
@@ -143,6 +321,28 @@
     } catch (error) {
       console.error(error);
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać przypomnień.', type: 'error' });
+    }
+  };
+
+  const loadAiConfig = async () => {
+    if (!aiForm) return;
+    try {
+      const data = await fetchJSON('/api/ai/config');
+      renderAiConfig(data);
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać konfiguracji AI.', type: 'error' });
+    }
+  };
+
+  const loadAiConversation = async () => {
+    if (!aiConversationContainer) return;
+    try {
+      const data = await fetchJSON('/api/ai/conversation');
+      renderAiConversation(data.items || []);
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać historii rozmowy AI.', type: 'error' });
     }
   };
 
@@ -181,6 +381,111 @@
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się zapisać przypomnienia.', type: 'error' });
     } finally {
       setReminderSaving(false);
+    }
+  };
+
+  const submitAiConfig = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!aiForm) return;
+
+    const enabled = !!aiEnabled?.checked;
+    const targetNumber = aiTargetNumber?.value.trim() || '';
+    const systemPrompt = aiSystemPrompt?.value.trim() || '';
+    const model = aiModel?.value.trim() || '';
+    const temperatureRaw = aiTemperature?.value.trim() || '';
+    const apiKeyRaw = aiApiKey?.value.trim() || '';
+
+    const payload = {
+      enabled,
+      target_number: targetNumber || null,
+      system_prompt: systemPrompt || null,
+      model: model || null
+    };
+
+    if (temperatureRaw !== '') {
+      const t = parseFloat(temperatureRaw);
+      if (!Number.isNaN(t)) {
+        payload.temperature = t;
+      }
+    }
+
+    if (apiKeyRaw) {
+      payload.api_key = apiKeyRaw;
+    }
+
+    try {
+      setAiSaving(true);
+      const data = await fetchJSON('/api/ai/config', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      renderAiConfig(data);
+      if (aiApiKey) aiApiKey.value = '';
+      showToast({ title: 'Zapisano', message: 'Konfiguracja AI została zapisana.', type: 'success' });
+      await loadAiConversation();
+    } catch (error) {
+      console.error(error);
+      const msg = error.message || '';
+      if (msg.includes('Target number is required')) {
+        showToast({ title: 'Błąd', message: 'Podaj numer rozmówcy, aby włączyć AI.', type: 'error' });
+      } else if (msg.includes('API key is required')) {
+        showToast({ title: 'Błąd', message: 'Podaj klucz API OpenAI, aby włączyć AI.', type: 'error' });
+      } else if (msg.includes('Temperature must be')) {
+        showToast({ title: 'Błąd', message: 'Temperatura musi być liczbą z zakresu 0–2.', type: 'error' });
+      } else {
+        showToast({ title: 'Błąd', message: msg || 'Nie udało się zapisać konfiguracji AI.', type: 'error' });
+      }
+    } finally {
+      setAiSaving(false);
+    }
+  };
+
+  const runAiTest = async () => {
+    if (!aiTestBtn) return;
+    const message = aiTestMessage?.value.trim();
+    const apiKeyOverride = aiApiKey?.value.trim();
+    const participantOverride = aiTargetNumber?.value.trim();
+    setAiTestLoading(true);
+    renderAiTestResult(null);
+    if (aiTestStatus) {
+      aiTestStatus.textContent = 'Łączenie z OpenAI...';
+    }
+
+    try {
+      const payload = {
+        use_latest_message: true
+      };
+      if (message) {
+        payload.message = message;
+      }
+      if (apiKeyOverride) {
+        payload.api_key = apiKeyOverride;
+      }
+      if (participantOverride) {
+        payload.participant = participantOverride;
+      }
+
+      const data = await fetchJSON('/api/ai/test', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      renderAiTestResult(data);
+      if (aiTestStatus) {
+        aiTestStatus.textContent = data.used_latest_message
+          ? 'Połączenie OK — użyto ostatniej wiadomości z historii.'
+          : 'Połączenie OK — odpowiedź wygenerowana na podstawie tekstu testowego.';
+      }
+    } catch (error) {
+      console.error(error);
+      if (aiTestStatus) {
+        aiTestStatus.textContent = error.message || 'Błąd połączenia z OpenAI.';
+      }
+      renderAiTestResult(null);
+    } finally {
+      setAiTestLoading(false);
     }
   };
 
@@ -547,6 +852,14 @@
       remindersTableBody?.addEventListener('click', handleReminderAction);
       loadReminders();
     }
+
+    if (aiForm) {
+      aiForm.addEventListener('submit', submitAiConfig);
+      loadAiConfig();
+      loadAiConversation();
+    }
+
+    aiTestBtn?.addEventListener('click', runAiTest);
   };
 
   document.addEventListener('visibilitychange', () => {

@@ -23,11 +23,19 @@ Aplikacja startuje na `http://0.0.0.0:3000`.
 - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` – wymagane.
 - `TWILIO_DEFAULT_FROM` – numer nadawcy w formacie E.164; wymagany do auto‑reply.
 - `TWILIO_MESSAGING_SERVICE_SID` – opcjonalnie, gdy używasz Messaging Service.
+- `OPENAI_API_KEY` – klucz używany do odpowiedzi AI; ustaw go, aby nie wpisywać go ręcznie w panelu.
+- `OPENAI_MODEL`, `OPENAI_TEMPERATURE` – domyślny model i temperatura (np. `gpt-4o-mini`, `0.7`).
+- `AI_TARGET_NUMBER`, `AI_SYSTEM_PROMPT`, `AI_ENABLED` – pozwalają włączyć AI i przypisać numer rozmówcy już przy starcie. Po zapisaniu ustawień w panelu wartością nadrzędną staje się konfiguracja z UI (env służy tylko do początkowego bootstrapu).
 - `CHAT_MODE` – `echo` (domyślnie) lub `keywords` (używane tylko, gdy auto‑reply w bazie jest wyłączone).
 - `APP_ENV`, `APP_DEBUG`, `APP_HOST`, `APP_PORT` – parametry serwera.
 - `DB_PATH` – ścieżka SQLite (domyślnie `data/app.db`).
 - `PUBLIC_BASE_URL` – publiczny URL do webhooków (prod/ngrok).
 - `TWILIO_VALIDATE_SIGNATURE` – `true` zalecane w prod; w dev możesz ustawić `false` by pominąć weryfikację podpisu.
+
+### Konfiguracja AI
+- Przy starcie aplikacji wartości z `OPENAI_*` i `AI_*` automatycznie trafiają do tabeli `ai_config`, więc środowisko produkcyjne jest gotowe bez klikania w UI.
+- Jeśli nie ustawisz zmiennych środowiskowych, konfigurację możesz nadal wprowadzić z panelu (zakładka „AI”).
+- Aby przetestować lokalnie bez prawdziwych webhooków, ustaw `TWILIO_VALIDATE_SIGNATURE=false`, wprowadź numer testowy w `AI_TARGET_NUMBER`, a następnie wyślij wiadomość z tego numeru.
 
 ## Auto‑reply (SMS)
 - `/twilio/inbound` zapisuje wiadomość do `messages`, a gdy `auto_reply_config.enabled=1`, odkłada payload do kolejki; worker `app/auto_reply.py` wysyła odpowiedź z tekstem `auto_reply_config.message`.
@@ -45,6 +53,7 @@ Konfiguracja:
 - `POST /twilio/inbound` – webhook wiadomości przychodzących.
 - `POST /twilio/status` – statusy dostarczenia.
 - `POST /api/send-message` – wysyłanie SMS/MMS (`to`, `body`, opcjonalnie `content_sid`, `media_urls`, `messaging_service_sid`, `use_messaging_service`).
+- `POST /api/ai/test` – wykonuje zapytanie do OpenAI i zwraca odpowiedź bez wysyłania SMS.
 - `GET /api/messages` – lista z bazy (`limit`, `direction`).
 - `GET /api/conversations`, `GET /api/conversations/<participant>` – rozmowy i wątki.
 - `GET /api/messages/remote` – najnowsze wiadomości z Twilio (`to`, `from`, `date_sent*`, `limit`).
@@ -63,10 +72,14 @@ curl -X POST http://localhost:3000/api/send-message \
 - Dashboard: statystyki, wysyłka ręczna, lista 50 ostatnich wiadomości z filtrami, auto‑refresh ~15 s.
 - Widok czatu `/chat/<numer>`: pełen wątek, auto‑refresh, formularz odpowiedzi.
 - Zakładka „Auto-odpowiedź”: włącz/wyłącz + treść, badge stanu, zapisywanie przez API.
+- Zakładka „AI”: konfiguracja OpenAI oraz przycisk „Przetestuj połączenie”, który uderza w `POST /api/ai/test` i wyświetla odpowiedź lub błąd.
 
 ## CLI
 ```bash
 python manage.py send --to +48123123123 --body "Siema z CLI" --use-messaging-service
+
+# Wygeneruj wiadomość AI i wyślij ją Twilio
+python manage.py ai-send --to +48123123123 --latest "Treść ostatniej wiadomości" --history-limit 30
 ```
 
 ## Docker / docker-compose

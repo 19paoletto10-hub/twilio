@@ -3,7 +3,7 @@ from .config import get_settings
 from .twilio_client import TwilioService
 from .webhooks import webhooks_bp
 from .logger import configure_logging
-from .database import init_app as init_database
+from .database import init_app as init_database, apply_ai_env_defaults
 from .ui import ui_bp
 from .auto_reply import start_auto_reply_worker
 from .reminder import start_reminder_worker
@@ -19,11 +19,12 @@ def create_app() -> Flask:
     app.config["TWILIO_SETTINGS"] = twilio_settings
 
     # Inicjalizacja serwisu Twilio
-    twilio_service = TwilioService(twilio_settings)
-    app.config["TWILIO_SERVICE"] = twilio_service
+    twilio_client = TwilioService(twilio_settings)
+    app.config["TWILIO_CLIENT"] = twilio_client
 
     # Baza danych + blueprinty
     init_database(app)
+    apply_ai_env_defaults(app)
     app.register_blueprint(webhooks_bp)
     app.register_blueprint(ui_bp)
 

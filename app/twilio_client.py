@@ -108,3 +108,19 @@ class TwilioService:
         if isinstance(value, str):
             return value
         return json.dumps(value)
+
+    def send_with_default_origin(self, *, to: str, body: str):
+        """Send an SMS using default Twilio credentials and default_from number."""
+
+        origin = (self.settings.default_from or "").strip()
+        if not origin:
+            raise RuntimeError(
+                "Brak TWILIO_DEFAULT_FROM. Ustaw numer nadawcy w .env, aby wysyłać wiadomości.")
+
+        message = self.client.messages.create(
+            body=body,
+            from_=origin,
+            to=to,
+        )
+
+        return message

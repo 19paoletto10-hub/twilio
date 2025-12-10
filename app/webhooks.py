@@ -12,9 +12,16 @@ from flask import Blueprint, current_app, request, Response, jsonify
 from twilio.request_validator import RequestValidator
 
 from .chat_logic import build_chat_engine
+from .ai_service import AIResponder, AIReplyError, send_ai_generated_sms
 from .twilio_client import TwilioService
 from .auto_reply import enqueue_auto_reply
-from .database import get_auto_reply_config, set_auto_reply_config
+from .database import (
+    get_auto_reply_config,
+    set_auto_reply_config,
+    get_ai_config,
+    set_ai_config,
+    normalize_contact,
+)
 from .database import (
     list_scheduled_messages,
     create_scheduled_message,
@@ -30,6 +37,7 @@ from .database import (
     delete_message_by_sid,
     list_conversations,
 )
+
 
 webhooks_bp = Blueprint("webhooks", __name__)
 
@@ -76,6 +84,91 @@ def _persist_twilio_message(message) -> None:
     )
 
 
+def send_ai_message_to_configured_target(
+    *,
+    latest_user_message: Optional[str] = None,
+    history_limit: int = 20,
+    api_key_override: Optional[str] = None,
+    reply_text_override: Optional[str] = None,
+    origin_number: Optional[str] = None,
+    participant_override: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Generate an AI reply and send it to the configured AI target number."""
+
+    cfg = get_ai_config()
+    api_key = (api_key_override or cfg.get("api_key") or "").strip()
+    if not api_key:
+        raise AIReplyError(
+            "Brak klucza OpenAI. Uzupełnij konfigurację AI lub przekaż api_key.",
+            status_code=400,
+        )
+
+    target_number = (participant_override or cfg.get("target_number") or "").strip()
+    normalized_target = normalize_contact(target_number)
+    if not normalized_target:
+        raise AIReplyError("Brak skonfigurowanego numeru AI.", status_code=400)
+
+    try:
+        resolved_history_limit = max(1, min(int(history_limit), 200))
+    except (TypeError, ValueError):
+        resolved_history_limit = 20
+
+    responder = AIResponder(
+        api_key=api_key,
+        model=(cfg.get("model") or "gpt-4o-mini").strip(),
+        system_prompt=cfg.get("system_prompt") or "",
+        temperature=float(cfg.get("temperature", 0.7) or 0.7),
+        history_limit=resolved_history_limit,
+    )
+
+    if reply_text_override is None:
+        try:
+            reply_text = responder.build_reply(
+                participant=target_number,
+                latest_user_message=latest_user_message or None,
+            )
+        except Exception as exc:  # noqa: BLE001
+            current_app.logger.exception(
+                "send_ai_message_to_configured_target: OpenAI error: %s", exc
+            )
+            raise AIReplyError(
+                f"Generowanie odpowiedzi nie powiodło się: {exc}",
+                status_code=502,
+            ) from exc
+    else:
+        reply_text = reply_text_override
+
+    reply_text = (reply_text or "").strip()
+    if not reply_text:
+        raise AIReplyError("OpenAI nie zwróciło treści odpowiedzi.", status_code=502)
+
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+
+    dispatch_result = send_ai_generated_sms(
+        responder=responder,
+        twilio_client=twilio_client,
+        participant_number=target_number,
+        latest_user_message=latest_user_message,
+        reply_text_override=reply_text_override,
+        origin_number=origin_number,
+        logger=current_app.logger,
+    )
+
+    _persist_twilio_message(dispatch_result.twilio_message)
+
+    return {
+        "to": dispatch_result.to_number,
+        "to_normalized": dispatch_result.normalized_to,
+        "body": dispatch_result.reply_text,
+        "sid": dispatch_result.sid,
+        "status": dispatch_result.status,
+        "model": responder.model,
+        "temperature": responder.temperature,
+        "history_limit": responder.history_limit,
+        "origin_number": dispatch_result.origin_number,
+    }
+
+
 def _validate_twilio_signature(req) -> bool:
     # Allow disabling validation for local testing (e.g., ngrok) via env flag
     if os.getenv("TWILIO_VALIDATE_SIGNATURE", "true").lower() in {"0", "false", "no", "off"}:
@@ -109,10 +202,15 @@ def _validate_twilio_signature(req) -> bool:
 
 
 def _maybe_enqueue_auto_reply_for_message(message) -> None:
-    """Queue auto-reply for a Twilio message when feature is enabled and inbound."""
+    """Queue reactive replies (AI or auto-reply) when enabled and inbound."""
 
-    cfg = get_auto_reply_config()
-    if not cfg.get("enabled"):
+    auto_cfg = get_auto_reply_config()
+    ai_cfg = get_ai_config()
+
+    ai_enabled = bool(ai_cfg.get("enabled"))
+    auto_enabled = bool(auto_cfg.get("enabled"))
+
+    if not ai_enabled and not auto_enabled:
         return
 
     direction = getattr(message, "direction", "") or ""
@@ -134,15 +232,28 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
     if not received_at_iso:
         received_at_iso = _datetime_to_iso(datetime.utcnow())
 
-    enabled_since_dt = _parse_iso_timestamp(cfg.get("enabled_since"))
-    received_at_dt = _parse_iso_timestamp(received_at_iso)
-    if enabled_since_dt and received_at_dt and received_at_dt < enabled_since_dt:
-        current_app.logger.info(
-            "Skipping auto-reply enqueue for SID=%s: received %s before enabled toggle %s",
-            sid,
-            received_at_iso,
-            cfg.get("enabled_since"),
-        )
+    should_enqueue = False
+
+    if ai_enabled:
+        if (ai_cfg.get("api_key") or "").strip():
+            should_enqueue = True
+        else:
+            current_app.logger.warning("AI mode enabled but API key missing; skipping AI reply enqueue")
+
+    if not should_enqueue and auto_enabled:
+        enabled_since_dt = _parse_iso_timestamp(auto_cfg.get("enabled_since"))
+        received_at_dt = _parse_iso_timestamp(received_at_iso)
+        if enabled_since_dt and received_at_dt and received_at_dt < enabled_since_dt:
+            current_app.logger.info(
+                "Skipping auto-reply enqueue for SID=%s: received %s before enabled toggle %s",
+                sid,
+                received_at_iso,
+                auto_cfg.get("enabled_since"),
+            )
+            return
+        should_enqueue = True
+
+    if not should_enqueue:
         return
 
     enqueue_auto_reply(
@@ -153,6 +264,40 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
         body=body,
         received_at=received_at_iso,
     )
+
+
+def _mask_secret(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    trimmed = value.strip()
+    if len(trimmed) <= 4:
+        return "•" * len(trimmed)
+    return "•" * (len(trimmed) - 4) + trimmed[-4:]
+
+
+def _send_ai_reply_message(*, inbound_from: str, inbound_to: str, reply_text: str):
+    """Send AI-generated reply back to the original sender via Twilio."""
+
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+    message = twilio_client.send_reply_to_inbound(
+        inbound_from=inbound_from,
+        inbound_to=inbound_to,
+        body=reply_text,
+    )
+    _persist_twilio_message(message)
+    return message
+def _serialize_ai_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "enabled": bool(cfg.get("enabled")),
+        "system_prompt": cfg.get("system_prompt", ""),
+        "target_number": cfg.get("target_number", ""),
+        "target_number_normalized": cfg.get("target_number_normalized", ""),
+        "model": cfg.get("model", "gpt-4o-mini"),
+        "temperature": float(cfg.get("temperature", 0.7) or 0.7),
+        "updated_at": cfg.get("updated_at") or "",
+        "has_api_key": bool((cfg.get("api_key") or "").strip()),
+        "api_key_preview": _mask_secret(cfg.get("api_key")),
+    }
 
 
 def _twilio_message_to_dict(message) -> Dict[str, Any]:
@@ -215,9 +360,9 @@ def _maybe_sync_messages(limit: int = 50) -> None:
     if now - cache.get("last_sync", 0.0) < 10:
         return
 
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
     try:
-        remote_messages = twilio_service.client.messages.list(limit=limit)
+        remote_messages = twilio_client.client.messages.list(limit=limit)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.warning("Unable to sync messages from Twilio: %s", exc)
         cache["last_sync"] = now
@@ -287,13 +432,15 @@ def inbound_message():
     except Exception as exc:  # noqa: BLE001
         app.logger.exception("Failed to store inbound message: %s", exc)
 
-    twilio_service: TwilioService = app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = app.config["TWILIO_CLIENT"]
 
-    # Generate auto-reply using chat engine
-    cfg = get_auto_reply_config()
+    ai_cfg = get_ai_config()
+    auto_cfg = get_auto_reply_config()
 
-    # If DB-driven auto-reply is enabled, enqueue for background worker
-    if cfg.get("enabled"):
+    ai_enabled = bool(ai_cfg.get("enabled"))
+    auto_enabled = bool(auto_cfg.get("enabled"))
+
+    if ai_enabled or auto_enabled:
         enqueue_auto_reply(
             app,
             sid=message_sid,
@@ -303,6 +450,8 @@ def inbound_message():
             received_at=received_at_iso,
         )
         return Response("OK", mimetype="text/plain")
+
+    # Generate auto-reply using chat engine when both AI and auto-reply are disabled
 
     # Otherwise, fall back to chat-engine based reply (synchronous send)
     reply_text = None
@@ -321,7 +470,7 @@ def inbound_message():
 
     if reply_text:
         try:
-            message = twilio_service.send_reply_to_inbound(
+            message = twilio_client.send_reply_to_inbound(
                 inbound_from=from_number,
                 inbound_to=to_number,
                 body=reply_text,
@@ -365,9 +514,313 @@ def api_update_auto_reply_config():
     if len(message) > 640:
         return jsonify({"error": "Treść auto-odpowiedzi nie może przekraczać 640 znaków."}), 400
 
+    if enabled:
+        ai_cfg = get_ai_config()
+        if ai_cfg.get("enabled"):
+            current_app.logger.info("Auto-reply enabling forces AI mode off")
+            set_ai_config(
+                enabled=False,
+                api_key=None,
+                system_prompt=None,
+                target_number=None,
+                model=None,
+                temperature=None,
+            )
+
     set_auto_reply_config(enabled=enabled, message=message)
     cfg = get_auto_reply_config()
     return jsonify({"enabled": bool(cfg.get("enabled")), "message": cfg.get("message", "")})
+
+
+@webhooks_bp.get("/api/ai/config")
+def api_get_ai_config():
+    cfg = get_ai_config()
+    return jsonify(_serialize_ai_config(cfg))
+
+
+@webhooks_bp.post("/api/ai/config")
+def api_update_ai_config():
+    payload = request.get_json(force=True, silent=True) or {}
+    enabled = bool(payload.get("enabled", False))
+    target_number = (payload.get("target_number") or "").strip()
+    system_prompt = payload.get("system_prompt")
+    model = (payload.get("model") or "gpt-4o-mini").strip()
+    temperature_raw = payload.get("temperature")
+
+    if temperature_raw is None:
+        temperature = None
+    else:
+        try:
+            temperature = float(temperature_raw)
+        except (TypeError, ValueError):
+            return jsonify({"error": "Temperatura musi być liczbą."}), 400
+        if temperature < 0 or temperature > 2:
+            return jsonify({"error": "Temperatura musi być w zakresie 0-2."}), 400
+
+    normalized_target = normalize_contact(target_number)
+    if enabled and not normalized_target:
+        return jsonify({"error": "Podaj numer uczestnika rozmowy."}), 400
+
+    api_key_provided = "api_key" in payload
+    api_key_value = payload.get("api_key") if api_key_provided else None
+    if api_key_provided:
+        api_key_value = (api_key_value or "").strip()
+
+    current_cfg = get_ai_config()
+    if enabled:
+        has_api_key = bool((current_cfg.get("api_key") or "").strip())
+        will_have_key = bool((api_key_value or "").strip()) or has_api_key
+        if not will_have_key:
+            return jsonify({"error": "Podaj klucz API, aby włączyć integrację AI."}), 400
+
+    updated_cfg = set_ai_config(
+        enabled=enabled,
+        api_key=api_key_value if api_key_provided else None,
+        system_prompt=system_prompt,
+        target_number=target_number,
+        model=model or None,
+        temperature=temperature,
+        enabled_source="ui",
+    )
+
+    if enabled:
+        auto_cfg = get_auto_reply_config()
+        if auto_cfg.get("enabled"):
+            current_app.logger.info("Disabling auto-reply because AI mode has been enabled")
+            set_auto_reply_config(enabled=False, message=auto_cfg.get("message", ""))
+
+    return jsonify(_serialize_ai_config(updated_cfg))
+
+
+@webhooks_bp.post("/api/ai/test")
+def api_test_ai_connection():
+    payload = request.get_json(force=True, silent=True) or {}
+    participant_override = (payload.get("participant") or "").strip()
+    message = (payload.get("message") or "").strip()
+    api_key_override = (payload.get("api_key") or "").strip()
+    history_limit_raw = payload.get("history_limit")
+    use_latest_message = payload.get("use_latest_message", True)
+
+    try:
+        history_limit = max(1, min(int(history_limit_raw), 200))
+    except (TypeError, ValueError):
+        history_limit = 20
+
+    cfg = get_ai_config()
+    api_key = api_key_override or (cfg.get("api_key") or "").strip()
+    if not api_key:
+        return jsonify({"error": "Brak klucza OpenAI. Wklej go w formularzu lub zapisz w konfiguracji."}), 400
+
+    target_number = participant_override or (cfg.get("target_number") or "").strip()
+    normalized_target = normalize_contact(target_number)
+    if not normalized_target:
+        return jsonify({"error": "Podaj numer rozmówcy w konfiguracji AI lub w polu 'participant'."}), 400
+
+    latest_message = None
+    if use_latest_message and not message:
+        candidates = list_messages(
+            limit=10,
+            direction="inbound",
+            participant_normalized=normalized_target,
+        )
+        for item in candidates:
+            body = (item.get("body") or "").strip()
+            if body:
+                latest_message = item
+                break
+
+    prompt_text = message or (latest_message.get("body") if latest_message else "")
+    fallback_prompt = "To jest test połączenia z OpenAI. Potwierdź, że wszystko działa."
+    used_latest_message = bool(latest_message and not message)
+    if not prompt_text:
+        prompt_text = fallback_prompt
+        used_latest_message = False
+
+    responder = AIResponder(
+        api_key=api_key,
+        model=(cfg.get("model") or "gpt-4o-mini").strip(),
+        system_prompt=cfg.get("system_prompt") or "",
+        temperature=float(cfg.get("temperature", 0.7) or 0.7),
+        history_limit=history_limit,
+    )
+
+    try:
+        reply = responder.build_reply(participant=target_number, latest_user_message=prompt_text)
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("AI test request failed: %s", exc)
+        return jsonify({"error": f"Żądanie OpenAI nie powiodło się: {exc}"}), 502
+
+    reply = (reply or "").strip()
+    if not reply:
+        return jsonify({"error": "OpenAI nie zwróciło treści odpowiedzi."}), 502
+
+    return jsonify(
+        {
+            "participant": target_number,
+            "participant_normalized": normalize_contact(target_number),
+            "input": prompt_text,
+            "reply": reply,
+            "model": responder.model,
+            "temperature": responder.temperature,
+            "history_limit": responder.history_limit,
+            "used_latest_message": used_latest_message,
+            "latest_message": latest_message,
+            "fallback_used": not message and not latest_message,
+        }
+    )
+
+
+@webhooks_bp.post("/api/ai/send")
+def api_ai_send_message():
+    """Generate an AI reply and send it via Twilio to a selected number.
+
+        Body JSON:
+            - participant: target phone number (optional; defaults to configured AI target)
+            - latest: optional latest user message to include
+            - history_limit: optional int, default 20
+            - api_key: optional override for OpenAI key (if not stored)
+    """
+
+    payload = request.get_json(force=True, silent=True) or {}
+    participant = (payload.get("participant") or "").strip()
+    latest = (payload.get("latest") or "").strip()
+    api_key_override = (payload.get("api_key") or "").strip()
+    history_limit_raw = payload.get("history_limit", 20)
+    try:
+        history_limit = max(1, min(int(history_limit_raw), 200))
+    except (TypeError, ValueError):
+        history_limit = 20
+
+    try:
+        result = send_ai_message_to_configured_target(
+            latest_user_message=latest or None,
+            history_limit=history_limit,
+            api_key_override=api_key_override or None,
+            participant_override=participant or None,
+        )
+    except AIReplyError as exc:
+        if exc.reply_text:
+            cfg = get_ai_config()
+            target_number = participant or (cfg.get("target_number") or "")
+            insert_message(
+                direction="outbound",
+                sid=None,
+                to_number=target_number,
+                from_number=current_app.config["TWILIO_SETTINGS"].default_from,
+                body=exc.reply_text,
+                status="failed",
+                error=str(exc),
+            )
+        return jsonify({"error": str(exc)}), exc.status_code
+
+    return jsonify(result), 201
+
+
+@webhooks_bp.post("/api/ai/reply")
+def api_ai_reply_to_inbound():
+    """Generate an AI reply and send it back to the sender of a specific inbound message.
+
+    Body JSON:
+      - inbound_from: required original sender number
+      - inbound_to: required Twilio number that received the message
+      - latest: optional latest user message content to include
+      - api_key: optional OpenAI key override
+      - history_limit: optional int, default 20
+    """
+
+    payload = request.get_json(force=True, silent=True) or {}
+    inbound_from = (payload.get("inbound_from") or "").strip()
+    inbound_to = (payload.get("inbound_to") or "").strip()
+    latest = (payload.get("latest") or "").strip()
+    api_key_override = (payload.get("api_key") or "").strip()
+    history_limit_raw = payload.get("history_limit", 20)
+
+    if not inbound_from or not inbound_to:
+        return jsonify({"error": "Wymagane pola: inbound_from oraz inbound_to."}), 400
+
+    try:
+        history_limit = max(1, min(int(history_limit_raw), 200))
+    except (TypeError, ValueError):
+        history_limit = 20
+
+    cfg = get_ai_config()
+    api_key = api_key_override or (cfg.get("api_key") or "").strip()
+    if not api_key:
+        return jsonify({"error": "Brak klucza OpenAI. Uzupełnij konfigurację lub podaj api_key w żądaniu."}), 400
+
+    responder = AIResponder(
+        api_key=api_key,
+        model=(cfg.get("model") or "gpt-4o-mini").strip(),
+        system_prompt=cfg.get("system_prompt") or "",
+        temperature=float(cfg.get("temperature", 0.7) or 0.7),
+        history_limit=history_limit,
+    )
+
+    try:
+        reply_text = responder.build_reply(participant=inbound_from, latest_user_message=latest or None)
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("AI reply generation failed: %s", exc)
+        return jsonify({"error": f"Generowanie odpowiedzi nie powiodło się: {exc}"}), 502
+
+    reply_text = (reply_text or "").strip()
+    if not reply_text:
+        return jsonify({"error": "OpenAI nie zwróciło treści odpowiedzi."}), 502
+
+    try:
+        message = _send_ai_reply_message(inbound_from=inbound_from, inbound_to=inbound_to, reply_text=reply_text)
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Twilio send failed: %s", exc)
+        insert_message(
+            direction="outbound",
+            sid=None,
+            to_number=inbound_from,
+            from_number=inbound_to,
+            body=reply_text,
+            status="failed",
+            error=str(exc),
+        )
+        return jsonify({"error": f"Wysyłka SMS nie powiodła się: {exc}"}), 502
+
+    return jsonify(
+        {
+            "to": inbound_from,
+            "from": inbound_to,
+            "body": reply_text,
+            "sid": getattr(message, "sid", None),
+            "status": getattr(message, "status", None),
+            "model": responder.model,
+            "temperature": responder.temperature,
+            "history_limit": responder.history_limit,
+        }
+    ), 201
+
+
+@webhooks_bp.get("/api/ai/conversation")
+def api_get_ai_conversation():
+    participant = (request.args.get("participant") or "").strip()
+    limit_raw = request.args.get("limit", "50")
+    try:
+        limit = max(1, min(200, int(limit_raw)))
+    except ValueError:
+        limit = 50
+
+    normalized = ""
+    if not participant:
+        cfg = get_ai_config()
+        participant = (cfg.get("target_number") or "").strip()
+        normalized = cfg.get("target_number_normalized") or normalize_contact(participant)
+    else:
+        normalized = normalize_contact(participant)
+
+    if not normalized:
+        return jsonify({"participant": "", "items": []})
+
+    messages = list_messages(
+        limit=limit,
+        participant_normalized=normalized,
+        ascending=True,
+    )
+    return jsonify({"participant": participant, "items": messages})
 
 
 @webhooks_bp.get("/api/reminders")
@@ -491,7 +944,7 @@ def api_send_message():
     if not any([body, content_sid, media_urls]):
         return jsonify({"error": "Provide at least one of: 'body', 'content_sid', or 'media_urls'."}), 400
 
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
 
     try:
         extra_params: Dict[str, Any] = {}
@@ -502,7 +955,7 @@ def api_send_message():
         if content_variables:
             extra_params["content_variables"] = content_variables
 
-        message = twilio_service.send_message(
+        message = twilio_client.send_message(
             to=to,
             body=body or "",
             use_messaging_service=use_ms,
@@ -511,7 +964,7 @@ def api_send_message():
         )
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Error while sending message")
-        origin = twilio_service.settings.default_from
+        origin = twilio_client.settings.default_from
         insert_message(
             direction="outbound",
             sid=None,
@@ -610,9 +1063,9 @@ def api_remote_messages():
     if date_sent_after:
         filters["date_sent_after"] = date_sent_after
 
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
     try:
-        remote_messages = twilio_service.list_messages(**filters)
+        remote_messages = twilio_client.list_messages(**filters)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Unable to list messages")
         return jsonify({"error": str(exc)}), 500
@@ -634,9 +1087,9 @@ def api_remote_messages():
 
 @webhooks_bp.get("/api/messages/<sid>")
 def api_message_detail(sid: str):
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
     try:
-        message = twilio_service.fetch_message(sid)
+        message = twilio_client.fetch_message(sid)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Unable to fetch message %s", sid)
         return jsonify({"error": str(exc)}), 404
@@ -647,9 +1100,9 @@ def api_message_detail(sid: str):
 
 @webhooks_bp.post("/api/messages/<sid>/redact")
 def api_redact_message(sid: str):
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
     try:
-        message = twilio_service.redact_message(sid)
+        message = twilio_client.redact_message(sid)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Unable to redact message %s", sid)
         return jsonify({"error": str(exc)}), 400
@@ -660,9 +1113,9 @@ def api_redact_message(sid: str):
 
 @webhooks_bp.delete("/api/messages/<sid>")
 def api_delete_message(sid: str):
-    twilio_service: TwilioService = current_app.config["TWILIO_SERVICE"]
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
     try:
-        twilio_service.delete_message(sid)
+        twilio_client.delete_message(sid)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Unable to delete message %s", sid)
         return jsonify({"error": str(exc)}), 400

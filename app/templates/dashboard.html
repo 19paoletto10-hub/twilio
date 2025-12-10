@@ -31,6 +31,11 @@
           Przypomnienia
         </button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-ai-btn" data-bs-toggle="tab" data-bs-target="#tab-ai" type="button" role="tab" aria-controls="tab-ai" aria-selected="false">
+          AI
+        </button>
+      </li>
     </ul>
 
     <div class="tab-content">
@@ -256,6 +261,108 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-ai" role="tabpanel" aria-labelledby="tab-ai-btn" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Integracja z AI</p>
+                  <h2 class="h5 mb-0">Konfiguracja OpenAI</h2>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis" id="ai-status-badge">Wyłączone</span>
+              </div>
+              <div class="card-body">
+                <form id="ai-config-form" novalidate>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" role="switch" id="ai-enabled">
+                    <label class="form-check-label" for="ai-enabled">Włącz prowadzenie rozmowy z wybranym numerem przez AI</label>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ai-target-number" class="form-label">Numer uczestnika rozmowy</label>
+                    <input type="tel" class="form-control" id="ai-target-number" placeholder="np. +48123456789">
+                    <div class="form-text">Wszystkie nowe wiadomości z tego numeru będą obsługiwane przez AI.</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ai-system-prompt" class="form-label">Prompt systemowy</label>
+                    <textarea class="form-control" id="ai-system-prompt" rows="3" placeholder="Np. Jesteś asystentem obsługi klienta, który odpowiada krótko i po polsku."></textarea>
+                    <div class="form-text">Dynamicznie definiuj rolę i styl asystenta.</div>
+                  </div>
+
+                  <div class="row g-3 mb-3">
+                    <div class="col-sm-6">
+                      <label for="ai-model" class="form-label">Model</label>
+                      <input type="text" class="form-control" id="ai-model" placeholder="gpt-4o-mini">
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="ai-temperature" class="form-label">Temperatura</label>
+                      <input type="number" step="0.1" min="0" max="2" class="form-control" id="ai-temperature" placeholder="0.7">
+                    </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="ai-api-key" class="form-label">OpenAI API key</label>
+                    <input type="password" class="form-control" id="ai-api-key" autocomplete="off" placeholder="sk-...">
+                    <div class="form-text" id="ai-api-key-preview">Brak zapisanego klucza.</div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button type="submit" class="btn btn-primary" id="ai-save-btn">
+                      <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                      Zapisz konfigurację
+                    </button>
+                    <small class="text-muted" id="ai-updated-at"></small>
+                  </div>
+                </form>
+
+                <hr class="my-4">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Test połączenia</p>
+                  <p class="small text-muted mb-3">
+                    Wyślij przykładową wiadomość tylko do OpenAI, aby upewnić się, że konfiguracja działa (bez wysyłki SMS).
+                    Gdy pozostawisz pole puste, użyjemy ostatniej wiadomości otrzymanej od numeru obsługiwanego przez AI.
+                    Możesz wkleić klucz API w polu powyżej i użyć go do testu bez zapisywania.
+                  </p>
+
+                  <div class="mb-3">
+                    <label for="ai-test-message" class="form-label">Wiadomość testowa</label>
+                    <textarea class="form-control" id="ai-test-message" rows="2" placeholder="Np. Cześć, to jest test. Jak się masz?"></textarea>
+                    <div class="form-text">Zostanie potraktowana jako ostatni komunikat użytkownika w rozmowie.</div>
+                  </div>
+
+                  <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <button type="button" class="btn btn-outline-primary" id="ai-test-btn">
+                      <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                      Przetestuj połączenie
+                    </button>
+                    <small class="text-muted" id="ai-test-status">&nbsp;</small>
+                  </div>
+
+                  <div class="alert alert-light border mt-3 d-none" id="ai-test-result"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Podgląd konwersacji</p>
+                <h2 class="h5 mb-0">Historia czatu z AI</h2>
+              </div>
+              <div class="card-body">
+                <div class="small text-muted mb-2">Wyświetlane są wiadomości z historii rozmowy z wybranym numerem.</div>
+                <div id="ai-conversation" class="border rounded p-2 bg-light-subtle" style="max-height: 320px; overflow-y: auto;">
+                  <p class="text-muted mb-0">Brak danych. Skonfiguruj AI i wybierz numer rozmówcy.</p>
                 </div>
               </div>
             </div>
