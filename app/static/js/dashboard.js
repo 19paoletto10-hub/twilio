@@ -852,9 +852,17 @@
         ? `<a class="btn btn-outline-primary btn-sm" href="${chatUrl}">Otwórz</a>`
         : '—';
       const bodyPreview = escapeHtml(buildMessagePreview(item.body));
+      const rowClasses = ['messages-row'];
+      if (chatUrl) {
+        rowClasses.push('messages-row--clickable');
+      }
+      const rowAttrs = [
+        `class="${rowClasses.join(' ')}"`,
+        chatUrl ? `data-chat-url="${chatUrl}"` : ''
+      ].filter(Boolean).join(' ');
 
       return `
-        <tr>
+        <tr ${rowAttrs}>
           <td class="text-nowrap">${directionCell}</td>
           <td class="text-nowrap" title="${escapeHtml(participant.main)}">
             <div class="messages-participant">
@@ -881,6 +889,21 @@
     });
 
     tableBody.innerHTML = rows.join('');
+  };
+
+  const handleMessagesRowClick = (event) => {
+    const interactiveTarget = event.target.closest('a, button, input, textarea, select, label');
+    if (interactiveTarget) {
+      return;
+    }
+
+    const row = event.target.closest('tr[data-chat-url]');
+    if (!row) return;
+
+    const url = row.getAttribute('data-chat-url');
+    if (!url) return;
+
+    window.location.href = url;
   };
 
   const refreshMessages = async () => {
@@ -1002,6 +1025,7 @@
     if (form && sendButton && tableBody) {
       form.addEventListener('submit', submitForm);
       filterButtons.forEach((button) => button.addEventListener('click', handleFilterClick));
+      tableBody.addEventListener('click', handleMessagesRowClick);
       refreshMessages();
       refreshStats();
       startAutoRefresh();

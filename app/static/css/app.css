@@ -83,6 +83,9 @@ body {
   font-size: 0.85rem;
   color: #212529;
 }
+.messages-row--clickable {
+  cursor: pointer;
+}
 
 .messages-datetime__date {
   font-size: 0.75rem;

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Twilio Chat App – ver3.0.1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 2rem auto; max-width: 900px; line-height: 1.6; color: #222; }
+    h1, h2, h3 { color: #111; }
+    code { background: #f5f5f5; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    .tag { font-family: monospace; background: #eef; padding: 0.1rem 0.4rem; border-radius: 3px; }
+    .meta { font-size: 0.9rem; color: #555; margin-bottom: 1.5rem; }
+    ul { margin-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Twilio Chat App – <span class="tag">ver3.0.1</span></h1>
+  <p class="meta">
+    Release tag: <code>ver3.0.1</code><br />
+    Data wydania: 2025-12-10<br />
+    Środowisko referencyjne: Docker (Python 3.12, gunicorn)
+  </p>
+
+  <h2>Podsumowanie</h2>
+  <p>
+    To wydanie skupia się na dopracowaniu panelu WWW i ergonomii pracy operatora.
+    Rozszerza możliwości podglądu rozmów, ułatwia nawigację do widoku czatu oraz
+    porządkuje sposób prezentacji historii wiadomości – bez zmian w publicznych
+    endpointach HTTP i bez ingerencji w istniejące integracje Twilio.
+  </p>
+
+  <h2>Technologie i środowisko</h2>
+  <ul>
+    <li>Język: Python 3.12 (obraz bazowy <code>python:3.12-slim</code>).</li>
+    <li>Framework backendowy: Flask 3.0.3.</li>
+    <li>Serwer HTTP w produkcji: <code>gunicorn</code> (2 workerów, 4 wątki każdy).</li>
+    <li>Baza danych: SQLite (plikowo, domyślnie <code>data/app.db</code>).</li>
+    <li>Integracje zewnętrzne:
+      <ul>
+        <li>Twilio (<code>twilio==9.3.1</code>) – obsługa SMS/MMS, webhooki, statusy.</li>
+        <li>OpenAI (<code>openai==1.59.3</code>) – generowanie odpowiedzi AI.</li>
+      </ul>
+    </li>
+    <li>Uruchomienie produkcyjne przez Docker/Docker Compose (port 3000, healthcheck na <code>/api/health</code>).</li>
+  </ul>
+
+  <h2>Zakres zmian w ver3.0.1</h2>
+
+  <h3>1. Ulepszona historia wiadomości w panelu</h3>
+  <ul>
+    <li>Przebudowano tabelę historii wiadomości (zakładka „Wiadomości”) tak, aby była bardziej czytelna i przyjazna przy większej liczbie wpisów:
+      <ul>
+        <li>każda wiadomość prezentuje skrócony, jednowierszowy podgląd treści (pełna treść dostępna w atrybucie <code>title</code> po najechaniu kursorem),</li>
+        <li>czas wysłania/odebrania podzielono na godzinę i datę w dedykowanej kolumnie,</li>
+        <li>informacja o uczestniku (numer) zawiera teraz także kontekst kanału i kierunku (np. <code>WhatsApp • od klienta</code>, <code>SMS • do klienta</code>).</li>
+      </ul>
+    </li>
+    <li>Ujednolicono wygląd kolumny uczestnika oraz pola czasu we wszystkich filtrach historii („Wszystkie”, „Przychodzące”, „Wychodzące”), dzięki czemu tabela zachowuje spójny layout niezależnie od użytego filtra.</li>
+  </ul>
+
+  <h3>2. Szybsza nawigacja do widoku czatu</h3>
+  <ul>
+    <li>Dodano możliwość wejścia do widoku pełnego czatu (ścieżka <code>/chat/&lt;numer&gt;</code>) nie tylko przez przycisk w kolumnie „Czat”, lecz także przez kliknięcie wiersza w tabeli historii wiadomości.</li>
+    <li>Klikalne są wszystkie wiersze, dla których aplikacja zna uczestnika rozmowy (numer telefonu lub adres kanału, np. <code>whatsapp:+48123…</code>).</li>
+    <li>Kliknięcie w elementy interaktywne w wierszu (np. przycisk „Otwórz”) nadal działa jak dotychczas – mechanizm nawigacji po wierszu został zaprojektowany tak, aby nie kolidować z istniejącymi kontrolkami.</li>
+  </ul>
+
+  <h3>3. Konsekwentne oznaczenia uczestnika i kanału</h3>
+  <ul>
+    <li>Wprowadzono helper odpowiedzialny za budowanie etykiet uczestnika na frontendzie (dla każdego wpisu w historii wiadomości):
+      <ul>
+        <li>rozpoznaje kanał po prefiksie (<code>whatsapp:</code>, <code>sms:</code>, <code>mms:</code>),</li>
+        <li>normalizuje wartość do czytelnej postaci (usuwając prefiks do wyświetlenia),</li>
+        <li>dodaje opis roli (<code>od klienta</code> / <code>do klienta</code>) w zależności od kierunku wiadomości (<code>inbound</code>/<code>outbound</code>).</li>
+      </ul>
+    </li>
+    <li>Dzięki temu operator od razu widzi, czy dana wiadomość pochodziła od klienta, czy została wysłana z aplikacji, a także przez jaki kanał dotarła.</li>
+  </ul>
+
+  <h3>4. Uspójnienie doświadczenia użytkownika (UX)</h3>
+  <ul>
+    <li>Drobne poprawki stylistyczne w tabeli historii:
+      <ul>
+        <li>specjalne klasy stylów dla kolumny uczestnika (dwuliniowa prezentacja: numer + opis meta),</li>
+        <li>małe, spójne opisy czasu z rozdzieleniem godziny i daty,</li>
+        <li>kursor <code>pointer</code> dla klikanych wierszy, aby wizualnie sugerować możliwość przejścia do szczegółów rozmowy.</li>
+      </ul>
+    </li>
+    <li>Zmiany te wpisują się w istniejący wygląd dashboardu (skeleton loading, nowoczesne karty, gradientowy nagłówek), nie wprowadzając nowych zależności ani łamiących zmian w HTML szablonu.</li>
+  </ul>
+
+  <h2>Kompatybilność i upgrade</h2>
+  <ul>
+    <li>Brak zmian w publicznych endpointach HTTP ani w modelu danych. Aktualizacja do <code>ver3.0.1</code> jest w pełni kompatybilna z backendem wprowadzonym w <code>ver3.0.0</code>.</li>
+    <li>Zmiany obejmują wyłącznie warstwę frontendową (CSS/JS) oraz zachowanie panelu WWW – backend API oraz logika AI/auto‑reply pozostają bez zmian.</li>
+    <li>Po stronie operatora nie są wymagane dodatkowe kroki poza wdrożeniem nowej wersji obrazu/kodu:
+      <ul>
+        <li>Zaktualizuj aplikację do commita/tagu <code>ver3.0.1</code>.</li>
+        <li>Odbuduj obraz Dockera lub przeprowadź standardowy deployment.</li>
+        <li>Odśwież panel WWW w przeglądarce, aby załadować nowe zasoby statyczne.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Tworzenie GitHub Release z tego tagu</h2>
+  <ol>
+    <li>Wejdź na stronę repozytorium w GitHub.</li>
+    <li>Przejdź do zakładki <strong>Releases</strong> i wybierz <strong>Draft a new release</strong>.</li>
+    <li>W polu <strong>Tag</strong> wybierz istniejący tag <code>ver3.0.1</code>.</li>
+    <li>Jako <strong>Release title</strong> wpisz: <code>ver3.0.1 – UX improvements for dashboard message history</code>.</li>
+    <li>Skopiuj treść z pliku <code>deploy/releases/ver3.0.1.md</code> lub użyj tej strony HTML jako załączonego artefaktu.</li>
+    <li>Opublikuj release przyciskiem <strong>Publish release</strong>.</li>
+  </ol>
+</body>
+</html>
