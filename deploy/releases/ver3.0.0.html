@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Twilio Chat App – ver3.0.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 2rem auto; max-width: 900px; line-height: 1.6; color: #222; }
+    h1, h2, h3 { color: #111; }
+    code { background: #f5f5f5; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    .tag { font-family: monospace; background: #eef; padding: 0.1rem 0.4rem; border-radius: 3px; }
+    .meta { font-size: 0.9rem; color: #555; margin-bottom: 1.5rem; }
+    ul { margin-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Twilio Chat App – <span class="tag">ver3.0.0</span></h1>
+  <p class="meta">
+    Release tag: <code>ver3.0.0</code><br />
+    Data wydania: 2025-12-10<br />
+    Środowisko referencyjne: Docker (Python 3.12, gunicorn)
+  </p>
+
+  <h2>Podsumowanie</h2>
+  <p>
+    To wydanie koncentruje się na wprowadzeniu trybu <strong>AI auto‑reply</strong> opartego o OpenAI,
+    uporządkowaniu klienta Twilio oraz higienie repozytorium. Aplikacja pozostaje kompatybilna
+    z istniejącymi integracjami HTTP, a główne zmiany dotyczą sposobu generowania i wysyłania
+    odpowiedzi SMS.
+  </p>
+
+  <h2>Technologie i środowisko</h2>
+  <ul>
+    <li>Język: Python 3.12 (obraz bazowy <code>python:3.12-slim</code>).</li>
+    <li>Framework backendowy: Flask 3.0.3.</li>
+    <li>Serwer HTTP w produkcji: <code>gunicorn</code> (2 workerów, 4 wątki każdy).</li>
+    <li>Baza danych: SQLite (plikowo, domyślnie <code>data/app.db</code>).</li>
+    <li>Integracje zewnętrzne:
+      <ul>
+        <li>Twilio (<code>twilio==9.3.1</code>) – obsługa SMS/MMS, webhooki, statusy.</li>
+        <li>OpenAI (<code>openai==1.59.3</code>) – generowanie odpowiedzi AI.</li>
+      </ul>
+    </li>
+    <li>Uruchomienie produkcyjne przez Docker/Docker Compose (port 3000, healthcheck na <code>/api/health</code>).</li>
+  </ul>
+
+  <h2>Kluczowe funkcje aplikacji</h2>
+  <ul>
+    <li>Webhooki Twilio: <code>/twilio/inbound</code>, <code>/twilio/status</code>.</li>
+    <li>REST API: wysyłanie SMS/MMS, pobieranie/sync wiadomości, redakcja i kasowanie.</li>
+    <li>Panel WWW: dashboard, widok czatu, konfiguracja auto‑reply i AI.</li>
+    <li>Auto‑reply: worker w tle, kolejka w pamięci, deduplikacja SID, walidacja numerów w E.164.</li>
+    <li>Tryb AI auto‑reply – globalne odpowiedzi AI na przychodzące SMS-y, z wykorzystaniem historii rozmowy.</li>
+  </ul>
+
+  <h2>Zmiany w ver3.0.0</h2>
+
+  <h3>1. Nowy tryb AI auto‑reply</h3>
+  <ul>
+    <li>System automatycznie odpowiada na wszystkie przychodzące SMS-y, wykorzystując model OpenAI oraz historię rozmowy przechowywaną w SQLite (<code>messages</code>).</li>
+    <li>Włączenie AI (<code>AI_ENABLED=true</code> lub z poziomu UI) powoduje, że klasyczny auto‑reply oparty o szablon zostaje wyłączony – brak podwójnych odpowiedzi.</li>
+    <li>Historia konwersacji jest budowana na podstawie wiadomości inbound/outbound dla danego numeru, co pozwala generować spójne, kontekstowe odpowiedzi.</li>
+  </ul>
+
+  <h3>2. Wzajemne wykluczenie AI i klasycznego auto‑reply</h3>
+  <ul>
+    <li>Backend egzekwuje zasadę, że tryb AI auto‑reply i klasyczny auto‑reply nie działają równocześnie.</li>
+    <li>Jeżeli AI jest aktywne dla danego numeru docelowego, worker auto‑reply nie kolejkuje ani nie wysyła odpowiedzi – całość obsługuje AI.</li>
+    <li>Gdy AI jest wyłączone, a auto‑reply włączone, działa dotychczasowy worker oparty o <code>auto_reply_config.message</code>.</li>
+  </ul>
+
+  <h3>3. Refaktoryzacja klienta Twilio</h3>
+  <ul>
+    <li>Ujednolicone nazewnictwo: w całej aplikacji używany jest <code>twilio_client</code> oparty o klasę <code>TwilioService</code> z <code>app/twilio_client.py</code>.</li>
+    <li>Dodano metodę <code>send_reply_to_inbound(inbound_from, inbound_to, body)</code>, która:
+      <ul>
+        <li>preferuje Messaging Service, jeśli jest skonfigurowany,</li>
+        <li>w przeciwnym razie używa numeru, na który przyszła wiadomość (<code>inbound_to</code>) lub <code>TWILIO_DEFAULT_FROM</code>,</li>
+        <li>utrzymuje poprawny wątek konwersacji po stronie Twilio.</li>
+      </ul>
+    </li>
+    <li>Metody <code>send_message</code> i <code>send_with_default_origin</code> pozostają dostępne (np. CLI, scheduler przypomnień).</li>
+  </ul>
+
+  <h3>4. Uporządkowana dokumentacja</h3>
+  <ul>
+    <li><code>README.md</code> zawiera aktualny opis trybu AI auto‑reply, klasycznego auto‑reply oraz fallbackowego bota (<code>chat_logic.py</code>).</li>
+    <li>Doprecyzowano zachowanie w zależności od ustawień AI/auto‑reply, w tym scenariusz fallbacku do prostego bota.</li>
+  </ul>
+
+  <h3>5. Higiena repozytorium</h3>
+  <ul>
+    <li>Usunięto przypadkowo skomitowany katalog <code>.venv</code> z historii bieżącej gałęzi.</li>
+    <li>Dodano <code>.venv/</code> do <code>.gitignore</code>, aby środowisko wirtualne było tworzone lokalnie, poza kontrolą wersji.</li>
+  </ul>
+
+  <h2>Kompatybilność i zalecenia upgrade</h2>
+  <ul>
+    <li>Publiczne endpointy HTTP pozostają bez zmian – integracje oparte o API nie wymagają aktualizacji.</li>
+    <li>Po włączeniu AI sposób generowania odpowiedzi SMS zmienia się z prostego szablonu na odpowiedzi generowane przez OpenAI, przy zachowaniu tych samych webhooków.</li>
+    <li>Zalecane kroki po aktualizacji do <code>ver3.0.0</code>:
+      <ul>
+        <li>Zaktualizuj kod aplikacji do commita/tagu <code>ver3.0.0</code>.</li>
+        <li>Upewnij się, że środowisko wirtualne nie jest śledzone przez git (<code>.venv/</code> ignorowane).</li>
+        <li>Ustaw zmienne środowiskowe <code>TWILIO_*</code>, <code>OPENAI_*</code> oraz <code>AI_*</code> zgodnie z sekcją "Zmienne środowiskowe" w <code>README.md</code>.</li>
+        <li>Zweryfikuj działanie webhooków Twilio (<code>/twilio/inbound</code>, <code>/twilio/status</code>) oraz healthchecka <code>/api/health</code>.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>Tworzenie GitHub Release z tego tagu</h2>
+  <ol>
+    <li>Wejdź na stronę repozytorium w GitHub.</li>
+    <li>Przejdź do zakładki <strong>Releases</strong> i wybierz <strong>Draft a new release</strong>.</li>
+    <li>W polu <strong>Tag</strong> wybierz istniejący tag <code>ver3.0.0</code>.</li>
+    <li>Jako <strong>Release title</strong> wpisz: <code>ver3.0.0 – AI auto-reply and Twilio client cleanup</code>.</li>
+    <li>Skopiuj treść z pliku <code>deploy/releases/ver3.0.0.md</code> lub użyj tej strony HTML jako załączonego artefaktu.</li>
+    <li>Opublikuj release przyciskiem <strong>Publish release</strong>.</li>
+  </ol>
+</body>
+</html>
