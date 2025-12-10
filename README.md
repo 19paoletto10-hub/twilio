@@ -113,3 +113,25 @@ Zalecane: montuj `./data`, aby zachować bazę SQLite (`DB_PATH`).
 - Dodaj własny silnik w `chat_logic.py` i zaktualizuj `build_chat_engine()`.
 - Rozszerz API/blueprinty według potrzeb.
 - Dodaj dodatkowe kanały (np. WhatsApp) i walidację numerów.
+
+## Wydanie ver3.0.0
+
+### Najważniejsze zmiany
+
+- **Nowy tryb AI auto-reply**  
+  System może teraz automatycznie odpowiadać na wszystkie przychodzące SMS-y z użyciem modelu OpenAI, z uwzględnieniem historii rozmowy. Gdy AI jest włączone (przez env lub UI), klasyczny auto‑reply jest automatycznie wyłączany – unikamy podwójnych odpowiedzi i nieprzewidywalnego zachowania.
+
+- **Refaktoryzacja klienta Twilio**  
+  Ujednolicone nazewnictwo klienta (`twilio_client`) w całej aplikacji. Odpowiedzi na wiadomości przychodzące korzystają z `send_reply_to_inbound`, co poprawia spójność wątków konwersacji po stronie Twilio. Zachowane zostały istniejące endpointy HTTP, dzięki czemu integracje nie wymagają zmian.
+
+- **Poprawiona dokumentacja i konfiguracja**  
+  `README.md` jasno opisuje teraz zasady działania AI auto‑reply, klasycznego auto‑reply oraz fallbackowego bota. Doprecyzowano rozłączność trybów (AI vs auto‑reply) oraz rekomendowane ustawienia środowiskowe.
+
+- **Higiena repozytorium**  
+  Usunięto przypadkowo skomitowany katalog `.venv` z historii bieżącej gałęzi. Dodano `.venv/` do `.gitignore`, aby uniknąć mieszania kodu aplikacji z zależnościami środowiska.
+
+### Kompatybilność i upgrade
+
+- Publiczne endpointy HTTP pozostają bez zmian – aktualizacja do `ver3.0.0` nie wymaga zmian w integracjach.
+- Jeśli włączysz AI, logika odpowiedzi SMS przełączy się z klasycznego auto‑reply na odpowiedzi generowane przez model OpenAI.
+- Po aktualizacji zaleca się odtworzenie środowiska wirtualnego lokalnie (`python -m venv venv`, `pip install -r requirements.txt`), zamiast trzymać je w repozytorium.
