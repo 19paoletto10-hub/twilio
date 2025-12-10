@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Twilio Chat App — Pełna dokumentacja</title>
+  <meta name="description" content="Profesjonalna dokumentacja produktu Twilio Chat App — opis funkcji, architektury, UX i scenariuszy biznesowych.">
+  <style>
+    :root{--bg:#f7f9fb;--card:#ffffff;--muted:#6c757d;--accent:#0d6efd;--accent-2:#0b5ed7}
+    html,body{height:100%}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;line-height:1.6;color:#172042;background:var(--bg)}
+    .container{max-width:1100px;margin:36px auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .brand{display:flex;gap:16px;align-items:center}
+    .logo{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
+    h1{font-size:1.6rem;margin:0}
+    .meta{color:var(--muted);font-size:0.95rem}
+    nav.toc{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap}
+    nav.toc a{background:#fff;padding:8px 12px;border-radius:999px;border:1px solid #e6eefb;color:var(--accent);text-decoration:none;font-weight:600}
+    section.card{background:var(--card);padding:20px;border-radius:10px;margin-top:18px;box-shadow:0 6px 18px rgba(20,30,60,0.04)}
+    .row{display:grid;grid-template-columns:1fr 340px;gap:20px}
+    .lead{color:var(--muted);margin-bottom:12px}
+    .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+    .feature{background:#f8fbff;padding:12px;border-radius:8px;border:1px solid #eaf4ff}
+    aside.sidebar{position:sticky;top:24px;height:max-content}
+    .screenshot{background:#eef4ff;border-radius:8px;border:1px dashed #dbeefe;padding:12px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted)}
+    figure{margin:0}
+    figcaption{font-size:0.9rem;color:var(--muted);margin-top:8px}
+    .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:700}
+    table.spec{width:100%;border-collapse:collapse;margin-top:12px}
+    table.spec td,table.spec th{padding:8px;border-bottom:1px solid #eef2fb}
+    .code{background:#0f1724;color:#f1f5f9;padding:6px 8px;border-radius:6px;font-family:monospace}
+    footer{margin-top:28px;text-align:center;color:var(--muted);font-size:0.9rem}
+    @media(max-width:920px){.row{grid-template-columns:1fr}.sidebar{position:relative}} 
+  </style>
+  <script>
+    document.addEventListener('click', (e)=>{
+      const a = e.target.closest('a[data-scroll]');
+      if(!a) return;
+      e.preventDefault(); document.querySelector(a.getAttribute('href')).scrollIntoView({behavior:'smooth'});
+    });
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">TC</div>
+        <div>
+          <h1>Twilio Chat App — Kompleksowa dokumentacja</h1>
+          <div class="meta">Opis produktu, architektura, scenariusze biznesowe &amp; wskazówki wdrożeniowe</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="meta">ver3.0.1 • 2025-12-10</div>
+        <a class="cta" href="#download">Pobierz PDF</a>
+      </div>
+    </header>
+
+    <nav class="toc" aria-label="Spis treści">
+      <a data-scroll href="#overview">Przegląd</a>
+      <a data-scroll href="#features">Funkcje</a>
+      <a data-scroll href="#architecture">Architektura</a>
+      <a data-scroll href="#ux">Panel & UX</a>
+      <a data-scroll href="#ai">AI & Auto‑reply</a>
+      <a data-scroll href="#deploy">Deployment</a>
+    </nav>
+
+    <div class="row">
+      <main>
+        <section id="overview" class="card">
+          <h2>Przegląd rozwiązania</h2>
+          <p class="lead">Twilio Chat App to dedykowane rozwiązanie dla firm, które potrzebują bezpiecznego, kontrolowanego kanału komunikacji SMS/MMS z możliwością automatyzacji i integracji z modelami AI. Produkt łączy prostotę obsługi z polityką audytowalności i pełnym zapisem danych.</p>
+          <div class="features">
+            <div class="feature"><strong>Panel operatora</strong><div class="muted">Intuicyjny interfejs dla zespołów obsługi</div></div>
+            <div class="feature"><strong>Auto‑reply & AI</strong><div class="muted">Tryby automatycznych odpowiedzi z logiką biznesową</div></div>
+            <div class="feature"><strong>REST API</strong><div class="muted">Integracja z systemami CRM i narzędziami zewnętrznymi</div></div>
+            <div class="feature"><strong>SQLite</strong><div class="muted">Łatwa persystencja i prosty backup plikowy</div></div>
+          </div>
+        </section>
+
+        <section id="features" class="card">
+          <h2>Kluczowe funkcje</h2>
+          <ul>
+            <li>Webhooki Twilio: przyjmowanie inbound i status callbacks</li>
+            <li>Auto‑reply (klasyczny): szablon tekstowy z deduplikacją i walidacją numerów</li>
+            <li>AI auto‑reply: integracja z OpenAI, historia rozmowy jako kontekst</li>
+            <li>Przypomnienia: scheduler cykliczny do powiadomień</li>
+          </ul>
+          <figure style="margin-top:12px">
+            <div class="screenshot">[Screenshot: Dashboard – statystyki i wysyłka]<br><small class="muted">(wstaw screen: dashboard_stats.png)</small></div>
+            <figcaption>Widok statystyk i formularz wysyłki — szybkie KPI dla zespołu</figcaption>
+          </figure>
+        </section>
+
+        <section id="architecture" class="card">
+          <h2>Architektura techniczna</h2>
+          <p class="lead">Modularna aplikacja Flask z dedykowanymi modułami integracji i workerami. Poniżej zwięzłe mapowanie komponentów.</p>
+          <table class="spec">
+            <tr><th>Komponent</th><th>Rola</th></tr>
+            <tr><td>`webhooks_bp`</td><td>HTTP webhooki Twilio i API</td></tr>
+            <tr><td>`ai_service`</td><td>Generowanie odpowiedzi AI i budowa kontekstu</td></tr>
+            <tr><td>`twilio_client`</td><td>Warstwa wysyłki wiadomości i zarządzania wątkami</td></tr>
+            <tr><td>`database.py`</td><td>SQLite, migracje, helpery biznesowe</td></tr>
+          </table>
+        </section>
+
+        <section id="ux" class="card">
+          <h2>Panel WWW — UX i scenariusze użycia</h2>
+          <p class="lead">Zaprojektowany pod kątem wydajności operatora: czytelne karty, inteligentne filtry i klikalne wiersze historii upraszczają pracę.</p>
+          <h3>Historia wiadomości</h3>
+          <p>Jednowierszowy podgląd treści, meta kanału i rola (od/do klienta), statusy oraz czas rozbity na godzinę i datę.</p>
+          <figure style="margin-top:12px">
+            <div class="screenshot">[Screenshot: Historia wiadomości – tabela]<br><small class="muted">(wstaw screen: messages_table.png)</small></div>
+            <figcaption>Przykładowy wiersz z meta kanału oraz przyciskiem szybkiej nawigacji do czatu</figcaption>
+          </figure>
+        </section>
+
+        <section id="ai" class="card">
+          <h2>AI & Auto‑reply — zasady działania</h2>
+          <p class="lead">AI działa jako globalny tryb auto‑reply; klasyczny auto‑reply jest wyłączany, gdy AI jest aktywne. Dodatkowo każdy tryb operuje tylko na wiadomościach nowszych niż punkt aktywacji (bez retro‑odpowiedzi).</p>
+          <ol>
+            <li>AI buduje historię rozmowy z tabeli `messages` i wysyła zapytanie do OpenAI.</li>
+            <li>Odpowiedzi są wysyłane tak, aby zachować wątek konwersacji (preferowana metoda `send_reply_to_inbound`).</li>
+            <li>Operator może przetestować model w zakładce AI bez wysyłania SMS (endpoint `POST /api/ai/test`).</li>
+          </ol>
+          <figure style="margin-top:12px">
+            <div class="screenshot">[Screenshot: AI config & conversation preview]<br><small class="muted">(wstaw screen: ai_panel.png)</small></div>
+            <figcaption>Interfejs konfiguracji AI oraz podgląd rozmowy w formie bąbelków</figcaption>
+          </figure>
+        </section>
+
+        <section id="deploy" class="card">
+          <h2>Deployment & generowanie PDF</h2>
+          <p class="lead">Plik HTML jest przygotowany do konwersji do PDF. Poniżej przykładowe polecenia do wygenerowania wysokiej jakości PDF lokalnie.</p>
+          <h4 id="download">Jak wygenerować PDF</h4>
+          <p class="muted">Rekomendowane: użyj headless Chrome lub wkhtmltopdf. Poniżej znajdują się dwie metody.</p>
+          <h5>Headless Chrome</h5>
+          <pre class="code">google-chrome --headless --disable-gpu --no-sandbox --print-to-pdf=twilio-chat-app.pdf file://$(pwd)/deploy/releases/full_documentation.html</pre>
+          <h5>wkhtmltopdf</h5>
+          <pre class="code">wkhtmltopdf deploy/releases/full_documentation.html twilio-chat-app.pdf</pre>
+          <p class="muted">Obie metody pozwalają na generację zaawansowanego, paginowanego PDF z poprawnymi stylami CSS. Jeżeli potrzebujesz, przygotuję skrypt automatyzujący proces — udostępniłem przykładowe skrypty w katalogu `scripts/`.</p>
+        </section>
+      </main>
+
+      <aside class="sidebar">
+        <section class="card">
+          <h3>Kontakt i wartości</h3>
+          <p class="muted">Twilio Chat App — gotowe rozwiązanie do szybkiego uruchomienia kanału SMS z AI.</p>
+          <p><strong>Korzyści:</strong></p>
+          <ul>
+            <li>Szybkie wdrożenie</li>
+            <li>Pełna kontrola nad danymi</li>
+            <li>Skalowalna automatyzacja</li>
+          </ul>
+        </section>
+
+        <section class="card" style="margin-top:12px">
+          <h4>Wstaw screenshoty</h4>
+          <p class="muted">Zastąp ramki screenshotami: <code>dashboard_stats.png</code>, <code>messages_table.png</code>, <code>ai_panel.png</code> w katalogu projektu przed generacją PDF.</p>
+        </section>
+      </aside>
+    </div>
+
+    <footer>
+      <div>Dokument wygenerowany automatycznie — Twilio Chat App • ver3.0.1</div>
+    </footer>
+  </div>
+</body>
+</html>
