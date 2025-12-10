@@ -234,11 +234,23 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
 
     should_enqueue = False
 
+    # AI: odpowiadamy tylko na wiadomości nowsze niż ostatnia zmiana konfiguracji AI
     if ai_enabled:
-        if (ai_cfg.get("api_key") or "").strip():
-            should_enqueue = True
-        else:
+        api_key = (ai_cfg.get("api_key") or "").strip()
+        if not api_key:
             current_app.logger.warning("AI mode enabled but API key missing; skipping AI reply enqueue")
+        else:
+            enabled_since_dt = _parse_iso_timestamp(ai_cfg.get("updated_at"))
+            received_at_dt = _parse_iso_timestamp(received_at_iso)
+            if enabled_since_dt and received_at_dt and received_at_dt < enabled_since_dt:
+                current_app.logger.info(
+                    "Skipping AI reply enqueue for SID=%s: received %s before AI config updated_at %s",
+                    sid,
+                    received_at_iso,
+                    ai_cfg.get("updated_at"),
+                )
+            else:
+                should_enqueue = True
 
     if not should_enqueue and auto_enabled:
         enabled_since_dt = _parse_iso_timestamp(auto_cfg.get("enabled_since"))

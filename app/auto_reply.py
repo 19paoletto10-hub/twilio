@@ -86,6 +86,18 @@ def start_auto_reply_worker(app: Flask) -> None:
                         )
                         continue
 
+                    # AI: nie odpowiadamy na wiadomości sprzed włączenia / ostatniej zmiany konfiguracji AI
+                    if ai_enabled:
+                        ai_enabled_since_raw = ai_cfg.get("updated_at")
+                        ai_enabled_since = _parse_iso_timestamp(ai_enabled_since_raw) if ai_enabled_since_raw else None
+                        if ai_enabled_since and received_at and received_at < ai_enabled_since:
+                            app.logger.info(
+                                "Skipping AI auto-reply: message timestamp %s precedes AI config updated_at %s",
+                                received_at_raw,
+                                ai_enabled_since_raw,
+                            )
+                            continue
+
                     from_number: Optional[str] = (payload.get("from_number") or "").strip()
                     if not from_number or not ALLOWED_NUMBER_RE.match(from_number):
                         if auto_enabled and not ai_enabled:
