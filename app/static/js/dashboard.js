@@ -49,6 +49,7 @@
   const aiUpdatedAt = document.getElementById('ai-updated-at');
   const aiApiKeyPreview = document.getElementById('ai-api-key-preview');
   const aiConversationContainer = document.getElementById('ai-conversation');
+    const aiConversationParticipant = document.getElementById('ai-conversation-participant');
   const aiTestMessage = document.getElementById('ai-test-message');
   const aiTestBtn = document.getElementById('ai-test-btn');
   const aiTestSpinner = aiTestBtn?.querySelector('.spinner-border');
@@ -184,6 +185,23 @@
     reminderCountBadge && (reminderCountBadge.textContent = String(items.length));
   };
 
+  const renderRemindersSkeleton = () => {
+    if (!remindersTableBody) return;
+    const row = `
+      <tr>
+        <td colspan="5">
+          <div class="skeleton skeleton-row">
+            <div class="skeleton-line skeleton-line--short mb-2"></div>
+            <div class="skeleton-line skeleton-line--full mb-1"></div>
+            <div class="skeleton-line skeleton-line--medium"></div>
+          </div>
+        </td>
+      </tr>
+    `;
+    remindersTableBody.innerHTML = row + row;
+    reminderCountBadge && (reminderCountBadge.textContent = '—');
+  };
+
   const renderAiConfig = (config) => {
     if (!config) return;
 
@@ -219,41 +237,92 @@
         ? `Ostatnia aktualizacja: ${config.updated_at}`
         : '';
     }
+
+    if (aiConversationParticipant) {
+      aiConversationParticipant.textContent = config.target_number || 'Brak skonfigurowanego numeru';
+    }
   };
 
   const renderAiConversation = (items = []) => {
     if (!aiConversationContainer) return;
 
     if (!items.length) {
-      aiConversationContainer.innerHTML = '<p class="text-muted mb-0">Brak wiadomości w rozmowie z wybranym numerem.</p>';
+      aiConversationContainer.innerHTML = '<div class="text-center text-muted py-4">Brak wiadomości w rozmowie z wybranym numerem.</div>';
       return;
     }
 
-    aiConversationContainer.innerHTML = items
-      .map((msg) => {
-        const isInbound = msg.direction === 'inbound';
-        const badgeClass = isInbound
-          ? 'bg-primary-subtle text-primary-emphasis'
-          : 'bg-success-subtle text-success-emphasis';
-        const who = isInbound ? 'Użytkownik' : 'AI / my';
-        const created = msg.created_at || '';
-        const safeBody = (msg.body || '')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+    let lastDateKey = null;
+    const parts = [];
 
-        return `
-          <div class="mb-2">
-            <div class="d-flex justify-content-between align-items-baseline mb-1">
-              <span class="badge ${badgeClass}">${who}</span>
-              <small class="text-muted">${created}</small>
-            </div>
-            <div class="p-2 rounded bg-white border">
-              <div class="small">${safeBody}</div>
-            </div>
+    for (const msg of items) {
+      const createdRaw = msg.created_at || '';
+      const createdDate = createdRaw ? new Date(createdRaw.endsWith('Z') ? createdRaw : `${createdRaw}Z`) : null;
+      const dateKey = createdDate && !Number.isNaN(createdDate.getTime())
+        ? createdDate.toISOString().substring(0, 10)
+        : null;
+
+      if (dateKey && dateKey !== lastDateKey) {
+        const label = createdDate.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit'
+        });
+        parts.push(`<div class="ai-date-divider"><span>${escapeHtml(label)}</span></div>`);
+        lastDateKey = dateKey;
+      }
+
+      const isInbound = msg.direction === 'inbound';
+      const bubbleClass = isInbound ? 'chat-bubble chat-bubble--inbound' : 'chat-bubble chat-bubble--outbound';
+      const author = isInbound ? 'Użytkownik' : 'AI';
+      const timestamp = formatDateTime(createdRaw);
+      const status = msg.status
+        ? msg.status
+        : isInbound
+          ? 'odebrano'
+          : 'wysłano';
+      const body = escapeHtml(msg.body || '');
+      const errorLine = msg.error ? `<div class="chat-bubble__error">${escapeHtml(msg.error)}</div>` : '';
+
+      parts.push(`
+        <div class="${bubbleClass}">
+          <div class="chat-bubble__meta">
+            <span>${author}</span>
+            <span>${timestamp}</span>
           </div>
-        `;
-      })
-      .join('');
+          <div class="chat-bubble__body">${body.replace(/\n/g, '<br>')}</div>
+          <div class="chat-bubble__status">Status: ${escapeHtml(status)}</div>
+          ${errorLine}
+        </div>
+      `);
+    }
+
+    aiConversationContainer.innerHTML = parts.join('');
+
+    requestAnimationFrame(() => {
+      aiConversationContainer.scrollTop = aiConversationContainer.scrollHeight;
+    });
+  };
+
+  const renderAiConversationSkeleton = () => {
+    if (!aiConversationContainer) return;
+    aiConversationContainer.innerHTML = `
+      <div class="chat-bubble chat-bubble--inbound skeleton skeleton-chat-bubble">
+        <div class="d-flex justify-content-between mb-2">
+          <div class="skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line skeleton-line--medium"></div>
+        </div>
+        <div class="skeleton-line skeleton-line--full mb-1"></div>
+        <div class="skeleton-line skeleton-line--medium"></div>
+      </div>
+      <div class="chat-bubble chat-bubble--outbound skeleton skeleton-chat-bubble">
+        <div class="d-flex justify-content-between mb-2">
+          <div class="skeleton-line skeleton-line--short"></div>
+          <div class="skeleton-line skeleton-line--medium"></div>
+        </div>
+        <div class="skeleton-line skeleton-line--full mb-1"></div>
+        <div class="skeleton-line skeleton-line--medium"></div>
+      </div>
+    `;
   };
 
   const renderAiTestResult = (payload) => {
@@ -316,6 +385,7 @@
 
   const loadReminders = async () => {
     try {
+      renderRemindersSkeleton();
       const data = await fetchJSON('/api/reminders');
       renderReminders(data.items || []);
     } catch (error) {
@@ -338,6 +408,7 @@
   const loadAiConversation = async () => {
     if (!aiConversationContainer) return;
     try {
+      renderAiConversationSkeleton();
       const data = await fetchJSON('/api/ai/conversation');
       renderAiConversation(data.items || []);
     } catch (error) {
@@ -345,6 +416,7 @@
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać historii rozmowy AI.', type: 'error' });
     }
   };
+  let aiRefreshTimer = null;
 
   const submitReminder = async (event) => {
     event.preventDefault();
@@ -681,6 +753,57 @@
     return date.toLocaleString();
   };
 
+  const buildMessagePreview = (body) => {
+    const text = (body || '').trim();
+    if (!text) return '';
+    if (text.length <= 100) return text;
+    return `${text.slice(0, 97)}…`;
+  };
+
+  const buildDateTimeParts = (value) => {
+    const fullLabel = formatDateTime(value);
+    if (!value) {
+      return { dateLabel: '—', timeLabel: '', fullLabel };
+    }
+
+    const iso = value.endsWith('Z') ? value : `${value}Z`;
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) {
+      return { dateLabel: fullLabel, timeLabel: '', fullLabel };
+    }
+
+    const dateLabel = date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const timeLabel = date.toLocaleTimeString(undefined, {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    return { dateLabel, timeLabel, fullLabel };
+  };
+
+  const renderMessagesSkeleton = () => {
+    if (!tableBody) return;
+    const skeletonRow = (idx) => `
+      <tr>
+        <td colspan="6">
+          <div class="skeleton skeleton-row">
+            <div class="d-flex justify-content-between mb-2">
+              <div class="skeleton-line skeleton-line--short me-2"></div>
+              <div class="skeleton-line skeleton-line--medium"></div>
+            </div>
+            <div class="skeleton-line skeleton-line--full mb-1"></div>
+            <div class="skeleton-line skeleton-line--medium"></div>
+          </div>
+        </td>
+      </tr>
+    `;
+    tableBody.innerHTML = [0, 1, 2].map(skeletonRow).join('');
+  };
+
   const renderMessages = (items) => {
     if (!items.length) {
       tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Brak wiadomości do wyświetlenia.</td></tr>';
@@ -692,24 +815,32 @@
       const participantRaw = item.direction === 'inbound' ? item.from_number : item.to_number;
       const participantLabel = participantRaw || '—';
       const statusCell = formatStatusBadge(item.status);
-      const timestamp = formatDateTime(item.created_at);
-      const errorLine = item.error ? `<div class="text-danger small mt-1 text-truncate-2">${item.error}</div>` : '';
+      const { dateLabel, timeLabel, fullLabel } = buildDateTimeParts(item.created_at);
+      const errorLine = item.error ? `<div class="text-danger small mt-1 text-truncate-2">${escapeHtml(item.error)}</div>` : '';
       const chatUrl = buildChatLink(participantRaw);
       const chatCell = chatUrl
         ? `<a class="btn btn-outline-primary btn-sm" href="${chatUrl}">Otwórz</a>`
         : '—';
+      const bodyPreview = escapeHtml(buildMessagePreview(item.body));
 
       return `
         <tr>
           <td class="text-nowrap">${directionCell}</td>
-          <td class="text-nowrap">${participantLabel}</td>
+          <td class="text-nowrap text-truncate-1" title="${escapeHtml(participantLabel)}">${escapeHtml(participantLabel)}</td>
           <td>
-            <div class="text-truncate-2">${item.body || ''}</div>
+            <div class="text-truncate-1" title="${bodyPreview}">${bodyPreview}</div>
+          </td>
+          <td class="text-nowrap">
+            ${statusCell}
             ${errorLine}
           </td>
-          <td class="text-nowrap">${statusCell}</td>
           <td class="text-nowrap">${chatCell}</td>
-          <td class="text-nowrap">${timestamp}</td>
+          <td class="text-nowrap">
+            <div class="messages-datetime" title="${escapeHtml(fullLabel)}">
+              <span class="messages-datetime__time">${escapeHtml(timeLabel)}</span>
+              <span class="messages-datetime__date">${escapeHtml(dateLabel)}</span>
+            </div>
+          </td>
         </tr>
       `;
     });
@@ -719,6 +850,7 @@
 
   const refreshMessages = async () => {
     try {
+      renderMessagesSkeleton();
       const directionParam = currentFilter === 'all' ? '' : `&direction=${currentFilter}`;
       const data = await fetchJSON(`/api/messages?limit=50${directionParam}`);
       renderMessages(data.items || []);
@@ -857,6 +989,11 @@
       aiForm.addEventListener('submit', submitAiConfig);
       loadAiConfig();
       loadAiConversation();
+      if (!aiRefreshTimer) {
+        aiRefreshTimer = setInterval(() => {
+          loadAiConversation();
+        }, 20000);
+      }
     }
 
     aiTestBtn?.addEventListener('click', runAiTest);
@@ -867,10 +1004,19 @@
       if (refreshTimer) {
         clearInterval(refreshTimer);
       }
+      if (aiRefreshTimer) {
+        clearInterval(aiRefreshTimer);
+        aiRefreshTimer = null;
+      }
     } else {
       refreshMessages();
       refreshStats();
       startAutoRefresh();
+      if (aiForm && !aiRefreshTimer) {
+        aiRefreshTimer = setInterval(() => {
+          loadAiConversation();
+        }, 20000);
+      }
     }
   });
 
