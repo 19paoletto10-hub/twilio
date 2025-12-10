@@ -10,6 +10,17 @@ Serwer czatu SMS oparty o Flask + Twilio z panelem www, webhookami i asynchronic
 - Panel www: dashboard, lista wiadomości, widok czatu dla numeru, zakładka konfiguracji auto‑reply.
 - Modułowa architektura (`app/config.py`, `app/twilio_client.py`, `app/auto_reply.py`, `app/webhooks.py`, `app/database.py`, `app/chat_logic.py`).
 
+### Architektura na wysokim poziomie
+
+- `app/__init__.py` – fabryka aplikacji Flask (`create_app()`), ładuje ustawienia z env, tworzy klienta Twilio, inicjalizuje bazę SQLite i uruchamia workery w tle (auto‑reply, przypomnienia).
+- `app/webhooks.py` – główny blueprint HTTP: webhooki Twilio, API do wiadomości, konfiguracji AI/auto‑reply, przypomnień oraz pomocnicza synchronizacja wiadomości z Twilio.
+- `app/ui.py` + `templates/` – panel www (dashboard, widok czatu, zakładki Auto‑odpowiedź i AI).
+- `app/database.py` – dostęp do SQLite: schemat, migracje, model wiadomości, konfiguracja AI/auto‑reply, scheduler przypomnień.
+- `app/twilio_client.py` – cienka warstwa nad `twilio.rest.Client` (wysyłka SMS, odpowiedzi na wiadomości przychodzące, praca z Messaging Service).
+- `app/ai_service.py` – integracja z OpenAI: budowanie historii rozmowy z bazy, wywołania Chat Completions, wygodna funkcja do generowania i wysyłania odpowiedzi AI jako SMS.
+- `app/auto_reply.py` – worker reagujący na kolejkę `AUTO_REPLY_QUEUE`: obsługuje zarówno klasyczny auto‑reply, jak i AI auto‑reply.
+- `app/reminder.py` – worker przypomnień SMS z tabeli `scheduled_messages`.
+
 ## Szybki start (lokalnie)
 ```bash
 python -m venv venv
@@ -102,6 +113,28 @@ Zalecane: montuj `./data`, aby zachować bazę SQLite (`DB_PATH`).
 2. Status callback: `https://twoja-domena.pl/twilio/status`.
 3. Używaj tego samego numeru / Messaging Service co w `.env` (`TWILIO_DEFAULT_FROM` lub `TWILIO_MESSAGING_SERVICE_SID`).
 4. Prod: `TWILIO_VALIDATE_SIGNATURE=true`; Dev: możesz ustawić `false` podczas testów tunelowanych.
+
+### Jak działa walidacja podpisu Twilio
+
+- Domyślnie wszystkie webhooki z Twilio są weryfikowane przez `RequestValidator` z pakietu `twilio`.
+- Adres URL + parametry POST są porównywane z nagłówkiem `X-Twilio-Signature`.
+- W środowisku developerskim możesz tymczasowo wyłączyć weryfikację ustawiając `TWILIO_VALIDATE_SIGNATURE=false` (np. przy użyciu ngrok).
+
+### Tryby odpowiedzi i priorytety
+
+- **AI auto‑reply**:
+  - włączany przez `AI_ENABLED` (env) lub z zakładki „AI” w panelu,
+  - wykorzystuje historię rozmowy z tabeli `messages` i model OpenAI (domyślnie `gpt-4o-mini`),
+  - odpowiada wyłącznie na wiadomości przychodzące **nowsze niż** ostatnia zmiana konfiguracji AI (`ai_config.updated_at`).
+- **Klasyczny auto‑reply**:
+  - działa tylko, gdy AI jest wyłączone,
+  - korzysta z prostego szablonu tekstowego (`auto_reply_config.message`),
+  - odpowiada tylko na wiadomości przychodzące nowsze niż `auto_reply_config.enabled_since`.
+- **Fallback chat‑bot (`chat_logic.py`)**:
+  - używany tylko, gdy **oba** powyższe tryby są wyłączone,
+  - tryb `echo` lub `keywords` wybierany przez `CHAT_MODE`.
+
+W efekcie dla każdej przychodzącej wiadomości działa dokładnie **jeden** z trybów (AI / auto‑reply / fallback), a tryby AI i auto‑reply nigdy nie udzielają podwójnych odpowiedzi.
 
 ## Debugowanie
 - Brak auto‑reply? Sprawdź logi: "Inbound webhook hit…", "Enqueue auto-reply payload…", "Auto-reply: sending…".
