@@ -26,6 +26,11 @@
           Auto-odpowiedź
         </button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-reminders-btn" data-bs-toggle="tab" data-bs-target="#tab-reminders" type="button" role="tab" aria-controls="tab-reminders" aria-selected="false">
+          Przypomnienia
+        </button>
+      </li>
     </ul>
 
     <div class="tab-content">
@@ -184,6 +189,74 @@
                   <li class="mb-2">- Kolejka w tle chroni przed duplikatami i obsługuje maks. 1000 ostatnich SID.</li>
                   <li>- Wyłączenie auto-odpowiedzi przywraca tryb odpowiedzi generowanej przez silnik czatu.</li>
                 </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-reminders" role="tabpanel" aria-labelledby="tab-reminders-btn" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Nowe przypomnienie SMS</p>
+                <h2 class="h5 mb-0">Wyślij cyklicznie</h2>
+              </div>
+              <div class="card-body">
+                <form id="reminder-form" novalidate>
+                  <div class="mb-3">
+                    <label for="reminder-to" class="form-label">Numer odbiorcy</label>
+                    <input type="tel" class="form-control" id="reminder-to" placeholder="+48123456789" required>
+                    <div class="invalid-feedback">Podaj numer w formacie E.164.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="reminder-body" class="form-label">Treść wiadomości</label>
+                    <textarea class="form-control" id="reminder-body" rows="3" maxlength="640" placeholder="Napisz treść przypomnienia" required></textarea>
+                    <div class="invalid-feedback">Treść jest wymagana.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="reminder-interval" class="form-label">Interwał (minuty)</label>
+                    <input type="number" min="1" class="form-control" id="reminder-interval" value="60" required>
+                    <div class="invalid-feedback">Podaj interwał co najmniej 1 minutę.</div>
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100" id="reminder-save-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    Zapisz przypomnienie
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 d-flex align-items-center justify-content-between">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Przypomnienia</p>
+                  <h2 class="h5 mb-0">Aktywne i zaplanowane</h2>
+                </div>
+                <span class="badge bg-secondary-subtle text-secondary-emphasis" id="reminder-count-badge">0</span>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0" id="reminders-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col">Numer</th>
+                        <th scope="col">Treść</th>
+                        <th scope="col" class="text-nowrap">Interwał</th>
+                        <th scope="col" class="text-nowrap">Status</th>
+                        <th scope="col" class="text-nowrap">Akcje</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Brak danych.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>

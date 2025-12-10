@@ -25,6 +25,16 @@
   const autoReplyBadge = document.getElementById('auto-reply-status-badge');
   const autoReplyLastUpdated = document.getElementById('auto-reply-last-updated');
 
+  // Reminders tab
+  const reminderForm = document.getElementById('reminder-form');
+  const reminderTo = document.getElementById('reminder-to');
+  const reminderBody = document.getElementById('reminder-body');
+  const reminderInterval = document.getElementById('reminder-interval');
+  const reminderSaveBtn = document.getElementById('reminder-save-btn');
+  const reminderSaveSpinner = reminderSaveBtn?.querySelector('.spinner-border');
+  const remindersTableBody = document.querySelector('#reminders-table tbody');
+  const reminderCountBadge = document.getElementById('reminder-count-badge');
+
   let currentFilter = 'all';
   let refreshTimer = null;
 
@@ -74,6 +84,134 @@
     const toastInstance = bootstrap.Toast.getOrCreateInstance(toast, { delay: 5000 });
     toastInstance.show();
     toast.addEventListener('hidden.bs.toast', () => toast.remove());
+  };
+
+  // Reminders helpers
+  const setReminderSaving = (isSaving) => {
+    if (!reminderSaveBtn) return;
+    if (isSaving) {
+      reminderSaveBtn.setAttribute('disabled', 'true');
+      reminderSaveSpinner?.classList.remove('d-none');
+    } else {
+      reminderSaveBtn.removeAttribute('disabled');
+      reminderSaveSpinner?.classList.add('d-none');
+    }
+  };
+
+  const renderReminders = (items = []) => {
+    if (!remindersTableBody) return;
+
+    if (!items.length) {
+      remindersTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Brak danych.</td></tr>';
+      reminderCountBadge && (reminderCountBadge.textContent = '0');
+      return;
+    }
+
+    const rows = items.map((item) => {
+      const enabled = Boolean(item.enabled);
+      const badge = enabled
+        ? '<span class="badge bg-success-subtle text-success-emphasis">aktywne</span>'
+        : '<span class="badge bg-secondary-subtle text-secondary-emphasis">wstrzymane</span>';
+      const intervalMinutes = Math.round((item.interval_seconds || 0) / 60);
+      const lastSent = item.last_sent_at || '—';
+      const nextRun = item.next_run_at || '—';
+
+      return `
+        <tr data-id="${item.id}">
+          <td class="text-nowrap">${item.to_number || '—'}</td>
+          <td class="text-truncate-2">${item.body || ''}</td>
+          <td class="text-nowrap">${intervalMinutes} min<br><small class="text-muted">nast.: ${nextRun}</small></td>
+          <td class="text-nowrap">${badge}<br><small class="text-muted">ostatnio: ${lastSent}</small></td>
+          <td class="text-nowrap d-flex gap-2">
+            <button class="btn btn-sm ${enabled ? 'btn-outline-warning' : 'btn-outline-success'}" data-action="toggle">
+              ${enabled ? 'Wstrzymaj' : 'Wznów'}
+            </button>
+            <button class="btn btn-sm btn-outline-danger" data-action="delete">Usuń</button>
+          </td>
+        </tr>
+      `;
+    });
+
+    remindersTableBody.innerHTML = rows.join('');
+    reminderCountBadge && (reminderCountBadge.textContent = String(items.length));
+  };
+
+  const loadReminders = async () => {
+    try {
+      const data = await fetchJSON('/api/reminders');
+      renderReminders(data.items || []);
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać przypomnień.', type: 'error' });
+    }
+  };
+
+  const submitReminder = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!reminderForm) return;
+    if (!reminderForm.checkValidity()) {
+      reminderForm.classList.add('was-validated');
+      return;
+    }
+
+    const to = reminderTo?.value.trim();
+    const body = reminderBody?.value.trim();
+    const intervalMinutes = Number(reminderInterval?.value || 0);
+
+    if (!to || !body || intervalMinutes < 1) {
+      reminderForm.classList.add('was-validated');
+      return;
+    }
+
+    setReminderSaving(true);
+
+    try {
+      const res = await fetchJSON('/api/reminders', {
+        method: 'POST',
+        body: JSON.stringify({ to, body, interval_minutes: intervalMinutes })
+      });
+      renderReminders(res.items || []);
+      reminderForm.reset();
+      reminderForm.classList.remove('was-validated');
+      showToast({ title: 'Zapisano', message: 'Przypomnienie dodane.', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się zapisać przypomnienia.', type: 'error' });
+    } finally {
+      setReminderSaving(false);
+    }
+  };
+
+  const handleReminderAction = async (event) => {
+    const actionBtn = event.target.closest('button[data-action]');
+    if (!actionBtn) return;
+    const row = actionBtn.closest('tr[data-id]');
+    if (!row) return;
+    const id = row.getAttribute('data-id');
+    const action = actionBtn.dataset.action;
+
+    try {
+      if (action === 'delete') {
+        const res = await fetchJSON(`/api/reminders/${id}`, { method: 'DELETE' });
+        renderReminders(res.items || []);
+        showToast({ title: 'Usunięto', message: 'Przypomnienie usunięte.', type: 'success' });
+      }
+
+      if (action === 'toggle') {
+        const isEnabled = actionBtn.textContent.includes('Wstrzymaj');
+        const res = await fetchJSON(`/api/reminders/${id}/toggle`, {
+          method: 'POST',
+          body: JSON.stringify({ enabled: !isEnabled })
+        });
+        renderReminders(res.items || []);
+        showToast({ title: 'Zapisano', message: !isEnabled ? 'Przypomnienie włączone.' : 'Przypomnienie wstrzymane.', type: 'success' });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Operacja nieudana.', type: 'error' });
+    }
   };
 
   const setAutoReplyBadge = (enabled) => {
@@ -402,6 +540,12 @@
       autoReplyForm.addEventListener('submit', submitAutoReplyConfig);
       autoReplyToggle?.addEventListener('change', syncAutoReplyMessageRequirement);
       loadAutoReplyConfig();
+    }
+
+    if (reminderForm) {
+      reminderForm.addEventListener('submit', submitReminder);
+      remindersTableBody?.addEventListener('click', handleReminderAction);
+      loadReminders();
     }
   };
 

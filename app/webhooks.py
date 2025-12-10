@@ -16,6 +16,12 @@ from .twilio_client import TwilioService
 from .auto_reply import enqueue_auto_reply
 from .database import get_auto_reply_config, set_auto_reply_config
 from .database import (
+    list_scheduled_messages,
+    create_scheduled_message,
+    update_scheduled_message,
+    delete_scheduled_message,
+)
+from .database import (
     insert_message,
     list_messages,
     update_message_status_by_sid,
@@ -328,6 +334,63 @@ def api_update_auto_reply_config():
     set_auto_reply_config(enabled=enabled, message=message)
     cfg = get_auto_reply_config()
     return jsonify({"enabled": bool(cfg.get("enabled")), "message": cfg.get("message", "")})
+
+
+@webhooks_bp.get("/api/reminders")
+def api_list_reminders():
+    items = list_scheduled_messages()
+    return jsonify({"items": items, "count": len(items)})
+
+
+@webhooks_bp.post("/api/reminders")
+def api_create_reminder():
+    payload = request.get_json(force=True, silent=True) or {}
+    to_number = (payload.get("to") or "").strip()
+    body = (payload.get("body") or "").strip()
+    interval_minutes_raw = payload.get("interval_minutes")
+
+    try:
+        interval_minutes = int(interval_minutes_raw)
+    except (TypeError, ValueError):
+        interval_minutes = 0
+
+    if not to_number:
+        return jsonify({"error": "Pole 'to' jest wymagane."}), 400
+    if not body:
+        return jsonify({"error": "Pole 'body' jest wymagane."}), 400
+    if interval_minutes < 1:
+        return jsonify({"error": "Interwał musi być co najmniej 1 minuta."}), 400
+
+    interval_seconds = interval_minutes * 60
+
+    sched_id = create_scheduled_message(
+        to_number=to_number,
+        body=body,
+        interval_seconds=interval_seconds,
+        enabled=True,
+    )
+    items = list_scheduled_messages()
+    return jsonify({"id": sched_id, "items": items, "count": len(items)}), 201
+
+
+@webhooks_bp.post("/api/reminders/<int:sched_id>/toggle")
+def api_toggle_reminder(sched_id: int):
+    payload = request.get_json(force=True, silent=True) or {}
+    enabled = bool(payload.get("enabled", False))
+    updated = update_scheduled_message(sched_id=sched_id, enabled=enabled)
+    if not updated:
+        return jsonify({"error": "Nie znaleziono rekordu."}), 404
+    items = list_scheduled_messages()
+    return jsonify({"items": items, "count": len(items)})
+
+
+@webhooks_bp.delete("/api/reminders/<int:sched_id>")
+def api_delete_reminder(sched_id: int):
+    deleted = delete_scheduled_message(sched_id)
+    if not deleted:
+        return jsonify({"error": "Nie znaleziono rekordu."}), 404
+    items = list_scheduled_messages()
+    return jsonify({"items": items, "count": len(items)})
 
 
 @webhooks_bp.post("/twilio/status")

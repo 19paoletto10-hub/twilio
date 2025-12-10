@@ -6,6 +6,7 @@ from .logger import configure_logging
 from .database import init_app as init_database
 from .ui import ui_bp
 from .auto_reply import start_auto_reply_worker
+from .reminder import start_reminder_worker
 
 
 def create_app() -> Flask:
@@ -28,6 +29,8 @@ def create_app() -> Flask:
 
     # Background worker: auto-reply on inbound messages (SMS-only)
     start_auto_reply_worker(app)
+    # Background worker: scheduled reminders
+    start_reminder_worker(app)
 
     @app.get("/api/health")
     def api_health():

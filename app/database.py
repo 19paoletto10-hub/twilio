@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -66,6 +66,20 @@ def _ensure_schema() -> None:
             );
             INSERT OR IGNORE INTO auto_reply_config (id, enabled, message)
                  VALUES (1, 0, '');
+
+            CREATE TABLE IF NOT EXISTS scheduled_messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                to_number TEXT NOT NULL,
+                body TEXT NOT NULL,
+                interval_seconds INTEGER NOT NULL CHECK(interval_seconds >= 60),
+                enabled INTEGER NOT NULL DEFAULT 1,
+                last_sent_at TEXT,
+                next_run_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_scheduled_enabled_next_run
+                ON scheduled_messages(enabled, next_run_at);
             """
         )
         conn.commit()
@@ -75,6 +89,10 @@ def _ensure_schema() -> None:
 
 def _utc_timestamp() -> str:
     return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _utc_after(seconds: int) -> str:
+    return (datetime.utcnow() + timedelta(seconds=seconds)).strftime("%Y-%m-%dT%H:%M:%S")
 
 
 def upsert_message(
@@ -378,3 +396,115 @@ def delete_message_by_sid(sid: str) -> bool:
     cursor = conn.execute("DELETE FROM messages WHERE sid = ?", (sid,))
     conn.commit()
     return cursor.rowcount > 0
+
+
+# Scheduled messages (reminders)
+
+
+def list_scheduled_messages() -> List[Dict[str, Any]]:
+    conn = _get_connection()
+    rows = conn.execute(
+        """
+        SELECT id, to_number, body, interval_seconds, enabled, last_sent_at, next_run_at, created_at, updated_at
+          FROM scheduled_messages
+      ORDER BY datetime(created_at) DESC, id DESC
+        """
+    ).fetchall()
+    return [_row_to_dict(row) for row in rows]
+
+
+def create_scheduled_message(*, to_number: str, body: str, interval_seconds: int, enabled: bool = True) -> int:
+    conn = _get_connection()
+    now = _utc_timestamp()
+    next_run = _utc_after(interval_seconds)
+    cursor = conn.execute(
+        """
+        INSERT INTO scheduled_messages (to_number, body, interval_seconds, enabled, last_sent_at, next_run_at, created_at, updated_at)
+        VALUES (?, ?, ?, ?, NULL, ?, ?, ?)
+        """,
+        (to_number, body, interval_seconds, 1 if enabled else 0, next_run, now, now),
+    )
+    conn.commit()
+    return int(cursor.lastrowid)
+
+
+def update_scheduled_message(
+    *,
+    sched_id: int,
+    to_number: Optional[str] = None,
+    body: Optional[str] = None,
+    interval_seconds: Optional[int] = None,
+    enabled: Optional[bool] = None,
+) -> bool:
+    conn = _get_connection()
+    fields = []
+    params: List[Any] = []
+
+    if to_number is not None:
+        fields.append("to_number = ?")
+        params.append(to_number)
+    if body is not None:
+        fields.append("body = ?")
+        params.append(body)
+    if interval_seconds is not None:
+        fields.append("interval_seconds = ?")
+        params.append(interval_seconds)
+    if enabled is not None:
+        fields.append("enabled = ?")
+        params.append(1 if enabled else 0)
+
+    if not fields:
+        return False
+
+    fields.append("updated_at = ?")
+    params.append(_utc_timestamp())
+    params.append(sched_id)
+
+    cursor = conn.execute(
+        f"UPDATE scheduled_messages SET {', '.join(fields)} WHERE id = ?",
+        params,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def delete_scheduled_message(sched_id: int) -> bool:
+    conn = _get_connection()
+    cursor = conn.execute("DELETE FROM scheduled_messages WHERE id = ?", (sched_id,))
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def mark_scheduled_sent(sched_id: int, interval_seconds: int) -> None:
+    conn = _get_connection()
+    now = _utc_timestamp()
+    next_run = _utc_after(interval_seconds)
+    conn.execute(
+        """
+        UPDATE scheduled_messages
+           SET last_sent_at = ?,
+               next_run_at = ?,
+               updated_at = ?
+         WHERE id = ?
+        """,
+        (now, next_run, now, sched_id),
+    )
+    conn.commit()
+
+
+def list_due_scheduled_messages(limit: int = 20) -> List[Dict[str, Any]]:
+    conn = _get_connection()
+    now = _utc_timestamp()
+    rows = conn.execute(
+        """
+        SELECT id, to_number, body, interval_seconds, enabled, last_sent_at, next_run_at, created_at, updated_at
+          FROM scheduled_messages
+         WHERE enabled = 1
+           AND next_run_at IS NOT NULL
+           AND datetime(next_run_at) <= datetime(?)
+      ORDER BY datetime(next_run_at) ASC, id ASC
+         LIMIT ?
+        """,
+        (now, limit),
+    ).fetchall()
+    return [_row_to_dict(row) for row in rows]
