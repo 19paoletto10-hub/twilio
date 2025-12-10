@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Twilio Chat App – dokumentacja rozwiązania</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 2rem auto; max-width: 1000px; line-height: 1.6; color: #222; }
+    h1, h2, h3, h4 { color: #111; }
+    code { background: #f5f5f5; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    .tag { font-family: monospace; background: #eef; padding: 0.1rem 0.4rem; border-radius: 3px; }
+    .meta { font-size: 0.9rem; color: #555; margin-bottom: 1.5rem; }
+    ul { margin-left: 1.2rem; }
+    .section-lead { font-size: 0.98rem; color: #555; margin-bottom: 0.75rem; }
+    .pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; background: #eef; font-size: 0.85rem; margin-right: 0.25rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem 1.5rem; }
+    .card { border-radius: 6px; border: 1px solid #e5e5e5; padding: 1rem 1.25rem; background: #fff; }
+    .card h3 { margin-top: 0; }
+    .muted { color: #777; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>Twilio Chat App – dokumentacja rozwiązania</h1>
+  <p class="meta">
+    Aplikacja: <strong>Twilio Chat App</strong><br />
+    Przeznaczenie: obsługa rozmów SMS/MMS z klientami z poziomu przeglądarki, z auto‑reply oraz AI auto‑reply na bazie OpenAI.<br />
+    Technologia: Python 3.12, Flask 3.x, Twilio, OpenAI, SQLite, Docker.
+  </p>
+
+  <h2>1. Cel biznesowy i zastosowania</h2>
+  <p class="section-lead">
+    Twilio Chat App jest lekkim, samodzielnym serwerem czatu SMS z panelem WWW. Umożliwia zespołom
+    obsługę komunikacji z klientami bez konieczności implementowania własnej integracji z Twilio
+    od podstaw, a jednocześnie zapewnia pełną kontrolę nad danymi i logiką odpowiedzi.
+  </p>
+  <ul>
+    <li><strong>Obsługa klienta</strong> – prowadzenie wątków SMS jako prostego "ticket systemu" z historii rozmów i widokiem czatu dla numeru.</li>
+    <li><strong>Marketing i powiadomienia</strong> – wysyłka pojedynczych kampanii SMS z panelu lub przez API.</li>
+    <li><strong>Automatyzacja</strong> – auto‑reply i AI auto‑reply do prostych zapytań, potwierdzeń, powitań,
+      a także okresowe przypomnienia (scheduler).</li>
+    <li><strong>Eksperymenty z AI</strong> – testowanie modeli OpenAI w kontekście realnych rozmów SMS dzięki 
+      trybowi AI auto‑reply oraz endpointom testowym.</li>
+  </ul>
+
+  <h2>2. Najważniejsze funkcje</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Auto‑reply &amp; AI auto‑reply</h3>
+      <p class="section-lead">Automatyczne odpowiedzi na wiadomości przychodzące, sterowane z panelu lub przez zmienne środowiskowe.</p>
+      <ul>
+        <li>Klasyczny auto‑reply – pojedynczy szablon tekstowy wysyłany na każdy nowy inbound.</li>
+        <li>AI auto‑reply – odpowiedzi generowane przez OpenAI (Chat Completions) z wykorzystaniem historii rozmowy.</li>
+        <li>Tryby są <strong>wzajemnie wykluczające</strong>; AI ma priorytet wobec klasycznego auto‑reply.</li>
+        <li>Bez "retro‑odpowiedzi" – odpowiedzi tylko dla wiadomości nowszych niż moment włączenia trybu.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Panel WWW</h3>
+      <p class="section-lead">Nowoczesny dashboard dla operatora, zbudowany na Bootstrap 5.</p>
+      <ul>
+        <li>Zakładka <strong>Wiadomości</strong> – statystyki, wysyłka ręczna, tabela 50 ostatnich wiadomości z filtrami (wszystkie / przychodzące / wychodzące) i auto‑refresh.</li>
+        <li>Zakładka <strong>Auto‑odpowiedź</strong> – konfiguracja klasycznego auto‑reply (włącz/wyłącz + szablon).</li>
+        <li>Zakładka <strong>Przypomnienia</strong> – definicja cyklicznych kampanii SMS.</li>
+        <li>Zakładka <strong>AI</strong> – konfiguracja OpenAI, test połączenia, podgląd historii rozmowy AI w formie dymków czatu.</li>
+        <li>Widok <strong>/chat/&lt;numer&gt;</strong> – pełny wątek rozmowy z danym uczestnikiem.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>REST API &amp; webhooki</h3>
+      <p class="section-lead">Warstwa HTTP rozdzielona na webhooki Twilio i REST API dla panelu oraz integracji zewnętrznych.</p>
+      <ul>
+        <li>Webhooki: <code>/twilio/inbound</code>, <code>/twilio/status</code> z walidacją podpisu Twilio.</li>
+        <li>API wiadomości: wysyłka SMS/MMS, lista, szczegóły, redakcja, kasowanie, sync z Twilio.</li>
+        <li>API konfiguracyjne: auto‑reply, AI, przypomnienia.</li>
+        <li>API rozmów: listy konwersacji oraz wątki per numer.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Background workery</h3>
+      <p class="section-lead">Przetwarzanie w tle z wykorzystaniem kolejek w pamięci i schedulerów opartych o SQLite.</p>
+      <ul>
+        <li>Worker <strong>auto_reply</strong> – reaguje na kolejkę wiadomości inbound (AI lub klasyczny auto‑reply).</li>
+        <li>Worker <strong>reminder</strong> – wysyła cykliczne przypomnienia z tabeli <code>scheduled_messages</code>.</li>
+        <li>Dedykowana logika deduplikacji SID oraz walidacji numerów w formacie E.164.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>3. Architektura systemu</h2>
+  <p class="section-lead">
+    Aplikacja składa się z rdzenia Flask, warstwy integracji z Twilio i OpenAI, bazy SQLite oraz
+    lekkich workerów w tle. Konstrukcja jest modułowa, co ułatwia rozwój i utrzymanie.
+  </p>
+  <ul>
+    <li><strong>Warstwa HTTP</strong> – blueprint <code>webhooks_bp</code> (<code>app/webhooks.py</code>) oraz <code>ui_bp</code> (<code>app/ui.py</code>).</li>
+    <li><strong>Logika biznesowa</strong> – moduły <code>ai_service</code>, <code>auto_reply</code>, <code>reminder</code>, <code>chat_logic</code>.</li>
+    <li><strong>Integracje</strong> – <code>twilio_client</code> jako cienka warstwa nad <code>twilio.rest.Client</code>; bezpośredni klient OpenAI.</li>
+    <li><strong>Persistence</strong> – <code>database.py</code> z wersjonowanym schematem, migracjami i helperami.</li>
+    <li><strong>Frontend</strong> – szablony Jinja2 (<code>templates/</code>) oraz zasoby statyczne w <code>app/static/</code>.</li>
+  </ul>
+
+  <h3>3.1 Tworzenie aplikacji</h3>
+  <p>
+    Funkcja <code>create_app()</code> w <code>app/__init__.py</code> odpowiada za zainicjalizowanie całego środowiska aplikacji:
+  </p>
+  <ul>
+    <li>wczytuje ustawienia z env poprzez <code>get_settings()</code> (<code>app/config.py</code>),</li>
+    <li>tworzy instancję klienta Twilio (<code>TwilioService</code>) i zapisuje ją w konfiguracji Flask,</li>
+    <li>inicjalizuje bazę danych SQLite (utworzenie tabel, migracje, indeksy),</li>
+    <li>aplikuje domyślną konfigurację AI z env do tabeli <code>ai_config</code>,</li>
+    <li>rejestruje blueprinty HTTP (<code>webhooks_bp</code>, <code>ui_bp</code>),</li>
+    <li>uruchamia w tle dwa workery: <strong>auto_reply</strong> i <strong>reminder</strong>,</li>
+    <li>wystawia endpoint healthcheck <code>GET /api/health</code>, używany przez Docker i monitoring.</li>
+  </ul>
+
+  <h3>3.2 Moduły konfiguracyjne</h3>
+  <p>
+    Konfiguracja aplikacji jest oparta o zmienne środowiskowe i klasy dataclasses w <code>app/config.py</code>:
+  </p>
+  <ul>
+    <li><code>TwilioSettings</code> – zawiera SID, token, numer nadawcy i ewentualny <code>messaging_service_sid</code>.</li>
+    <li><code>AppSettings</code> – definiuje środowisko (<code>APP_ENV</code>), debug, host, port oraz ścieżkę do pliku SQLite.</li>
+    <li><code>get_settings()</code> – waliduje obecność krytycznych parametrów Twilio, rozwiązuje ścieżkę <code>DB_PATH</code> względem katalogu projektu i pozwala na użycie jednego zestawu zmiennych w dev i prod.</li>
+  </ul>
+
+  <h2>4. Model danych i baza SQLite</h2>
+  <p class="section-lead">
+    Baza danych została zaprojektowana jako pojedynczy plik SQLite, z prostymi, ale czytelnymi
+    tabelami oraz wersjonowanym schematem. Dzięki temu migracje są wykonywane automatycznie przy
+    starcie aplikacji, bez zewnętrznych narzędzi migracyjnych.
+  </p>
+  <ul>
+    <li><strong>Tabela <code>messages</code></strong> – przechowuje wszystkie wiadomości inbound/outbound:<br />
+      SID, numery nadawcy/odbiorcy, kierunek (<code>direction</code>), status, treść, błąd, timestampy <code>created_at</code>/<code>updated_at</code>.</li>
+    <li><strong>Tabela <code>auto_reply_config</code></strong> – pojedynczy rekord kontrolujący klasyczny auto‑reply (flaga <code>enabled</code>, tekst <code>message</code>, znacznik <code>enabled_since</code>).</li>
+    <li><strong>Tabela <code>scheduled_messages</code></strong> – definicje cyklicznych przypomnień (numer odbiorcy, treść, interwał w sekundach, <code>enabled</code>, <code>last_sent_at</code>, <code>next_run_at</code>).</li>
+    <li><strong>Tabela <code>ai_config</code></strong> – konfiguracja AI (włączone/wyłączone, klucz API, <code>system_prompt</code>, model, temperatura, numer docelowy, źródło konfiguracji, <code>updated_at</code>).</li>
+  </ul>
+  <p>
+    Moduł <code>app/database.py</code> udostępnia też szereg helperów biznesowych: <code>list_messages()</code> do budowy
+    list w dashboardzie, <code>list_conversations()</code> dla widoku czatu, a także <code>upsert_message()</code> do
+    bezpiecznego scalania danych przychodzących z Twilio bez duplikatów po SID.
+  </p>
+
+  <h2>5. Integracja z Twilio</h2>
+  <p class="section-lead">
+    Za integrację z Twilio odpowiada moduł <code>app/twilio_client.py</code> oraz zestaw webhooków w
+    <code>app/webhooks.py</code>. Celem jest maksymalne uproszczenie użycia przy jednoczesnym zachowaniu
+    spójności wątków po stronie Twilio.
+  </p>
+  <h3>5.1 Klient Twilio (<code>TwilioService</code>)</h3>
+  <ul>
+    <li><code>send_message()</code> – uniwersalna metoda wysyłki SMS/MMS z obsługą Messaging Service lub <code>from_</code>.</li>
+    <li><code>send_reply_to_inbound(inbound_from, inbound_to, body)</code> – wysyła odpowiedź jako część istniejącego wątku Twilio, preferując Messaging Service, a w jego braku używając numeru, na który przyszła wiadomość lub <code>TWILIO_DEFAULT_FROM</code>.</li>
+    <li><code>send_with_default_origin()</code> – uproszczona wysyłka z domyślnego numeru nadawcy.</li>
+    <li>Funkcje pomocnicze: <code>list_messages</code>, <code>fetch_message</code>, <code>redact_message</code>, <code>delete_message</code> – wykorzystywane w API i panelu.</li>
+  </ul>
+
+  <h3>5.2 Webhooki i walidacja podpisu</h3>
+  <ul>
+    <li><code>POST /twilio/inbound</code> – przyjmowanie wiadomości przychodzących, zapis do <code>messages</code>, kolejka auto‑reply/AI, fallback do prostego bota, jeśli tryby są wyłączone.</li>
+    <li><code>POST /twilio/status</code> – przyjmowanie statusów dostarczenia i aktualizacja rekordów w <code>messages</code>.</li>
+    <li>Walidacja podpisu Twilio odbywa się przy pomocy <code>RequestValidator</code>; można ją wyłączyć w środowisku deweloperskim poprzez <code>TWILIO_VALIDATE_SIGNATURE=false</code>.</li>
+    <li>Funkcja <code>_maybe_sync_messages()</code> umożliwia dociąganie najnowszych wiadomości z Twilio, z zachowaniem tych samych zasad auto‑reply/AI jak w webhookach.</li>
+  </ul>
+
+  <h2>6. AI i tryby odpowiedzi</h2>
+  <h3>6.1 AI auto‑reply</h3>
+  <ul>
+    <li>Konfiguracja AI przechowywana jest w tabeli <code>ai_config</code> i może być ustawiona zarówno z poziomu env (<code>OPENAI_*</code>, <code>AI_*</code>), jak i z zakładki "AI" w panelu.</li>
+    <li>Moduł <code>AIResponder</code> buduje historię rozmowy dla danego numeru na podstawie <code>messages</code> i zamienia ją na listę komunikatów <code>system</code>/<code>user</code>/<code>assistant</code> dla OpenAI.</li>
+    <li>Funkcja <code>send_ai_generated_sms()</code> generuje odpowiedź, wybiera właściwy sposób wysyłki (odpowiedź na inbound albo zwykła wysyłka) i zapisuje wynik do bazy.</li>
+    <li>Worker auto‑reply filtruje wiadomości obsługiwane przez AI tak, aby odpowiadać wyłącznie na zdarzenia nowsze niż <code>ai_config.updated_at</code> – włączenie AI lub zmiana konfiguracji działa jak punkt startowy.</li>
+  </ul>
+
+  <h3>6.2 Klasyczny auto‑reply i fallback</h3>
+  <ul>
+    <li>Klasyczny auto‑reply wykorzystuje prosty szablon tekstowy (<code>auto_reply_config.message</code>) i odpowiada tylko na wiadomości przychodzące nowsze niż <code>auto_reply_config.enabled_since</code>.</li>
+    <li>Numery są weryfikowane pod kątem formatu E.164, a wysyłka odbywa się z <code>TWILIO_DEFAULT_FROM</code>.</li>
+    <li>W przypadku, gdy zarówno AI, jak i auto‑reply są wyłączone, backend używa fallbackowego bota z <code>chat_logic.py</code> (tryb <code>echo</code> lub <code>keywords</code>), aby nie pozostawiać rozmów bez odpowiedzi w środowiskach testowych.</li>
+    <li>Zasada biznesowa: <strong>dla każdej przychodzącej wiadomości działa dokładnie jeden tryb</strong> (AI / auto‑reply / fallback), nigdy równocześnie.</li>
+  </ul>
+
+  <h2>7. Panel WWW i doświadczenie użytkownika</h2>
+  <h3>7.1 Dashboard i historia wiadomości</h3>
+  <ul>
+    <li>Zakładka "Wiadomości" prezentuje 50 ostatnich zdarzeń z bazy (<code>/api/messages</code>) z auto‑odświeżaniem co ~15 sekund.</li>
+    <li>Operator może filtrować widok na: wszystkie, tylko przychodzące lub tylko wychodzące wiadomości.</li>
+    <li>Każdy wiersz zawiera:
+      <ul>
+        <li>kierunek (oznaczony badge),</li>
+        <li>uczestnika (numer) wraz z opisem kanału i roli, np. <code>WhatsApp • od klienta</code>,</li>
+        <li>skrócony podgląd treści z pełnym tekstem w atrybucie <code>title</code>,</li>
+        <li>status oraz ewentualny błąd w osobnej linii,</li>
+        <li>czas rozbity na godzinę i datę.</li>
+      </ul>
+    </li>
+    <li>Wiersze z przypisanym numerem są klikalne – kliknięcie otwiera widok pełnego czatu (<code>/chat/&lt;numer&gt;</code>), co przyspiesza nawigację operatora.</li>
+  </ul>
+
+  <h3>7.2 Widok czatu i zakładka AI</h3>
+  <ul>
+    <li>Widok <code>/chat/&lt;numer&gt;</code> prezentuje wątek jako listę "dymków" z wyraźnym rozróżnieniem wiadomości przychodzących i wychodzących.</li>
+    <li>Zakładka "AI" w dashboardzie pozwala:
+      <ul>
+        <li>skonfigurować klucz OpenAI, model, temperaturę, system prompt oraz numer docelowy,</li>
+        <li>włączyć lub wyłączyć AI auto‑reply jednym przełącznikiem,</li>
+        <li>przetestować połączenie z OpenAI bez wysyłania SMS (<code>/api/ai/test</code>),</li>
+        <li>podejrzeć historię rozmowy z AI w formie wątku czatowego, z dzielnikami dat i statusami.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h2>8. Przypomnienia i kampanie cykliczne</h2>
+  <p class="section-lead">
+    Moduł przypomnień umożliwia definiowanie cyklicznych wiadomości SMS, które są wysyłane w zdefiniowanych
+    interwałach czasowych, np. przypomnienia o płatnościach, spotkaniach czy statusach.
+  </p>
+  <ul>
+    <li>Konfiguracja przypomnień odbywa się z zakładki "Przypomnienia" – użytkownik podaje numer, treść oraz interwał w minutach.</li>
+    <li>Worker <code>start_reminder_worker</code> cyklicznie odczytuje wiersze z <code>scheduled_messages</code> i realizuje wysyłkę poprzez <code>send_message</code>.</li>
+    <li>Każde przypomnienie aktualizuje pola <code>last_sent_at</code> i <code>next_run_at</code>, a wysłane wiadomości są logowane w tabeli <code>messages</code>.</li>
+  </ul>
+
+  <h2>9. Uruchomienie, konfiguracja i deployment</h2>
+  <h3>9.1 Szybki start lokalny</h3>
+  <pre><code>python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env
+python run.py
+</code></pre>
+  <p class="muted">Aplikacja startuje domyślnie na <code>http://0.0.0.0:3000</code>.</p>
+
+  <h3>9.2 Zmienne środowiskowe</h3>
+  <ul>
+    <li><strong>Twilio</strong>: <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_DEFAULT_FROM</code>, opcjonalnie <code>TWILIO_MESSAGING_SERVICE_SID</code>.</li>
+    <li><strong>OpenAI / AI</strong>: <code>OPENAI_API_KEY</code>, <code>OPENAI_MODEL</code>, <code>OPENAI_TEMPERATURE</code>, <code>AI_TARGET_NUMBER</code>, <code>AI_SYSTEM_PROMPT</code>, <code>AI_ENABLED</code>.</li>
+    <li><strong>Aplikacja</strong>: <code>APP_ENV</code>, <code>APP_DEBUG</code>, <code>APP_HOST</code>, <code>APP_PORT</code>, <code>DB_PATH</code>, <code>PUBLIC_BASE_URL</code>, <code>TWILIO_VALIDATE_SIGNATURE</code>.</li>
+  </ul>
+
+  <h3>9.3 Docker i środowisko produkcyjne</h3>
+  <ul>
+    <li>Obraz budowany jest na bazie <code>python:3.12-slim</code>, aplikacja uruchamiana przez <code>gunicorn</code> z kilkoma workerami i wątkami.</li>
+    <li>Plik <code>docker-compose.production.yml</code> zawiera przykładową konfigurację produkcyjną z mapowaniem wolumenu <code>./data</code> na katalog <code>/app/data</code>.</li>
+    <li>Rekomendowane jest ustawienie <code>TWILIO_VALIDATE_SIGNATURE=true</code> w środowisku produkcyjnym.</li>
+  </ul>
+
+  <h2>10. Bezpieczeństwo, niezawodność i rozwój</h2>
+  <ul>
+    <li><strong>Bezpieczeństwo webhooków</strong> – walidacja podpisu Twilio, ograniczenie dostępu przez poprawnie skonfigurowany <code>PUBLIC_BASE_URL</code> i HTTPS po stronie frontowej infrastruktury.</li>
+    <li><strong>Higiena danych</strong> – możliwość redakcji lub usunięcia treści wiadomości po SID, logowanie błędów AI i Twilio.</li>
+    <li><strong>Niezawodność</strong> – deduplikacja SID w workerze auto‑reply, ograniczone kolejki w pamięci, defensywne sprawdzanie konfiguracji (np. obowiązkowe <code>TWILIO_DEFAULT_FROM</code> dla auto‑reply).</li>
+    <li><strong>Rozszerzalność</strong> – możliwość dodawania nowych trybów odpowiedzi w <code>chat_logic.py</code>, kolejnych kanałów komunikacji (np. WhatsApp) oraz nowych endpointów API bez naruszania istniejących integracji.</li>
+  </ul>
+
+  <h2>11. Wersjonowanie i release notes</h2>
+  <p class="section-lead">
+    Historia zmian jest utrzymywana w plikach Markdown i HTML w katalogu <code>deploy/releases</code>,
+    co ułatwia budowanie przejrzystych opisów wydań oraz publikowanie ich jako GitHub Releases.
+  </p>
+  <ul>
+    <li><code>ver3.0.0</code> – wprowadzenie trybu AI auto‑reply, refaktoryzacja klienta Twilio, porządki w repozytorium.</li>
+    <li><code>ver3.0.1</code> – dopracowanie UX dashboardu, estetyczna i funkcjonalna historia wiadomości oraz szybki dostęp do widoku czatu.</li>
+  </ul>
+
+</body>
+</html>
