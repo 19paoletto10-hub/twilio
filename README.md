@@ -4,6 +4,7 @@ Serwer czatu SMS oparty o Flask + Twilio z panelem www, webhookami i asynchronic
 
 ## Funkcje
 - Auto‑reply (worker w tle, kolejka w pamięci, deduplikacja SID) z konfigurowalną treścią w UI/API.
+- Tryb AI auto‑reply – gdy AI jest włączone, wszystkie przychodzące SMS-y dostają odpowiedź wygenerowaną przez OpenAI (z wykorzystaniem historii rozmowy), a klasyczny auto‑reply jest automatycznie wyłączony.
 - Webhooki Twilio: `/twilio/inbound`, `/twilio/status`.
 - REST API: wysyłanie SMS/MMS, pobieranie/sync, redakcja, kasowanie.
 - Panel www: dashboard, lista wiadomości, widok czatu dla numeru, zakładka konfiguracji auto‑reply.
@@ -36,13 +37,15 @@ Aplikacja startuje na `http://0.0.0.0:3000`.
 - Przy starcie aplikacji wartości z `OPENAI_*` i `AI_*` automatycznie trafiają do tabeli `ai_config`, więc środowisko produkcyjne jest gotowe bez klikania w UI.
 - Jeśli nie ustawisz zmiennych środowiskowych, konfigurację możesz nadal wprowadzić z panelu (zakładka „AI”).
 - Aby przetestować lokalnie bez prawdziwych webhooków, ustaw `TWILIO_VALIDATE_SIGNATURE=false`, wprowadź numer testowy w `AI_TARGET_NUMBER`, a następnie wyślij wiadomość z tego numeru.
+- Gdy `AI_ENABLED=true` (lub AI włączone z poziomu UI), system działa jak globalny auto‑reply oparty o OpenAI: każdy inbound SMS jest obsługiwany przez AI, a klasyczny auto‑reply z `auto_reply_config` zostaje wyłączony (oba tryby są wzajemnie wykluczające).
 
 ## Auto‑reply (SMS)
 - `/twilio/inbound` zapisuje wiadomość do `messages`, a gdy `auto_reply_config.enabled=1`, odkłada payload do kolejki; worker `app/auto_reply.py` wysyła odpowiedź z tekstem `auto_reply_config.message`.
 - Wymagany nadawca: `TWILIO_DEFAULT_FROM` (przekazywany jako `from_`).
 - Walidacja numeru: E.164 (`+` i 7–15 cyfr); inne są pomijane z logiem.
 - Deduplikacja po SID (ostatnie 1000 w pamięci), pełne logowanie wysyłki/SID.
-- Jeśli auto‑reply jest wyłączone, używany jest synchroniczny bot z `chat_logic.py` (`echo`/`keywords`).
+- Jeśli auto‑reply jest wyłączone, używany jest synchroniczny bot z `chat_logic.py` (`echo`/`keywords`), o ile nie jest włączone AI.
+- Auto‑reply i AI są rozłączne: jeżeli AI jest aktywne (AI config `enabled=true`), worker auto‑reply nie odpowiada na wiadomości – odpowiedzi generuje wyłącznie AI.
 - Synchronizacja z Twilio (`GET /api/messages/remote` lub okresowe `_maybe_sync_messages`) także kolejkuje auto‑reply dla najnowszej wiadomości inbound, jeśli funkcja jest włączona.
 
 Konfiguracja:
