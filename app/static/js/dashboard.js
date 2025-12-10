@@ -760,6 +760,36 @@
     return `${text.slice(0, 97)}…`;
   };
 
+  const buildParticipantDisplay = (raw, direction) => {
+    const value = (raw || '').trim();
+    if (!value) {
+      return {
+        main: '—',
+        meta: direction === 'inbound' ? 'nieznany nadawca' : 'nieznany odbiorca'
+      };
+    }
+
+    let channel = 'SMS';
+    let normalized = value;
+
+    if (value.toLowerCase().startsWith('whatsapp:')) {
+      channel = 'WhatsApp';
+      normalized = value.slice('whatsapp:'.length);
+    } else if (value.toLowerCase().startsWith('mms:')) {
+      channel = 'MMS';
+      normalized = value.slice('mms:'.length);
+    } else if (value.toLowerCase().startsWith('sms:')) {
+      channel = 'SMS';
+      normalized = value.slice('sms:'.length);
+    }
+
+    const role = direction === 'inbound' ? 'od klienta' : 'do klienta';
+    return {
+      main: normalized || value,
+      meta: `${channel} • ${role}`
+    };
+  };
+
   const buildDateTimeParts = (value) => {
     const fullLabel = formatDateTime(value);
     if (!value) {
@@ -813,7 +843,7 @@
     const rows = items.map((item) => {
       const directionCell = formatDirectionBadge(item.direction);
       const participantRaw = item.direction === 'inbound' ? item.from_number : item.to_number;
-      const participantLabel = participantRaw || '—';
+      const participant = buildParticipantDisplay(participantRaw, item.direction);
       const statusCell = formatStatusBadge(item.status);
       const { dateLabel, timeLabel, fullLabel } = buildDateTimeParts(item.created_at);
       const errorLine = item.error ? `<div class="text-danger small mt-1 text-truncate-2">${escapeHtml(item.error)}</div>` : '';
@@ -826,7 +856,12 @@
       return `
         <tr>
           <td class="text-nowrap">${directionCell}</td>
-          <td class="text-nowrap text-truncate-1" title="${escapeHtml(participantLabel)}">${escapeHtml(participantLabel)}</td>
+          <td class="text-nowrap" title="${escapeHtml(participant.main)}">
+            <div class="messages-participant">
+              <span class="messages-participant__number text-truncate-1">${escapeHtml(participant.main)}</span>
+              <span class="messages-participant__meta text-truncate-1">${escapeHtml(participant.meta)}</span>
+            </div>
+          </td>
           <td>
             <div class="text-truncate-1" title="${bodyPreview}">${bodyPreview}</div>
           </td>

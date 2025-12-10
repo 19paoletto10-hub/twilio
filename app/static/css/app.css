@@ -89,6 +89,22 @@ body {
   color: #6c757d;
 }
 
+.messages-participant {
+  display: flex;
+  flex-direction: column;
+  max-width: 220px;
+}
+
+.messages-participant__number {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.messages-participant__meta {
+  font-size: 0.75rem;
+  color: #6c757d;
+}
+
 .conversation-list {
   padding: 1.5rem;
   display: grid;
