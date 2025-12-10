@@ -7,7 +7,11 @@ import re
 
 from flask import Flask
 
-from .database import list_due_scheduled_messages, mark_scheduled_sent
+from .database import (
+    insert_message,
+    list_due_scheduled_messages,
+    mark_scheduled_sent,
+)
 from .twilio_client import TwilioService
 
 E164_RE = re.compile(r"^\+[1-9]\d{6,14}$")
@@ -38,6 +42,7 @@ def start_reminder_worker(app: Flask, *, interval_seconds: int = 5) -> None:
                         body = (item.get("body") or "").strip()
                         sched_id = int(item["id"])
                         interval = int(item.get("interval_seconds") or 60)
+                        origin_number = (twilio_service.settings.default_from or "").strip()
 
                         if not to_number or not E164_RE.match(to_number):
                             app.logger.info("Reminder skip invalid number: %s", to_number)
@@ -47,17 +52,40 @@ def start_reminder_worker(app: Flask, *, interval_seconds: int = 5) -> None:
                             app.logger.info("Reminder skip empty body for id=%s", sched_id)
                             mark_scheduled_sent(sched_id, interval)
                             continue
+                        if not origin_number:
+                            app.logger.error(
+                                "Reminder worker cannot send: TWILIO_DEFAULT_FROM is unset"
+                            )
+                            mark_scheduled_sent(sched_id, interval)
+                            continue
 
                         try:
                             app.logger.info("Reminder: sending to %s (id=%s)", to_number, sched_id)
-                            twilio_service.send_message(
+                            message = twilio_service.send_message(
                                 to=to_number,
                                 body=body,
-                                extra_params={"from_": twilio_service.settings.default_from},
+                                extra_params={"from_": origin_number},
+                            )
+                            insert_message(
+                                direction="outbound",
+                                sid=getattr(message, "sid", None),
+                                to_number=to_number,
+                                from_number=origin_number,
+                                body=body,
+                                status=getattr(message, "status", "queued"),
                             )
                             mark_scheduled_sent(sched_id, interval)
                         except Exception as exc:  # noqa: BLE001
                             app.logger.exception("Reminder send failed for id=%s: %s", sched_id, exc)
+                            insert_message(
+                                direction="outbound",
+                                sid=None,
+                                to_number=to_number,
+                                from_number=origin_number or None,
+                                body=body,
+                                status="failed",
+                                error=str(exc),
+                            )
             except Exception as exc:  # noqa: BLE001
                 app.logger.exception("Reminder worker error: %s", exc)
 

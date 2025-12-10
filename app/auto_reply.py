@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import re
 import threading
 from collections import deque
+from datetime import datetime
 from queue import SimpleQueue, Empty
-import re
 from typing import Optional, Dict, Any
 
 from flask import Flask
@@ -15,6 +16,21 @@ from .twilio_client import TwilioService
 InboundPayload = Dict[str, Any]
 # Accept standard E.164 numbers (+country up to 15 digits). Reject empties/short.
 ALLOWED_NUMBER_RE = re.compile(r"^\+[1-9]\d{6,14}$")
+
+_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
+
+def _utc_now_iso() -> str:
+    return datetime.utcnow().strftime(_TIMESTAMP_FORMAT)
+
+
+def _parse_iso_timestamp(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 def start_auto_reply_worker(app: Flask) -> None:
@@ -51,6 +67,18 @@ def start_auto_reply_worker(app: Flask) -> None:
 
                     if not cfg.get("enabled"):
                         app.logger.info("Auto-reply disabled; skipping message")
+                        continue
+
+                    enabled_since_raw = cfg.get("enabled_since")
+                    enabled_since = _parse_iso_timestamp(enabled_since_raw)
+                    received_at_raw = payload.get("received_at")
+                    received_at = _parse_iso_timestamp(received_at_raw)
+                    if enabled_since and received_at and received_at < enabled_since:
+                        app.logger.info(
+                            "Skipping auto-reply: message timestamp %s precedes enabled toggle %s",
+                            received_at_raw,
+                            enabled_since_raw,
+                        )
                         continue
 
                     message_body = (cfg.get("message") or "").strip()
@@ -115,7 +143,15 @@ def start_auto_reply_worker(app: Flask) -> None:
     app.config["AUTO_REPLY_WORKER_STARTED"] = True
 
 
-def enqueue_auto_reply(app: Flask, *, sid: Optional[str], from_number: Optional[str], to_number: Optional[str], body: str) -> None:
+def enqueue_auto_reply(
+    app: Flask,
+    *,
+    sid: Optional[str],
+    from_number: Optional[str],
+    to_number: Optional[str],
+    body: str,
+    received_at: Optional[str] = None,
+) -> None:
     """Place inbound message data on the queue for async auto-reply.
 
     Called from webhook after persisting inbound message. Lightweight and non-blocking.
@@ -127,6 +163,7 @@ def enqueue_auto_reply(app: Flask, *, sid: Optional[str], from_number: Optional[
         "from_number": from_number,
         "to_number": to_number,
         "body": body,
+        "received_at": received_at or _utc_now_iso(),
     }
     app.logger.info("Enqueue auto-reply payload: %s", payload)
     queue.put(payload)

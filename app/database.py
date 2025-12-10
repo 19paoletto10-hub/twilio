@@ -7,6 +7,9 @@ from typing import Any, Dict, List, Optional
 
 from flask import current_app, g
 
+SCHEMA_VERSION = 3
+_TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
+
 
 def init_app(app) -> None:
     """Configure database lifecycle and ensure schema exists."""
@@ -33,66 +36,137 @@ def _close_connection(_=None) -> None:
         conn.close()
 
 
+def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
+    row = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name = ?",
+        (table_name,),
+    ).fetchone()
+    return row is not None
+
+
+def _column_exists(conn: sqlite3.Connection, table_name: str, column_name: str) -> bool:
+    columns = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    for column in columns:
+        name = column["name"] if isinstance(column, sqlite3.Row) else column[1]
+        if name == column_name:
+            return True
+    return False
+
+
+def _create_base_schema(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            sid TEXT UNIQUE,
+            direction TEXT NOT NULL CHECK(direction IN ('inbound', 'outbound')),
+            to_number TEXT,
+            from_number TEXT,
+            body TEXT NOT NULL,
+            status TEXT,
+            error TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_messages_sid ON messages(sid);
+        CREATE INDEX IF NOT EXISTS idx_messages_created_at
+            ON messages(created_at);
+        CREATE INDEX IF NOT EXISTS idx_messages_direction_created_at
+            ON messages(direction, created_at);
+
+        CREATE TABLE IF NOT EXISTS auto_reply_config (
+            id INTEGER PRIMARY KEY CHECK(id = 1),
+            enabled INTEGER NOT NULL DEFAULT 0,
+            message TEXT NOT NULL DEFAULT '',
+            enabled_since TEXT
+        );
+        INSERT OR IGNORE INTO auto_reply_config (id, enabled, message, enabled_since)
+             VALUES (1, 0, '', NULL);
+
+        CREATE TABLE IF NOT EXISTS scheduled_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            to_number TEXT NOT NULL,
+            body TEXT NOT NULL,
+            interval_seconds INTEGER NOT NULL CHECK(interval_seconds >= 60),
+            enabled INTEGER NOT NULL DEFAULT 1,
+            last_sent_at TEXT,
+            next_run_at TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_scheduled_enabled_next_run
+            ON scheduled_messages(enabled, next_run_at);
+        """
+    )
+
+
+def _migration_add_auto_reply_enabled_since(conn: sqlite3.Connection) -> None:
+    if not _column_exists(conn, "auto_reply_config", "enabled_since"):
+        conn.execute("ALTER TABLE auto_reply_config ADD COLUMN enabled_since TEXT")
+        conn.execute(
+            "UPDATE auto_reply_config SET enabled_since = NULL WHERE enabled_since IS NULL"
+        )
+
+
+def _migration_add_message_indexes(conn: sqlite3.Connection) -> None:
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_messages_direction_created_at ON messages(direction, created_at)"
+    )
+
+
 def _ensure_schema() -> None:
     db_path = Path(current_app.config["APP_SETTINGS"].db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
     try:
-        conn.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                sid TEXT,
-                direction TEXT NOT NULL CHECK(direction IN ('inbound', 'outbound')),
-                to_number TEXT,
-                from_number TEXT,
-                body TEXT NOT NULL,
-                status TEXT,
-                error TEXT,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
+        conn.execute("PRAGMA foreign_keys = ON")
+        current_version_row = conn.execute("PRAGMA user_version").fetchone()
+        current_version = int(current_version_row[0]) if current_version_row else 0
 
-            CREATE INDEX IF NOT EXISTS idx_messages_sid ON messages(sid);
-            CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_sid_unique
-                ON messages(sid)
-             WHERE sid IS NOT NULL;
+        has_messages_table = _table_exists(conn, "messages")
 
-            CREATE TABLE IF NOT EXISTS auto_reply_config (
-                id INTEGER PRIMARY KEY CHECK(id = 1),
-                enabled INTEGER NOT NULL DEFAULT 0,
-                message TEXT NOT NULL DEFAULT ''
-            );
-            INSERT OR IGNORE INTO auto_reply_config (id, enabled, message)
-                 VALUES (1, 0, '');
+        if current_version == 0 and not has_messages_table:
+            _create_base_schema(conn)
+            current_version = SCHEMA_VERSION
+        else:
+            if current_version == 0:
+                current_version = 1
 
-            CREATE TABLE IF NOT EXISTS scheduled_messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                to_number TEXT NOT NULL,
-                body TEXT NOT NULL,
-                interval_seconds INTEGER NOT NULL CHECK(interval_seconds >= 60),
-                enabled INTEGER NOT NULL DEFAULT 1,
-                last_sent_at TEXT,
-                next_run_at TEXT,
-                created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
-            );
-            CREATE INDEX IF NOT EXISTS idx_scheduled_enabled_next_run
-                ON scheduled_messages(enabled, next_run_at);
-            """
-        )
+            if current_version < 2:
+                _migration_add_auto_reply_enabled_since(conn)
+                current_version = 2
+
+            if current_version < 3:
+                _migration_add_message_indexes(conn)
+                current_version = 3
+
+        conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()
     finally:
         conn.close()
 
 
 def _utc_timestamp() -> str:
-    return datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+    return datetime.utcnow().strftime(_TIMESTAMP_FORMAT)
 
 
 def _utc_after(seconds: int) -> str:
-    return (datetime.utcnow() + timedelta(seconds=seconds)).strftime("%Y-%m-%dT%H:%M:%S")
+    return (datetime.utcnow() + timedelta(seconds=seconds)).strftime(_TIMESTAMP_FORMAT)
+
+
+def _safe_fromiso(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
 
 
 def upsert_message(
@@ -112,15 +186,35 @@ def upsert_message(
     created_value = created_at or now
     updated_value = updated_at or now
 
-    if sid:
-        existing = conn.execute(
-            "SELECT id FROM messages WHERE sid = ?",
-            (sid,),
-        ).fetchone()
-        if existing:
-            record_id = int(existing["id"])
-            conn.execute(
+    def _update_record(record_id: int, *, set_sid: bool) -> int:
+        if set_sid:
+            query = """
+                UPDATE messages
+                   SET sid = ?,
+                       direction = ?,
+                       to_number = ?,
+                       from_number = ?,
+                       body = ?,
+                       status = ?,
+                       error = ?,
+                       created_at = ?,
+                       updated_at = ?
+                 WHERE id = ?
                 """
+            params = (
+                sid,
+                direction,
+                to_number,
+                from_number,
+                body,
+                status,
+                error,
+                created_value,
+                updated_value,
+                record_id,
+            )
+        else:
+            query = """
                 UPDATE messages
                    SET direction = ?,
                        to_number = ?,
@@ -131,21 +225,74 @@ def upsert_message(
                        created_at = ?,
                        updated_at = ?
                  WHERE id = ?
-                """,
-                (
+                """
+            params = (
+                direction,
+                to_number,
+                from_number,
+                body,
+                status,
+                error,
+                created_value,
+                updated_value,
+                record_id,
+            )
+
+        conn.execute(query, params)
+        conn.commit()
+        return record_id
+
+    if sid:
+        placeholder = conn.execute(
+            """
+            SELECT id, created_at
+              FROM messages
+             WHERE sid IS NULL
+               AND direction = ?
+               AND ((from_number = ?) OR (from_number IS NULL AND ? IS NULL))
+               AND ((to_number = ?) OR (to_number IS NULL AND ? IS NULL))
+          ORDER BY datetime(created_at) DESC, id DESC
+             LIMIT 1
+            """,
+            (direction, from_number, from_number, to_number, to_number),
+        ).fetchone()
+
+        if placeholder:
+            placeholder_dt = _safe_fromiso(placeholder["created_at"])
+            desired_dt = _safe_fromiso(created_value)
+            use_placeholder = True
+            if placeholder_dt and desired_dt:
+                use_placeholder = abs((desired_dt - placeholder_dt).total_seconds()) <= 600
+            if use_placeholder:
+                return _update_record(int(placeholder["id"]), set_sid=True)
+
+        try:
+            cursor = conn.execute(
+                """
+                INSERT INTO messages (
+                    sid,
                     direction,
                     to_number,
                     from_number,
                     body,
                     status,
                     error,
-                    created_value,
-                    updated_value,
-                    record_id,
-                ),
+                    created_at,
+                    updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (sid, direction, to_number, from_number, body, status, error, created_value, updated_value),
             )
             conn.commit()
-            return record_id
+            return int(cursor.lastrowid)
+        except sqlite3.IntegrityError:
+            existing = conn.execute(
+                "SELECT id FROM messages WHERE sid = ?",
+                (sid,),
+            ).fetchone()
+            if existing:
+                return _update_record(int(existing["id"]), set_sid=False)
+            raise
 
     cursor = conn.execute(
         """
@@ -176,9 +323,13 @@ def insert_message(
     from_number: Optional[str] = None,
     status: Optional[str] = None,
     error: Optional[str] = None,
+    created_at: Optional[str] = None,
+    updated_at: Optional[str] = None,
 ) -> int:
     conn = _get_connection()
     now = _utc_timestamp()
+    created_value = created_at or now
+    updated_value = updated_at or now
     cursor = conn.execute(
         """
         INSERT INTO messages (
@@ -193,7 +344,7 @@ def insert_message(
             updated_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (sid, direction, to_number, from_number, body, status, error, now, now),
+        (sid, direction, to_number, from_number, body, status, error, created_value, updated_value),
     )
     conn.commit()
     return int(cursor.lastrowid)
@@ -326,27 +477,42 @@ def list_inbound_after(last_id: int, limit: int = 50) -> List[Dict[str, Any]]:
 def get_auto_reply_config() -> Dict[str, Any]:
     conn = _get_connection()
     row = conn.execute(
-        "SELECT id, enabled, message FROM auto_reply_config WHERE id = 1"
+        "SELECT id, enabled, message, enabled_since FROM auto_reply_config WHERE id = 1"
     ).fetchone()
     if row is None:
         # Fallback to defaults if somehow missing
         conn.execute(
-            "INSERT OR IGNORE INTO auto_reply_config (id, enabled, message) VALUES (1, 0, '')"
+            "INSERT OR IGNORE INTO auto_reply_config (id, enabled, message, enabled_since) VALUES (1, 0, '', NULL)"
         )
         conn.commit()
-        return {"enabled": False, "message": ""}
+        row = conn.execute(
+            "SELECT id, enabled, message, enabled_since FROM auto_reply_config WHERE id = 1"
+        ).fetchone()
+        if row is None:
+            return {"enabled": False, "message": "", "enabled_since": None}
 
     return {
         "enabled": bool(row["enabled"]),
         "message": row["message"] or "",
+        "enabled_since": row["enabled_since"],
     }
 
 
 def set_auto_reply_config(*, enabled: bool, message: str) -> None:
     conn = _get_connection()
+    current_cfg = get_auto_reply_config()
+    now = _utc_timestamp()
+    if enabled:
+        if current_cfg.get("enabled"):
+            enabled_since = current_cfg.get("enabled_since") or now
+        else:
+            enabled_since = now
+    else:
+        enabled_since = None
+
     conn.execute(
-        "UPDATE auto_reply_config SET enabled = ?, message = ? WHERE id = 1",
-        (1 if enabled else 0, message or ""),
+        "UPDATE auto_reply_config SET enabled = ?, message = ?, enabled_since = ? WHERE id = 1",
+        (1 if enabled else 0, message or "", enabled_since),
     )
     conn.commit()
 

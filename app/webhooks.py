@@ -44,6 +44,15 @@ def _datetime_to_iso(value: Optional[datetime]) -> Optional[str]:
     return value.strftime("%Y-%m-%dT%H:%M:%S")
 
 
+def _parse_iso_timestamp(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except ValueError:
+        return None
+
+
 def _persist_twilio_message(message) -> None:
     direction = (
         "inbound"
@@ -115,12 +124,34 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
     body = getattr(message, "body", "") or ""
     sid = getattr(message, "sid", None)
 
+    received_at_iso = None
+    for attr in ("date_created", "date_sent", "date_updated"):
+        dt_value = getattr(message, attr, None)
+        if dt_value:
+            received_at_iso = _datetime_to_iso(dt_value)
+            if received_at_iso:
+                break
+    if not received_at_iso:
+        received_at_iso = _datetime_to_iso(datetime.utcnow())
+
+    enabled_since_dt = _parse_iso_timestamp(cfg.get("enabled_since"))
+    received_at_dt = _parse_iso_timestamp(received_at_iso)
+    if enabled_since_dt and received_at_dt and received_at_dt < enabled_since_dt:
+        current_app.logger.info(
+            "Skipping auto-reply enqueue for SID=%s: received %s before enabled toggle %s",
+            sid,
+            received_at_iso,
+            cfg.get("enabled_since"),
+        )
+        return
+
     enqueue_auto_reply(
         current_app,
         sid=sid,
         from_number=from_number,
         to_number=to_number,
         body=body,
+        received_at=received_at_iso,
     )
 
 
@@ -224,6 +255,8 @@ def inbound_message():
         app.logger.warning("Missing required webhook parameters: From=%s, To=%s", from_number, to_number)
         return Response("<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response></Response>", mimetype="application/xml")
 
+    received_at_iso = _datetime_to_iso(datetime.utcnow())
+
     # Store the incoming message
     try:
         if message_sid:
@@ -267,6 +300,7 @@ def inbound_message():
             from_number=from_number,
             to_number=to_number,
             body=body,
+            received_at=received_at_iso,
         )
         return Response("OK", mimetype="text/plain")
 
