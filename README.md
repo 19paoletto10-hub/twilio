@@ -5,19 +5,29 @@
 ---
 
 ## Spis treści
+- [TL;DR / kontekst biznesowy](#tldr--kontekst-biznesowy)
 - [Opis systemu](#opis-systemu)
 - [Architektura i komponenty](#architektura-i-komponenty)
 - [Szybki start (lokalnie)](#szybki-start-lokalnie)
-- [Konfiguracja środowiska (.env)](#konfiguracja-środowiska-env)
 - [Uruchomienie w Dockerze](#uruchomienie-w-dockerze)
 - [Uruchomienie w GitHub Codespaces](#uruchomienie-w-github-codespaces)
+- [Konfiguracja środowiska (.env)](#konfiguracja-środowiska-env)
+- [Dane i backup](#dane-i-backup)
 - [Panel WWW](#panel-www)
 - [News / FAISS / RAG](#news--faiss--rag)
 - [CLI – kontrola z konsoli](#cli--kontrola-z-konsoli)
+- [Operacyjny runbook (prod)](#operacyjny-runbook-prod)
 - [Dla deweloperów](#dla-deweloperów)
 - [Debugowanie i dobre praktyki](#debugowanie-i-dobre-praktyki)
 
 ---
+
+## TL;DR / kontekst biznesowy
+
+- Cel: spójny hub SMS (i WhatsApp, jeśli numer Twilio to wspiera) z prostym panelem www, automatycznymi odpowiedziami (szablon + AI), cykliczną dystrybucją newsów i prostym RAG opartym o lokalny FAISS.
+- Wartość: redukcja czasu obsługi klientów, możliwość szybkiego broadcastu streszczeń newsów, przewidywalne SLA dzięki workerom i SQLite (brak zewnętrznych baz).
+- Wymagania: konto Twilio (numery / Messaging Service), klucz OpenAI (dla AI i embeddings), Python 3.10+, sieć z dostępem do platform Twilio i OpenAI.
+- Kluczowe procesy: webhook inbound/status Twilio, worker auto-reply, worker przypomnień, scheduler newsów (RAG + SMS), panel do operacji ręcznych i diagnostyki.
 
 ## Opis systemu
 
@@ -66,32 +76,28 @@ Dane:
 
 ## Szybki start (lokalnie)
 
-Minimalne wymagania:
+Minimalne wymagania (workstation / dev):
 
 - Python 3.10+,
-- konto Twilio z numerem SMS,
-- konto OpenAI z aktywnym kluczem API.
+- konto Twilio z numerem SMS lub Messaging Service,
+- (opcjonalnie) konto OpenAI z aktywnym kluczem API dla AI / embeddings.
 
-1. Klon repozytorium i środowisko:
+Procedura:
 
 ```bash
+# 1) środowisko
 python -m venv venv
 source venv/bin/activate              # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env                  # wypełnij wartości obowiązkowe
+
+# 2) uruchomienie w dev
+python run.py                         # lub: make run-dev
 ```
 
-2. Uzupełnij `.env` (patrz sekcja „Konfiguracja środowiska”).
+Adres panelu: http://0.0.0.0:3000
 
-3. Uruchom aplikację:
-
-```bash
-python run.py
-```
-
-Domyślnie panel jest dostępny pod: http://0.0.0.0:3000
-
-4. Skonfiguruj webhooki Twilio (Incoming i Status Callback – szczegóły niżej).
+Po starcie skonfiguruj webhooki Twilio (Incoming i Status Callback) na `PUBLIC_BASE_URL/twilio/inbound` oraz `PUBLIC_BASE_URL/twilio/status`.
 
 ---
 
@@ -136,6 +142,21 @@ SECOND_MODEL=gpt-4o-mini
 
 4. Zrestartuj aplikację / kontener.
 5. W panelu (zakładka AI / News) użyj przycisku „Przetestuj …”, aby upewnić się, że połączenie działa.
+
+Tipy operacyjne:
+
+- `TWILIO_VALIDATE_SIGNATURE=false` tylko w dev/tunelu; w prod zostaw `true`.
+- `APP_DEBUG=false` w prod, `LOG_LEVEL=info` lub `warning` aby ograniczyć hałas logów.
+- `SECOND_OPENAI` jest używane do embeddings/RAG; `OPENAI_API_KEY`/`AI_*` dla czatu AI. Można ustawić oba, ale nie są współdzielone.
+- Ścieżki danych (`DB_PATH`, katalog `X1_data`) mogą być względne (w repo) lub absolutne (np. montowane wolumeny w Docker).
+
+## Dane i backup
+
+- Baza: `data/app.db` (SQLite). Backup: snapshot pliku + lock w czasie kopiowania (np. `sqlite3 .backup`).
+- Indeks FAISS: `X1_data/faiss_openai_index/` (`index.faiss` lub `index.npz` + `docs.json`).
+- Snapshot dokumentów: `X1_data/documents.json` (pozwala odbudować indeks nawet bez plików binarnych FAISS).
+- Surowe scrapes: `X1_data/business_insider_scrapes/*.txt|json`.
+- Zalecany backup prod: cały `X1_data/` + `data/app.db`. Przywrócenie: odtworzyć katalogi, uruchomić aplikację, sprawdzić `/api/news/test-faiss`.
 
 ---
 
@@ -282,6 +303,33 @@ python manage.py ai-send \
   - `--use-messaging-service` – jak wyżej.
 
 CLI korzysta z pełnej konfiguracji aplikacji (Flask app context), więc działa w ten sam sposób, co panel / webhooki.
+
+## Operacyjny runbook (prod)
+
+1. **Provision**
+  - Przygotuj host z Docker + docker-compose (v2) i dostępem do internetu (Twilio, OpenAI).
+  - Utwórz katalog na dane: `data/`, `X1_data/` (z backupu lub pusty).
+2. **Konfiguracja**
+  - Skopiuj `.env` (bez sekretów w repo). Ustaw: `APP_DEBUG=false`, `TWILIO_VALIDATE_SIGNATURE=true`, `PUBLIC_BASE_URL=https://<domena>`.
+  - Zweryfikuj `TWILIO_DEFAULT_FROM` **lub** `TWILIO_MESSAGING_SERVICE_SID` (wymagane do wysyłki).
+  - Uzupełnij `SECOND_OPENAI` (embeddings/RAG) i `AI_*`/`OPENAI_API_KEY` (czat AI) w razie potrzeby.
+3. **Uruchomienie**
+  - Dev/test: `make compose-up` (mapuje port 3000).
+  - Prod: `make compose-prod` (daemon). Wolumeny: `./data:/app/data`, `./X1_data:/app/X1_data`.
+  - Healthcheck: `curl http://<host>:3000/api/health` (status ok/env/openai_enabled).
+4. **Po starcie**
+  - W konsoli Twilio ustaw webhooki: `https://PUBLIC_BASE_URL/twilio/inbound`, `https://PUBLIC_BASE_URL/twilio/status`.
+  - Wejdź do panelu: skonfiguruj AI/Auto-reply/News, wykonaj testy: `/api/ai/test`, `/api/news/test`, `/api/news/test-faiss`.
+5. **Monitoring i logi**
+  - Logi aplikacji: `docker compose logs -f web` (domyślny serwis w compose). Szukaj `Inbound webhook hit`, `Message status update`, `FAISS`.
+  - Workery uruchamiane w tym samym procesie Flask (auto-reply queue, reminders, news scheduler) – logi wspólne.
+6. **Backup/restore**
+  - Backup plików: `data/app.db`, `X1_data/`.
+  - Restore: odtwórz katalogi, uruchom kontener, sprawdź `/api/news/test-faiss` oraz widoczność historii w panelu.
+7. **Awaryjne kroki**
+  - Brak wysyłki SMS: sprawdź, czy `TWILIO_DEFAULT_FROM` lub Messaging Service jest ustawione; zweryfikuj logi statusów Twilio.
+  - Brak wyników RAG: zbuduj indeks `POST /api/news/indices/build` lub uruchom `Scrape` w panelu.
+  - Kolejka auto-reply: przy braku odpowiedzi upewnij się, że AI/auto-reply jest włączone i inbound trafia do `/twilio/inbound` (logi + dashboard).
 
 ---
 
