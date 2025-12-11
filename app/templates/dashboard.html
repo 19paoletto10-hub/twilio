@@ -36,6 +36,11 @@
           AI
         </button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-news-btn" data-bs-toggle="tab" data-bs-target="#tab-news" type="button" role="tab" aria-controls="tab-news" aria-selected="false">
+          News
+        </button>
+      </li>
     </ul>
 
     <div class="tab-content">
@@ -377,6 +382,202 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-news" role="tabpanel" aria-labelledby="tab-news-btn" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">News / RAG</p>
+                <h2 class="h5 mb-0">Dodaj odbiorce powiadomień</h2>
+              </div>
+              <div class="card-body">
+                <form id="news-add-recipient-form" novalidate>
+                  <div class="mb-3">
+                    <label for="news-recipient-phone" class="form-label">Numer telefonu</label>
+                    <input type="tel" class="form-control" id="news-recipient-phone" placeholder="np. +48123456789" required>
+                    <div class="invalid-feedback">Podaj numer w formacie E.164.</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="news-recipient-time" class="form-label">Godzina wysyłki (24h)</label>
+                    <input type="time" class="form-control" id="news-recipient-time" value="08:00" required>
+                    <div class="form-text">Powiadomienie zostanie wysłane o wybranej godzinie</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <label for="news-recipient-prompt" class="form-label">Prompt dla AI</label>
+                    <textarea class="form-control" id="news-recipient-prompt" rows="3" placeholder="np. Wygeneruj krótkie podsumowanie najważniejszych newsów ekonomicznych..." required></textarea>
+                    <div class="form-text">Opisz jak AI ma wygenerować wiadomość</div>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" id="news-add-spinner"></span>
+                    Dodaj odbiorce
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Menedżer</p>
+                  <h2 class="h5 mb-0">Aktywni odbiorcy (<span id="news-recipients-count">0</span>)</h2>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" id="news-recipients-refresh-btn">
+                  <i class="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="news-recipients-list">
+                  <p class="text-muted text-center py-4">Brak odbiorców</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Test FAISS</p>
+                <h2 class="h5 mb-0">Testuj zapytania do bazy newsów</h2>
+              </div>
+              <div class="card-body">
+                <p class="small text-muted">Zadaj pytanie do bazy FAISS aby sprawdzić jak AI odpowiada na podstawie zeskrapowanych newsów.</p>
+                
+                <div class="mb-3">
+                  <label for="news-faiss-query" class="form-label">Zapytanie testowe</label>
+                  <textarea class="form-control" id="news-faiss-query" rows="3" placeholder="np. Jakie są najważniejsze informacje ekonomiczne?"></textarea>
+                  <div class="form-text">Wpisz pytanie lub prompt, a AI wygeneruje odpowiedź na podstawie newsów.</div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                  <button type="button" class="btn btn-success" id="news-faiss-test-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    Testuj FAISS
+                  </button>
+                </div>
+
+                <div id="news-faiss-result" class="d-none">
+                  <div class="card bg-light border-0">
+                    <div class="card-body">
+                      <p class="text-muted small mb-2">Odpowiedź AI:</p>
+                      <div id="news-faiss-answer" class="text-dark" style="white-space: pre-wrap;"></div>
+                      <div class="mt-2 small text-muted">
+                        <span id="news-faiss-meta"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-3 small text-muted">
+                  <div>Ostatnia budowa: <span id="news-last-build">—</span></div>
+                  <div>Ostatnie powiadomienie: <span id="news-last-notification">—</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Skrapowanie + FAISS</p>
+                <h2 class="h5 mb-0">Uruchom pobieranie newsów</h2>
+              </div>
+              <div class="card-body">
+                <p class="small text-muted mb-3">Kliknij, aby pobrać kategorie Business Insider, zapisać pliki i odbudować bazę FAISS.</p>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                  <button class="btn btn-success" id="news-scrape-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="news-scrape-spinner"></span>
+                    Pobierz i zbuduj
+                  </button>
+                  <span class="badge bg-light text-muted border" id="news-scrape-status">Oczekuje</span>
+                </div>
+                <div class="alert alert-light border small d-none" id="news-scrape-log"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Zapisane pliki</p>
+                  <h2 class="h5 mb-0">Kategorie po skrapowaniu</h2>
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-success btn-sm" id="news-build-index-btn" title="Zbuduj indeks FAISS z istniejących plików">
+                    <span class="spinner-border spinner-border-sm me-1 d-none" role="status" id="news-build-index-spinner"></span>
+                    🔨 Zbuduj Indeks FAISS
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm" id="news-files-refresh-btn">Odśwież</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row g-3" id="news-files-grid">
+                  <div class="col-12 text-center text-muted py-4" id="news-files-empty">Brak plików. Uruchom skrapowanie, aby zobaczyć kafelki.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Bazy FAISS</p>
+                  <h2 class="h5 mb-0">Wybierz aktywną bazę / podgląd</h2>
+                </div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" id="news-refresh-indices-btn">Odśwież</button>
+                  <span class="badge bg-light text-muted border" id="news-indices-count">0</span>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="alert alert-danger d-none" id="news-indices-error"></div>
+                <div class="table-responsive">
+                  <table class="table table-hover align-middle mb-0" id="news-indices-table">
+                    <thead class="table-light">
+                      <tr>
+                        <th scope="col">Nazwa</th>
+                        <th scope="col" class="text-nowrap">Utworzono</th>
+                        <th scope="col" class="text-nowrap">Rozmiar</th>
+                        <th scope="col" class="text-nowrap">Status</th>
+                        <th scope="col" class="text-nowrap">Akcje</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td colspan="5" class="text-center text-muted py-4">Brak danych.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="news-overlay d-none" id="news-file-overlay">
+        <div class="news-overlay__backdrop"></div>
+        <div class="news-overlay__panel">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <p class="text-uppercase text-muted fs-6 mb-1">Podgląd pliku</p>
+              <h3 class="h5 mb-0" id="news-overlay-title">—</h3>
+              <div class="small text-muted" id="news-overlay-meta">—</div>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" id="news-overlay-close-btn">Zamknij</button>
+          </div>
+          <div class="news-overlay__content" id="news-overlay-content">
+            <div class="text-center text-muted py-4">Wybierz kafelek, aby zobaczyć dane.</div>
           </div>
         </div>
       </div>

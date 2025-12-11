@@ -2,4 +2,9 @@ Flask==3.0.3
 python-dotenv==1.0.1
 twilio==9.3.1
 openai==1.59.3
-placeholder
+faiss-cpu==1.13.1
+numpy>=1.24
+beautifulsoup4>=4.12
+requests>=2.31.0
+trafilatura>=1.6.0
+lxml>=4.9.0

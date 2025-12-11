@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import json
+import logging
 from typing import Optional, Dict, Any
 
 from twilio.rest import Client
@@ -59,6 +60,42 @@ class TwilioService:
 
         message = self.client.messages.create(**params)
         return message
+
+    def send_sms(
+        self,
+        *,
+        to: str,
+        body: str,
+        from_: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Convenience wrapper returning a dict result.
+
+        Used by News scheduler / manual News send. Hides raw Twilio
+        exceptions behind a simple success/error structure.
+        """
+        logger = logging.getLogger(__name__)
+        try:
+            extra_params: Dict[str, Any] = {}
+            if from_:
+                extra_params["from_"] = from_
+
+            message = self.send_message(
+                to=to,
+                body=body,
+                extra_params=extra_params,
+            )
+
+            return {
+                "success": True,
+                "sid": getattr(message, "sid", None),
+                "status": getattr(message, "status", None),
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.exception("Twilio send_sms failed: %s", exc)
+            return {
+                "success": False,
+                "error": str(exc),
+            }
 
     def send_reply_to_inbound(self, *, inbound_from: str, inbound_to: str, body: str):
         """Send an SMS back to the sender of an inbound message.

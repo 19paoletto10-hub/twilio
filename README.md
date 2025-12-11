@@ -1,170 +1,348 @@
 # Twilio Chat App
 
-Serwer czatu SMS oparty o Flask + Twilio z panelem www, webhookami i asynchronicznym auto‑reply. Obsługuje SQLite, uruchomienie lokalne i w Dockerze. UI korzysta z Bootstrap 5.
+> Produkcyjny serwer SMS oparty o Flask + Twilio, z panelem www, AI auto‑reply i wyszukiwaniem semantycznym (FAISS). Dokument napisany z perspektywy twórcy i dewelopera, który ma to realnie utrzymywać.
 
-## Funkcje
-- Auto‑reply (worker w tle, kolejka w pamięci, deduplikacja SID) z konfigurowalną treścią w UI/API.
-- Tryb AI auto‑reply – gdy AI jest włączone, wszystkie przychodzące SMS-y dostają odpowiedź wygenerowaną przez OpenAI (z wykorzystaniem historii rozmowy), a klasyczny auto‑reply jest automatycznie wyłączony.
-- Webhooki Twilio: `/twilio/inbound`, `/twilio/status`.
-- REST API: wysyłanie SMS/MMS, pobieranie/sync, redakcja, kasowanie.
-- Panel www: dashboard, lista wiadomości, widok czatu dla numeru, zakładka konfiguracji auto‑reply.
-- Modułowa architektura (`app/config.py`, `app/twilio_client.py`, `app/auto_reply.py`, `app/webhooks.py`, `app/database.py`, `app/chat_logic.py`).
+---
 
-### Architektura na wysokim poziomie
+## Spis treści
+- [Opis systemu](#opis-systemu)
+- [Architektura i komponenty](#architektura-i-komponenty)
+- [Szybki start (lokalnie)](#szybki-start-lokalnie)
+- [Konfiguracja środowiska (.env)](#konfiguracja-środowiska-env)
+- [Uruchomienie w Dockerze](#uruchomienie-w-dockerze)
+- [Uruchomienie w GitHub Codespaces](#uruchomienie-w-github-codespaces)
+- [Panel WWW](#panel-www)
+- [News / FAISS / RAG](#news--faiss--rag)
+- [CLI – kontrola z konsoli](#cli--kontrola-z-konsoli)
+- [Dla deweloperów](#dla-deweloperów)
+- [Debugowanie i dobre praktyki](#debugowanie-i-dobre-praktyki)
 
-- `app/__init__.py` – fabryka aplikacji Flask (`create_app()`), ładuje ustawienia z env, tworzy klienta Twilio, inicjalizuje bazę SQLite i uruchamia workery w tle (auto‑reply, przypomnienia).
-- `app/webhooks.py` – główny blueprint HTTP: webhooki Twilio, API do wiadomości, konfiguracji AI/auto‑reply, przypomnień oraz pomocnicza synchronizacja wiadomości z Twilio.
-- `app/ui.py` + `templates/` – panel www (dashboard, widok czatu, zakładki Auto‑odpowiedź i AI).
-- `app/database.py` – dostęp do SQLite: schemat, migracje, model wiadomości, konfiguracja AI/auto‑reply, scheduler przypomnień.
-- `app/twilio_client.py` – cienka warstwa nad `twilio.rest.Client` (wysyłka SMS, odpowiedzi na wiadomości przychodzące, praca z Messaging Service).
-- `app/ai_service.py` – integracja z OpenAI: budowanie historii rozmowy z bazy, wywołania Chat Completions, wygodna funkcja do generowania i wysyłania odpowiedzi AI jako SMS.
-- `app/auto_reply.py` – worker reagujący na kolejkę `AUTO_REPLY_QUEUE`: obsługuje zarówno klasyczny auto‑reply, jak i AI auto‑reply.
-- `app/reminder.py` – worker przypomnień SMS z tabeli `scheduled_messages`.
+---
+
+## Opis systemu
+
+Aplikacja realizuje kompletny „hub SMS” dla jednego konta Twilio:
+
+- przyjmuje webhooki z Twilio (`/twilio/inbound`, `/twilio/status`),
+- zapisuje wszystkie wiadomości w SQLite,
+- pozwala z panelu www prowadzić konwersacje 1:1,
+- obsługuje trzy tryby odpowiedzi: klasyczny auto‑reply, AI auto‑reply (OpenAI) oraz prostego chat‑bota,
+- potrafi cyklicznie wysyłać newsy / podsumowania (RAG) opierając się o lokalny indeks FAISS.
+
+System jest „lekki” (Flask + SQLite), ale architektura jest modularna i gotowa na produkcję (Docker, docker‑compose, osobne workery, logowanie).
+
+---
+
+## Architektura i komponenty
+
+Najważniejsze moduły:
+
+- `app/__init__.py` – fabryka Flask (`create_app`): ładuje konfigurację z `.env`, inicjalizuje klienta Twilio, bazę SQLite i uruchamia workery (auto‑reply, przypomnienia).
+- `app/webhooks.py` – główny blueprint HTTP:
+  - webhooki Twilio (`/twilio/inbound`, `/twilio/status`),
+  - REST API do wiadomości, AI, auto‑reply,
+  - API News/FAISS (scraping, budowa indeksu, test zapytań, lista oraz wysyłka do odbiorców),
+  - operacje na plikach scrapów i indeksie (delete, wybór aktywnego indeksu).
+- `app/ui.py` + `templates/` + `static/` – panel www (dashboard, czat, zakładki AI, Auto‑reply, News/FAISS).
+- `app/database.py` – definicje tabel (wiadomości, konfiguracja AI/auto‑reply, scheduler przypomnień) oraz helpery do zapisu/odczytu.
+- `app/twilio_client.py` – cienka warstwa nad `twilio.rest.Client` (wysyłka SMS, odpowiedzi na inbound, integracja z Messaging Service).
+- `app/ai_service.py` + `app/chat_logic.py` – generowanie odpowiedzi AI (OpenAI) oraz fallbackowy silnik „echo / keywords”.
+- `app/auto_reply.py` – worker, który konsumuje kolejkę auto‑reply i wysyła odpowiedzi (klasyczne lub AI, zależnie od konfiguracji).
+- `app/reminder.py` – worker przypomnień SMS oparty o tabelę `scheduled_messages`.
+- `app/faiss_service.py` – integracja z FAISS i embeddings:
+  - budowa indeksu z plików scrapów,
+  - wyszukiwanie semantyczne,
+  - odpowiedzi RAG z użyciem `NewsOpenAIService` (OpenAI, modele z `SECOND_MODEL`).
+- `app/scraper_service.py` – scraper wybranych serwisów newsowych, generujący teksty wejściowe do FAISS.
+
+Dane:
+
+- baza SQLite: `data/app.db`,
+- indeks FAISS: katalog `X1_data/faiss_openai_index/`,
+- snapshot dokumentów RAG: `X1_data/documents.json`,
+- pliki scrapów (surowe teksty / JSON): `X1_data/business_insider_scrapes/`.
+
+---
 
 ## Szybki start (lokalnie)
+
+Minimalne wymagania:
+
+- Python 3.10+,
+- konto Twilio z numerem SMS,
+- konto OpenAI z aktywnym kluczem API.
+
+1. Klon repozytorium i środowisko:
+
 ```bash
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate              # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env
+```
+
+2. Uzupełnij `.env` (patrz sekcja „Konfiguracja środowiska”).
+
+3. Uruchom aplikację:
+
+```bash
 python run.py
 ```
-Aplikacja startuje na `http://0.0.0.0:3000`.
 
-## Zmienne środowiskowe (.env)
-- `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` – wymagane.
-- `TWILIO_DEFAULT_FROM` – numer nadawcy w formacie E.164; wymagany do auto‑reply.
-- `TWILIO_MESSAGING_SERVICE_SID` – opcjonalnie, gdy używasz Messaging Service.
-- `OPENAI_API_KEY` – klucz używany do odpowiedzi AI; ustaw go, aby nie wpisywać go ręcznie w panelu.
-- `OPENAI_MODEL`, `OPENAI_TEMPERATURE` – domyślny model i temperatura (np. `gpt-4o-mini`, `0.7`).
-- `AI_TARGET_NUMBER`, `AI_SYSTEM_PROMPT`, `AI_ENABLED` – pozwalają włączyć AI i przypisać numer rozmówcy już przy starcie. Po zapisaniu ustawień w panelu wartością nadrzędną staje się konfiguracja z UI (env służy tylko do początkowego bootstrapu).
-- `CHAT_MODE` – `echo` (domyślnie) lub `keywords` (używane tylko, gdy auto‑reply w bazie jest wyłączone).
-- `APP_ENV`, `APP_DEBUG`, `APP_HOST`, `APP_PORT` – parametry serwera.
-- `DB_PATH` – ścieżka SQLite (domyślnie `data/app.db`).
-- `PUBLIC_BASE_URL` – publiczny URL do webhooków (prod/ngrok).
-- `TWILIO_VALIDATE_SIGNATURE` – `true` zalecane w prod; w dev możesz ustawić `false` by pominąć weryfikację podpisu.
+Domyślnie panel jest dostępny pod: http://0.0.0.0:3000
 
-### Konfiguracja AI
-- Przy starcie aplikacji wartości z `OPENAI_*` i `AI_*` automatycznie trafiają do tabeli `ai_config`, więc środowisko produkcyjne jest gotowe bez klikania w UI.
-- Jeśli nie ustawisz zmiennych środowiskowych, konfigurację możesz nadal wprowadzić z panelu (zakładka „AI”).
-- Aby przetestować lokalnie bez prawdziwych webhooków, ustaw `TWILIO_VALIDATE_SIGNATURE=false`, wprowadź numer testowy w `AI_TARGET_NUMBER`, a następnie wyślij wiadomość z tego numeru.
-- Gdy `AI_ENABLED=true` (lub AI włączone z poziomu UI), system działa jak globalny auto‑reply oparty o OpenAI: każdy inbound SMS jest obsługiwany przez AI, a klasyczny auto‑reply z `auto_reply_config` zostaje wyłączony (oba tryby są wzajemnie wykluczające).
+4. Skonfiguruj webhooki Twilio (Incoming i Status Callback – szczegóły niżej).
 
-## Auto‑reply (SMS)
-- `/twilio/inbound` zapisuje wiadomość do `messages`, a gdy `auto_reply_config.enabled=1`, odkłada payload do kolejki; worker `app/auto_reply.py` wysyła odpowiedź z tekstem `auto_reply_config.message`.
-- Wymagany nadawca: `TWILIO_DEFAULT_FROM` (przekazywany jako `from_`).
-- Walidacja numeru: E.164 (`+` i 7–15 cyfr); inne są pomijane z logiem.
-- Deduplikacja po SID (ostatnie 1000 w pamięci), pełne logowanie wysyłki/SID.
-- Jeśli auto‑reply jest wyłączone, używany jest synchroniczny bot z `chat_logic.py` (`echo`/`keywords`), o ile nie jest włączone AI.
-- Auto‑reply i AI są rozłączne: jeżeli AI jest aktywne (AI config `enabled=true`), worker auto‑reply nie odpowiada na wiadomości – odpowiedzi generuje wyłącznie AI.
-- Synchronizacja z Twilio (`GET /api/messages/remote` lub okresowe `_maybe_sync_messages`) także kolejkuje auto‑reply dla najnowszej wiadomości inbound, jeśli funkcja jest włączona.
+---
 
-Konfiguracja:
-- UI: zakładka „Auto-odpowiedź” w dashboardzie (przełącznik + treść, limit 640 znaków).
-- API: `GET /api/auto-reply/config`, `POST /api/auto-reply/config` z polami `enabled`, `message`.
+## Konfiguracja środowiska (.env)
 
-## Endpointy HTTP
-- `POST /twilio/inbound` – webhook wiadomości przychodzących.
-- `POST /twilio/status` – statusy dostarczenia.
-- `POST /api/send-message` – wysyłanie SMS/MMS (`to`, `body`, opcjonalnie `content_sid`, `media_urls`, `messaging_service_sid`, `use_messaging_service`).
-- `POST /api/ai/test` – wykonuje zapytanie do OpenAI i zwraca odpowiedź bez wysyłania SMS.
-- `GET /api/messages` – lista z bazy (`limit`, `direction`).
-- `GET /api/conversations`, `GET /api/conversations/<participant>` – rozmowy i wątki.
-- `GET /api/messages/remote` – najnowsze wiadomości z Twilio (`to`, `from`, `date_sent*`, `limit`).
-- `GET /api/messages/<sid>` – szczegóły z Twilio.
-- `POST /api/messages/<sid>/redact` – wyczyszczenie treści.
-- `DELETE /api/messages/<sid>` – kasowanie w Twilio i lokalnie.
+Najważniejsze zmienne (pełna lista w `app/config.py`):
 
-Przykład wysyłki:
-```bash
-curl -X POST http://localhost:3000/api/send-message \
-  -H "Content-Type: application/json" \
-  -d '{"to":"+48123123123","body":"Test z API"}'
+```ini
+# Twilio
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=...
+TWILIO_DEFAULT_FROM=+48123456789       # numer SMS w formacie E.164
+TWILIO_MESSAGING_SERVICE_SID=...       # (opcjonalnie) Messaging Service SID
+
+# OpenAI – AI auto-reply do rozmów SMS
+OPENAI_MODEL=gpt-4o-mini
+OPENAI_TEMPERATURE=0.7
+
+# OpenAI – News/FAISS (RAG)
+SECOND_OPENAI=sk-...
+SECOND_MODEL=gpt-4o-mini
+
+# Aplikacja
+APP_HOST=0.0.0.0
+APP_PORT=3000
+APP_DEBUG=true
+DB_PATH=data/app.db
+PUBLIC_BASE_URL=https://twoja-domena.pl
+TWILIO_VALIDATE_SIGNATURE=true         # w dev możesz ustawić false
 ```
 
-## Panel WWW
-- Dashboard: statystyki, wysyłka ręczna, lista 50 ostatnich wiadomości z filtrami, auto‑refresh ~15 s.
-- Widok czatu `/chat/<numer>`: pełen wątek, auto‑refresh, formularz odpowiedzi.
-- Zakładka „Auto-odpowiedź”: włącz/wyłącz + treść, badge stanu, zapisywanie przez API.
-- Zakładka „AI”: konfiguracja OpenAI oraz przycisk „Przetestuj połączenie”, który uderza w `POST /api/ai/test` i wyświetla odpowiedź lub błąd.
+### Jak zdobyć i ustawić klucz OpenAI (SECOND_OPENAI)
 
-## CLI
-```bash
-python manage.py send --to +48123123123 --body "Siema z CLI" --use-messaging-service
+1. Wejdź na https://platform.openai.com/api-keys.
+2. Utwórz nowy **Secret key**.
+3. Wklej do `.env`:
 
-# Wygeneruj wiadomość AI i wyślij ją Twilio
-python manage.py ai-send --to +48123123123 --latest "Treść ostatniej wiadomości" --history-limit 30
+```ini
+SECOND_OPENAI=sk-...
+SECOND_MODEL=gpt-4o-mini
 ```
 
-## Docker / docker-compose
-Build lokalny:
+4. Zrestartuj aplikację / kontener.
+5. W panelu (zakładka AI / News) użyj przycisku „Przetestuj …”, aby upewnić się, że połączenie działa.
+
+---
+
+## Uruchomienie w Dockerze
+
+### Obraz lokalny
+
 ```bash
 docker build -t twilio-chat:latest .
-docker run --rm -it -p 3000:3000 --env-file .env -v $(pwd)/data:/app/data twilio-chat:latest
+
+docker run --rm -it \
+  -p 3000:3000 \
+  --env-file .env \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/X1_data:/app/X1_data \
+  twilio-chat:latest
 ```
-Compose (prod przykład):
+
+### docker-compose (dev / prod)
+
+Dev:
+
 ```bash
-docker compose -f docker-compose.production.yml up --build
+make compose-up        # alias na: docker compose up --build
 ```
-Zalecane: montuj `./data`, aby zachować bazę SQLite (`DB_PATH`).
 
-## Twilio – webhooki
-1. Incoming: `https://twoja-domena.pl/twilio/inbound` (lub ngrok).
-2. Status callback: `https://twoja-domena.pl/twilio/status`.
-3. Używaj tego samego numeru / Messaging Service co w `.env` (`TWILIO_DEFAULT_FROM` lub `TWILIO_MESSAGING_SERVICE_SID`).
-4. Prod: `TWILIO_VALIDATE_SIGNATURE=true`; Dev: możesz ustawić `false` podczas testów tunelowanych.
+Prod (np. na serwerze):
 
-### Jak działa walidacja podpisu Twilio
+```bash
+make compose-prod      # docker compose -f docker-compose.production.yml up --build -d
+```
 
-- Domyślnie wszystkie webhooki z Twilio są weryfikowane przez `RequestValidator` z pakietu `twilio`.
-- Adres URL + parametry POST są porównywane z nagłówkiem `X-Twilio-Signature`.
-- W środowisku developerskim możesz tymczasowo wyłączyć weryfikację ustawiając `TWILIO_VALIDATE_SIGNATURE=false` (np. przy użyciu ngrok).
+Przy pracy z Dockerem **koniecznie** montuj:
 
-### Tryby odpowiedzi i priorytety
+- `./data -> /app/data` (baza SQLite),
+- `./X1_data -> /app/X1_data` (indeks FAISS i dokumenty RAG).
 
-- **AI auto‑reply**:
-  - włączany przez `AI_ENABLED` (env) lub z zakładki „AI” w panelu,
-  - wykorzystuje historię rozmowy z tabeli `messages` i model OpenAI (domyślnie `gpt-4o-mini`),
-  - odpowiada wyłącznie na wiadomości przychodzące **nowsze niż** ostatnia zmiana konfiguracji AI (`ai_config.updated_at`).
-- **Klasyczny auto‑reply**:
-  - działa tylko, gdy AI jest wyłączone,
-  - korzysta z prostego szablonu tekstowego (`auto_reply_config.message`),
-  - odpowiada tylko na wiadomości przychodzące nowsze niż `auto_reply_config.enabled_since`.
-- **Fallback chat‑bot (`chat_logic.py`)**:
-  - używany tylko, gdy **oba** powyższe tryby są wyłączone,
-  - tryb `echo` lub `keywords` wybierany przez `CHAT_MODE`.
+Dzięki temu restart kontenerów nie kasuje historii wiadomości ani indeksu.
 
-W efekcie dla każdej przychodzącej wiadomości działa dokładnie **jeden** z trybów (AI / auto‑reply / fallback), a tryby AI i auto‑reply nigdy nie udzielają podwójnych odpowiedzi.
+---
 
-## Debugowanie
-- Brak auto‑reply? Sprawdź logi: "Inbound webhook hit…", "Enqueue auto-reply payload…", "Auto-reply: sending…".
-- Upewnij się, że `TWILIO_DEFAULT_FROM` jest ustawione.
-- 403 na webhooku: tymczasowo `TWILIO_VALIDATE_SIGNATURE=false` (tylko dev).
-- Numery muszą być w E.164, inaczej są pomijane.
+## Uruchomienie w GitHub Codespaces
 
-## Rozbudowa
-- Dodaj własny silnik w `chat_logic.py` i zaktualizuj `build_chat_engine()`.
-- Rozszerz API/blueprinty według potrzeb.
-- Dodaj dodatkowe kanały (np. WhatsApp) i walidację numerów.
+1. Utwórz Codespace na tym repozytorium.
+2. W katalogu projektu dodaj plik `.env` (warto użyć Secrets Codespaces/Repo).
+3. W terminalu Codespace:
 
-## Wydanie ver3.0.0
+```bash
+pip install -r requirements.txt
+python run.py
+```
 
-### Najważniejsze zmiany
+4. W zakładce „Ports” wystaw port 3000 jako **publiczny**.
+5. Skopiuj publiczny adres URL i ustaw go jako `PUBLIC_BASE_URL` w `.env`.
+6. W konsoli Twilio skonfiguruj webhooki na `https://PUBLIC_BASE_URL/twilio/inbound` oraz `https://PUBLIC_BASE_URL/twilio/status`.
 
-- **Nowy tryb AI auto-reply**  
-  System może teraz automatycznie odpowiadać na wszystkie przychodzące SMS-y z użyciem modelu OpenAI, z uwzględnieniem historii rozmowy. Gdy AI jest włączone (przez env lub UI), klasyczny auto‑reply jest automatycznie wyłączany – unikamy podwójnych odpowiedzi i nieprzewidywalnego zachowania.
+---
 
-- **Refaktoryzacja klienta Twilio**  
-  Ujednolicone nazewnictwo klienta (`twilio_client`) w całej aplikacji. Odpowiedzi na wiadomości przychodzące korzystają z `send_reply_to_inbound`, co poprawia spójność wątków konwersacji po stronie Twilio. Zachowane zostały istniejące endpointy HTTP, dzięki czemu integracje nie wymagają zmian.
+## Panel WWW
 
-- **Poprawiona dokumentacja i konfiguracja**  
-  `README.md` jasno opisuje teraz zasady działania AI auto‑reply, klasycznego auto‑reply oraz fallbackowego bota. Doprecyzowano rozłączność trybów (AI vs auto‑reply) oraz rekomendowane ustawienia środowiskowe.
+Panel jest responsywny (Bootstrap 5) i składa się z kilku głównych widoków:
 
-- **Higiena repozytorium**  
-  Usunięto przypadkowo skomitowany katalog `.venv` z historii bieżącej gałęzi. Dodano `.venv/` do `.gitignore`, aby uniknąć mieszania kodu aplikacji z zależnościami środowiska.
+- **Dashboard**
+  - skrócone statystyki,
+  - szybka wysyłka SMS,
+  - lista ostatnich wiadomości (z filtrami po kierunku/statusie),
+  - auto‑odświeżanie.
 
-### Kompatybilność i upgrade
+- **Widok czatu** (`/chat/<numer>`)
+  - pełna historia konwersacji z jednym numerem,
+  - formularz odpowiedzi,
+  - informacja o statusach dostarczenia i ewentualnych błędach z Twilio.
 
-- Publiczne endpointy HTTP pozostają bez zmian – aktualizacja do `ver3.0.0` nie wymaga zmian w integracjach.
-- Jeśli włączysz AI, logika odpowiedzi SMS przełączy się z klasycznego auto‑reply na odpowiedzi generowane przez model OpenAI.
-- Po aktualizacji zaleca się odtworzenie środowiska wirtualnego lokalnie (`python -m venv venv`, `pip install -r requirements.txt`), zamiast trzymać je w repozytorium.
+- **Zakładka „Auto‑reply”**
+  - przełącznik włączenia/wyłączenia klasycznego auto‑reply,
+  - edycja treści szablonu,
+  - integracja z webhookiem – worker `auto_reply` odbiera i wysyła odpowiedzi.
+
+- **Zakładka „AI”**
+  - konfiguracja OpenAI (model, temperatura, system prompt),
+  - numer docelowy AI (`AI_TARGET_NUMBER`),
+  - przycisk „Przetestuj połączenie” – prośba do API `/api/ai/test` i podgląd odpowiedzi.
+
+- **Zakładka „News / FAISS”**
+  - lista plików scrapów (podgląd, usuwanie),
+  - przyciski „Scrape / Build index / Test FAISS”,
+  - zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie).
+
+---
+
+## News / FAISS / RAG
+
+### Pliki i indeks
+
+- źródła tekstów: `X1_data/business_insider_scrapes/` (`.txt` i `.json`),
+- snapshot dokumentów: `X1_data/documents.json`,
+- indeks FAISS / MinimalVectorStore: `X1_data/faiss_openai_index/` (`index.faiss` / `index.npz` + `docs.json`).
+
+Aplikacja potrafi:
+
+1. **Scrapować** – endpoint `/api/news/scrape` oraz przycisk w panelu „Scrape” (używa `ScraperService`).
+2. **Zbudować indeks** – automatycznie po scrapowaniu lub ręcznie przez `/api/news/indices/build`.
+3. **Testować zapytania** – endpoint `/api/news/test-faiss`, w UI: pole zapytania + wynik (liczba trafień, odpowiedź modelu).
+4. **Zarządzać plikami** – usuwać pojedyncze pliki scrapów lub cały indeks z poziomu panelu.
+
+### Odbudowa indeksu FAISS
+
+Kod `FAISSService` został napisany tak, aby odtworzenie indeksu było przewidywalne i bezpieczne:
+
+- przy zapisie (`save_faiss_index`) tworzony jest komplet plików (`index.faiss` lub `index.npz` + `docs.json`),
+- przy odczycie (`load_faiss_index`):
+  1. najpierw ładowany jest pełny indeks FAISS, jeśli istnieje,
+  2. jeśli jest tylko `index.npz`, używany jest `MinimalVectorStore`,
+  3. jeśli istnieje samo `docs.json` – indeks jest **rekonstruowany od zera** wyłącznie z dokumentów,
+  4. dodatkowo, jeśli brakuje plików dla `faiss_openai_index`, ale istnieje globalny snapshot `X1_data/documents.json`, serwis spróbuje odbudować indeks na jego podstawie.
+
+W praktyce: **backup katalogu `X1_data/` wystarcza do pełnej odbudowy indeksu**.
+
+---
+
+## CLI – kontrola z konsoli
+
+Aplikacja ma prosty, ale bardzo użyteczny interfejs CLI oparty o `manage.py`.
+
+```bash
+python manage.py send --to +48123123123 --body "Test z CLI" --use-messaging-service
+
+python manage.py ai-send \
+  --to +48123123123 \
+  --latest "Treść ostatniej wiadomości" \
+  --history-limit 30 \
+  --use-messaging-service
+```
+
+- `send` – wysyła pojedynczy SMS:
+  - `--to` – numer odbiorcy (E.164),
+  - `--body` – treść wiadomości,
+  - `--use-messaging-service` – jeśli ustawione, użyje `TWILIO_MESSAGING_SERVICE_SID` zamiast `TWILIO_DEFAULT_FROM`.
+
+- `ai-send` – generuje treść odpowiedzi z użyciem `AIResponder` i wysyła ją SMS‑em:
+  - `--to` – numer odbiorcy; jeśli brak, używany jest numer z konfiguracji AI,
+  - `--latest` – (opcjonalnie) ostatnia wiadomość użytkownika, przekazana do modelu,
+  - `--history-limit` – ile ostatnich wiadomości uwzględnić przy budowaniu kontekstu,
+  - `--use-messaging-service` – jak wyżej.
+
+CLI korzysta z pełnej konfiguracji aplikacji (Flask app context), więc działa w ten sam sposób, co panel / webhooki.
+
+---
+
+## Dla deweloperów
+
+### Struktura projektu
+
+- `app/` – kod aplikacji Flask (blueprinty, serwisy, integracje),
+- `templates/` – widoki Jinja2,
+- `static/` – JS + CSS (dashboard, chat, news manager),
+- `data/` – baza SQLite,
+- `X1_data/` – indeks FAISS + pliki wejściowe dla RAG,
+- `deploy/` – pliki pomocnicze (nginx, statyczna dokumentacja),
+- `scripts/` – skrypty narzędziowe (np. generowanie PDF‑ów, demo wysyłki).
+
+### Środowisko dev
+
+1. Utwórz wirtualne środowisko (`venv` lub `.venv`).
+2. Zainstaluj zależności z `requirements.txt`.
+3. Uruchamiaj w trybie dev `APP_DEBUG=true`, port 3000.
+4. Do szybkiego startu możesz użyć:
+
+```bash
+make run-dev
+```
+
+### Dodawanie nowych endpointów / funkcji
+
+- nowe endpointy HTTP dodawaj do `app/webhooks.py` lub osobnych blueprintów,
+- logikę biznesową trzymaj w serwisach (`app/ai_service.py`, `app/faiss_service.py`, itp.),
+- DB: rozbudowuj `app/database.py` – tam są helpery do migracji / modeli,
+- UI: widoki w `templates/*.html`, logika frontu w `static/js/*.js`.
+
+### Styl i jakość kodu
+
+- Python: PEP‑8, bez nadmiernej magii, dużo jawnych logów przy obsłudze błędów integracji (Twilio, OpenAI).
+- Wyjątki z zewnętrznych serwisów zawsze logujemy (z `exc_info=True`) i zwracamy bezpieczny komunikat użytkownikowi.
+- Wszędzie, gdzie to możliwe, moduły są odporne na brak kluczy API – zamiast się wywrócić, przechodzą w tryb „no‑LLM” z czytelną informacją w odpowiedzi.
+
+---
+
+## Debugowanie i dobre praktyki
+
+- **Webhooki Twilio**
+  - przy 403 w dev ustaw `TWILIO_VALIDATE_SIGNATURE=false` i korzystaj z tunelu (ngrok, Cloudflare Tunnel),
+  - sprawdzaj logi dla wpisów: `Inbound webhook hit...`, `Message status update...`.
+
+- **Auto‑reply / AI**
+  - brak odpowiedzi → upewnij się, że odpowiedni tryb jest włączony w panelu oraz że numer jest w formacie E.164,
+  - AI wymaga poprawnie ustawionego klucza (w panelu i/lub `.env`).
+
+- **FAISS / News**
+  - brak wyników → sprawdź, czy indeks został zbudowany (scraping + build),
+  - jeśli ręcznie usuniesz pliki indeksu, aplikacja spróbuje go odbudować z `documents.json`.
+
+- **Bezpieczeństwo**
+  - `.env` nigdy nie commitujemy do repozytorium,
+  - produkcyjny `PUBLIC_BASE_URL` powinien wskazywać na HTTPS za reverse proxy (nginx),
+  - w środowisku produkcyjnym trzymaj `APP_DEBUG=false` i włącz `TWILIO_VALIDATE_SIGNATURE`.
+
+---
+
+> Ten README jest utrzymywany jak kod – jeśli zmienisz coś w API, CLI albo strukturze FAISS, zaktualizuj dokumentację w tym pliku, żeby kolejny deweloper (a często: Ty za 3 miesiące) nie musiał odtwarzać kontekstu z historii gita.
+

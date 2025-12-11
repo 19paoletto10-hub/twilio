@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import unquote
 
-from flask import Blueprint, current_app, render_template
+from flask import Blueprint, current_app, render_template, jsonify
 
 ui_bp = Blueprint("ui", __name__)
 
@@ -39,3 +39,24 @@ def chat_view(participant: str):
         display_number=display_number,
         app_env=app_settings.env,
     )
+
+
+@ui_bp.get("/api/openai/status")
+def openai_status():
+    """
+    Endpoint do sprawdzenia statusu konfiguracji OpenAI.
+    Używany przez frontend do wyświetlenia informacji o dostępności RAG/embeddings.
+    """
+    openai_settings = current_app.config.get("OPENAI_SETTINGS")
+    if not openai_settings:
+        return jsonify({
+            "enabled": False,
+            "error": "OpenAI settings not loaded"
+        }), 503
+
+    return jsonify({
+        "enabled": openai_settings.enabled,
+        "chat_model": openai_settings.chat_model,
+        "embedding_model": openai_settings.embedding_model,
+        "api_key_masked": openai_settings.get_masked_key(),
+    })

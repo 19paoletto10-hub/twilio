@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import json
+import os
 import time
 from datetime import datetime, timezone
 from typing import Optional, Any, Dict, List
 from urllib.parse import unquote
-
-import os
 
 from flask import Blueprint, current_app, request, Response, jsonify
 from twilio.request_validator import RequestValidator
@@ -37,6 +36,11 @@ from .database import (
     delete_message_by_sid,
     list_conversations,
 )
+from .scraper_service import ScraperService, SCRAPED_DIR, DATA_DIR
+from .faiss_service import FAISS_INDEX_PATH
+from .reminder import E164_RE
+
+NEWS_CONFIG_PATH = os.path.join(DATA_DIR, "news_config.json")
 
 
 webhooks_bp = Blueprint("webhooks", __name__)
@@ -285,6 +289,197 @@ def _mask_secret(value: Optional[str]) -> Optional[str]:
     if len(trimmed) <= 4:
         return "•" * len(trimmed)
     return "•" * (len(trimmed) - 4) + trimmed[-4:]
+
+
+# ---------------------------------------------------------------------------
+# News helpers
+# ---------------------------------------------------------------------------
+def _default_news_config() -> Dict[str, Any]:
+    return {
+        "enabled": True,
+        "recipients": [],  # Lista odbiorców: [{id, phone, prompt, time, enabled, created_at}]
+        "updated_at": "",
+        "last_build_at": "",
+        "active_index": "faiss_openai_index",
+    }
+
+
+def _load_news_config() -> Dict[str, Any]:
+    base = _default_news_config()
+    try:
+        if os.path.exists(NEWS_CONFIG_PATH):
+            with open(NEWS_CONFIG_PATH, "r", encoding="utf-8") as f:
+                stored = json.load(f)
+                if isinstance(stored, dict):
+                    base.update(stored)
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.warning("News config load failed: %s", exc)
+    return base
+
+
+def _save_news_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    data = _default_news_config()
+    data.update(cfg)
+    data["updated_at"] = datetime.utcnow().isoformat() + "Z"
+    os.makedirs(os.path.dirname(NEWS_CONFIG_PATH), exist_ok=True)
+    with open(NEWS_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    return data
+
+
+def _serialize_news_config(cfg: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "enabled": bool(cfg.get("enabled", True)),
+        "recipients": cfg.get("recipients", []),
+        "updated_at": cfg.get("updated_at", ""),
+        "last_build_at": cfg.get("last_build_at", ""),
+        "active_index": cfg.get("active_index", "faiss_openai_index"),
+    }
+
+
+def _list_scraped_files() -> List[Dict[str, Any]]:
+    items: List[Dict[str, Any]] = []
+    if not os.path.isdir(SCRAPED_DIR):
+        return items
+
+    for fn in sorted(os.listdir(SCRAPED_DIR)):
+        if not (fn.endswith(".txt") or fn.endswith(".json")):
+            continue
+
+        path = os.path.join(SCRAPED_DIR, fn)
+        try:
+            stat = os.stat(path)
+            name, ext = os.path.splitext(fn)
+            items.append(
+                {
+                    "name": fn,
+                    "category": name.replace("_", " ").title(),
+                    "size_bytes": stat.st_size,
+                    "updated_at": datetime.utcfromtimestamp(stat.st_mtime).isoformat() + "Z",
+                    "format": ext.lstrip("."),
+                }
+            )
+        except OSError as exc:  # noqa: BLE001
+            current_app.logger.warning("Cannot stat %s: %s", path, exc)
+            continue
+    return items
+
+
+def _read_scraped_file_content(filename: str) -> Dict[str, Any]:
+    safe_name = os.path.basename(filename)
+    path = os.path.join(SCRAPED_DIR, safe_name)
+
+    if not os.path.exists(path):
+        # try alternate extension
+        base, _ = os.path.splitext(safe_name)
+        alt_txt = os.path.join(SCRAPED_DIR, base + ".txt")
+        alt_json = os.path.join(SCRAPED_DIR, base + ".json")
+        if os.path.exists(alt_txt):
+            path = alt_txt
+            safe_name = os.path.basename(alt_txt)
+        elif os.path.exists(alt_json):
+            path = alt_json
+            safe_name = os.path.basename(alt_json)
+        else:
+            return {"error": "Plik nie istnieje."}
+
+    try:
+        stat = os.stat(path)
+        _, ext = os.path.splitext(path)
+        content = ""
+        if ext.lower() == ".json":
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                parts = []
+                for idx, item in enumerate(data, 1):
+                    title = (item.get("title") or "Bez tytułu").strip()
+                    url = item.get("url") or ""
+                    text = item.get("text") or ""
+                    parts.append(f"[{idx}] {title}\n{url}\n\n{text}".strip())
+                content = "\n\n" + ("-" * 40) + "\n\n".join(parts)
+            else:
+                content = json.dumps(data, ensure_ascii=False, indent=2)
+        else:
+            with open(path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+        return {
+            "name": safe_name,
+            "content": content,
+            "size_bytes": stat.st_size,
+            "updated_at": datetime.utcfromtimestamp(stat.st_mtime).isoformat() + "Z",
+        }
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Error reading scraped file %s: %s", path, exc)
+        return {"error": f"Nie udało się odczytać pliku: {exc}"}
+
+
+def _faiss_indices_payload() -> Dict[str, Any]:
+    os.makedirs(FAISS_INDEX_PATH, exist_ok=True)
+    index_file = os.path.join(FAISS_INDEX_PATH, "index.faiss")
+    docs_file = os.path.join(FAISS_INDEX_PATH, "docs.json")
+    npz_file = os.path.join(FAISS_INDEX_PATH, "index.npz")
+
+    def _stat(path: str) -> Optional[float]:
+        try:
+            return os.path.getmtime(path)
+        except OSError:
+            return None
+
+    mtimes = [t for t in (_stat(index_file), _stat(docs_file), _stat(npz_file)) if t]
+    updated_at = None
+    if mtimes:
+        updated_at = datetime.utcfromtimestamp(max(mtimes)).isoformat() + "Z"
+
+    size_total = 0
+    for path in (index_file, docs_file, npz_file):
+        try:
+            size_total += os.path.getsize(path)
+        except OSError:
+            continue
+
+    exists = any(os.path.exists(p) for p in (index_file, npz_file, docs_file))
+
+    return {
+        "items": [
+            {
+                "name": "faiss_openai_index",
+                "status": "aktywny" if exists else "brak danych",
+                "active": True,
+                "size": size_total if size_total else None,
+                "created_at": updated_at or "",
+                "exists": exists,
+            }
+        ],
+        "updated_at": updated_at,
+    }
+
+
+def _faiss_index_files(name: str) -> Dict[str, str]:
+    base = FAISS_INDEX_PATH  # single index directory; extendable for future multi-index
+    safe_name = os.path.basename(name)
+    return {
+        "index": os.path.join(base, "index.faiss"),
+        "docs": os.path.join(base, "docs.json"),
+        "npz": os.path.join(base, "index.npz"),
+        "base": base,
+        "name": safe_name,
+    }
+
+
+def _delete_faiss_index(name: str) -> Dict[str, Any]:
+    paths = _faiss_index_files(name)
+    removed: List[str] = []
+    for key in ("index", "docs", "npz"):
+        p = paths[key]
+        try:
+            if os.path.exists(p):
+                os.remove(p)
+                removed.append(os.path.basename(p))
+        except OSError as exc:  # noqa: BLE001
+            current_app.logger.warning("Cannot delete %s: %s", p, exc)
+    return {"removed": removed, "name": paths["name"]}
 
 
 def _send_ai_reply_message(*, inbound_from: str, inbound_to: str, reply_text: str):
@@ -730,30 +925,31 @@ def api_ai_send_message():
 
 @webhooks_bp.post("/api/ai/reply")
 def api_ai_reply_to_inbound():
-    """Generate an AI reply and send it back to the sender of a specific inbound message.
-
-    Body JSON:
-      - inbound_from: required original sender number
-      - inbound_to: required Twilio number that received the message
-      - latest: optional latest user message content to include
-      - api_key: optional OpenAI key override
-      - history_limit: optional int, default 20
-    """
-
     payload = request.get_json(force=True, silent=True) or {}
-    inbound_from = (payload.get("inbound_from") or "").strip()
-    inbound_to = (payload.get("inbound_to") or "").strip()
-    latest = (payload.get("latest") or "").strip()
-    api_key_override = (payload.get("api_key") or "").strip()
-    history_limit_raw = payload.get("history_limit", 20)
+    # Numer telefonu nie jest już wymagany – ten endpoint testuje tylko łączność HTTP
+    _ = (payload.get("target_number") or "").strip()  # zachowaj zgodność z istniejącym UI
 
-    if not inbound_from or not inbound_to:
-        return jsonify({"error": "Wymagane pola: inbound_from oraz inbound_to."}), 400
+    svc = ScraperService()
+    sample_url = next(iter(svc.news_sites.values()))
+    started = time.monotonic()
+    html = svc._get(sample_url)  # best-effort ping
+    latency_ms = int((time.monotonic() - started) * 1000)
 
-    try:
-        history_limit = max(1, min(int(history_limit_raw), 200))
-    except (TypeError, ValueError):
-        history_limit = 20
+    if not html:
+        return jsonify({"success": False, "error": "Brak odpowiedzi z serwisem news."}), 502
+
+    cfg = _load_news_config()
+    cfg["last_test_at"] = datetime.utcnow().isoformat() + "Z"
+    cfg = _save_news_config(cfg)
+    return jsonify(
+        {
+            "success": True,
+            "details": f"Połączenie OK ({latency_ms} ms)",
+            "latency_ms": latency_ms,
+            "source": sample_url,
+            "tested_at": cfg["last_test_at"],
+        }
+    )
 
     cfg = get_ai_config()
     api_key = api_key_override or (cfg.get("api_key") or "").strip()
@@ -890,6 +1086,501 @@ def api_delete_reminder(sched_id: int):
         return jsonify({"error": "Nie znaleziono rekordu."}), 404
     items = list_scheduled_messages()
     return jsonify({"items": items, "count": len(items)})
+
+
+@webhooks_bp.get("/api/news/config")
+def api_get_news_config():
+    cfg = _load_news_config()
+    return jsonify(_serialize_news_config(cfg))
+
+
+@webhooks_bp.post("/api/news/config")
+def api_update_news_config():
+    """Deprecated - use /api/news/recipients instead"""
+    return jsonify({"error": "Use /api/news/recipients to manage notification recipients"}), 400
+
+
+@webhooks_bp.get("/api/news/recipients")
+def api_get_news_recipients():
+    """Get list of all news notification recipients"""
+    cfg = _load_news_config()
+    recipients = cfg.get("recipients", [])
+    return jsonify({"recipients": recipients, "count": len(recipients)})
+
+
+@webhooks_bp.post("/api/news/recipients")
+def api_add_news_recipient():
+    """Add new news notification recipient"""
+    payload = request.get_json(force=True, silent=True) or {}
+    phone = (payload.get("phone") or "").strip()
+    prompt = (payload.get("prompt") or "").strip()
+    time_str = (payload.get("time") or "08:00").strip()
+    
+    if not phone:
+        return jsonify({"error": "Podaj numer telefonu."}), 400
+    
+    if not prompt:
+        prompt = "Wygeneruj krótkie podsumowanie najważniejszych newsów."
+    
+    # Walidacja formatu czasu (HH:MM, 24h)
+    import re
+    if not re.match(r"^([01]\d|2[0-3]):([0-5]\d)$", time_str):
+        return jsonify({"error": "Nieprawidłowy format czasu. Użyj HH:MM (24h)."}), 400
+
+    # Normalizuj i waliduj numer telefonu (E.164)
+    normalized = normalize_contact(phone)
+    if not normalized or not E164_RE.match(normalized):
+        return jsonify({"error": "Podaj numer w formacie E.164, np. +48123456789."}), 400
+    
+    cfg = _load_news_config()
+    recipients = cfg.get("recipients", [])
+
+    # Zapobiegaj duplikatom (ten sam numer i godzina)
+    for existing in recipients:
+        if (
+            existing.get("phone_normalized") == normalized
+            and existing.get("time") == time_str
+        ):
+            return jsonify({"error": "Taki odbiorca (numer + godzina) już istnieje."}), 400
+
+    # Wygeneruj ID (max ID + 1)
+    max_id = max([r.get("id", 0) for r in recipients], default=0)
+    new_id = max_id + 1
+    
+    # Utwórz nowego odbiorce
+    new_recipient = {
+        "id": new_id,
+        "phone": phone,
+        "phone_normalized": normalized,
+        "prompt": prompt,
+        "time": time_str,
+        "enabled": True,
+        "created_at": datetime.utcnow().isoformat() + "Z",
+        "last_sent_at": None
+    }
+    
+    recipients.append(new_recipient)
+    cfg["recipients"] = recipients
+    saved = _save_news_config(cfg)
+    
+    return jsonify({
+        "success": True,
+        "recipient": new_recipient,
+        "recipients": saved.get("recipients", [])
+    })
+
+
+@webhooks_bp.delete("/api/news/recipients/<int:recipient_id>")
+def api_delete_news_recipient(recipient_id: int):
+    """Delete news notification recipient"""
+    cfg = _load_news_config()
+    recipients = cfg.get("recipients", [])
+    
+    # Znajdź i usuń odbiorce
+    new_recipients = [r for r in recipients if r.get("id") != recipient_id]
+    
+    if len(new_recipients) == len(recipients):
+        return jsonify({"error": "Nie znaleziono odbiorcy"}), 404
+    
+    cfg["recipients"] = new_recipients
+    saved = _save_news_config(cfg)
+    
+    return jsonify({
+        "success": True,
+        "recipients": saved.get("recipients", [])
+    })
+
+
+@webhooks_bp.post("/api/news/recipients/<int:recipient_id>/toggle")
+def api_toggle_news_recipient(recipient_id: int):
+    """Enable/disable news notification recipient"""
+    cfg = _load_news_config()
+    recipients = cfg.get("recipients", [])
+    
+    found = False
+    for recipient in recipients:
+        if recipient.get("id") == recipient_id:
+            recipient["enabled"] = not recipient.get("enabled", True)
+            found = True
+            break
+    
+    if not found:
+        return jsonify({"error": "Nie znaleziono odbiorcy"}), 404
+    
+    cfg["recipients"] = recipients
+    saved = _save_news_config(cfg)
+    
+    return jsonify({
+        "success": True,
+        "recipients": saved.get("recipients", [])
+    })
+
+
+@webhooks_bp.post("/api/news/recipients/<int:recipient_id>/test")
+def api_test_news_recipient(recipient_id: int):
+    """Test notification generation for recipient (without sending SMS)"""
+    cfg = _load_news_config()
+    recipients = cfg.get("recipients", [])
+    
+    recipient = next((r for r in recipients if r.get("id") == recipient_id), None)
+    if not recipient:
+        return jsonify({"error": "Nie znaleziono odbiorcy"}), 404
+    
+    try:
+        from app.faiss_service import FAISSService
+        
+        faiss_service = FAISSService()
+        loaded = faiss_service.load_index()
+        
+        if not loaded:
+            return jsonify({
+                "success": False,
+                "error": "Brak indeksu FAISS. Najpierw wykonaj scraping."
+            }), 404
+        
+        # Użyj promptu odbiorcy
+        prompt = recipient.get("prompt", "Wygeneruj krótkie podsumowanie newsów.")
+        response = faiss_service.answer_query(prompt, top_k=5)
+        
+        if response.get("success") and response.get("answer"):
+            message = f"📰 News Test:\n\n{response['answer']}"
+            return jsonify({
+                "success": True,
+                "recipient_id": recipient_id,
+                "phone": recipient.get("phone"),
+                "message": message,
+                "llm_used": response.get("llm_used", False)
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": response.get("error", "Nie udało się wygenerować odpowiedzi")
+            }), 500
+            
+    except Exception as exc:
+        current_app.logger.exception("Test recipient failed: %s", exc)
+        return jsonify({
+            "success": False,
+            "error": f"Błąd: {exc}"
+        }), 500
+
+
+@webhooks_bp.post("/api/news/recipients/<int:recipient_id>/send")
+def api_send_news_recipient(recipient_id: int):
+    """Force send notification to specific recipient"""
+    cfg = _load_news_config()
+    recipients = cfg.get("recipients", [])
+    
+    recipient = next((r for r in recipients if r.get("id") == recipient_id), None)
+    if not recipient:
+        return jsonify({"error": "Nie znaleziono odbiorcy"}), 404
+    
+    if not recipient.get("enabled"):
+        return jsonify({"error": "Odbiorca jest wyłączony"}), 400
+    
+    try:
+        from app.faiss_service import FAISSService
+        from app.twilio_client import TwilioService
+
+        # Walidacja numeru odbiorcy
+        phone = recipient.get("phone_normalized") or recipient.get("phone")
+        if not phone or not E164_RE.match(phone):
+            return jsonify({
+                "success": False,
+                "error": "Nieprawidłowy numer telefonu odbiorcy (wymagany format E.164).",
+            }), 400
+
+        faiss_service = FAISSService()
+        faiss_service.load_index()
+
+        # Generuj wiadomość
+        prompt = recipient.get("prompt", "Wygeneruj krótkie podsumowanie newsów.")
+        response = faiss_service.answer_query(prompt, top_k=5)
+
+        if not response.get("success") or not response.get("answer"):
+            return jsonify({
+                "success": False,
+                "error": "Nie udało się wygenerować wiadomości",
+            }), 500
+
+        message = f"📰 News:\n\n{response['answer']}"
+
+        # Wyślij SMS
+        twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+        origin = twilio_client.settings.default_from
+
+        if not origin:
+            return jsonify({
+                "success": False,
+                "error": "Brak skonfigurowanego nadawcy Twilio",
+            }), 500
+
+        result = twilio_client.send_sms(
+            from_=origin,
+            to=phone,
+            body=message[:1600],
+        )
+
+        if result.get("success"):
+            # Aktualizuj last_sent_at
+            for r in recipients:
+                if r.get("id") == recipient_id:
+                    r["last_sent_at"] = datetime.utcnow().isoformat() + "Z"
+                    break
+
+            cfg["recipients"] = recipients
+            _save_news_config(cfg)
+
+            return jsonify({
+                "success": True,
+                "recipient_id": recipient_id,
+                "phone": phone,
+                "message_sid": result.get("sid"),
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": result.get("error", "Nie udało się wysłać SMS"),
+            }), 500
+
+    except Exception as exc:
+        current_app.logger.exception("Send to recipient failed: %s", exc)
+        return jsonify({
+            "success": False,
+            "error": f"Błąd: {exc}"
+        }), 500
+
+
+@webhooks_bp.post("/api/news/test")
+def api_test_news():
+    payload = request.get_json(force=True, silent=True) or {}
+    # Numer telefonu nie jest już wymagany – ten endpoint testuje tylko łączność HTTP
+    _ = (payload.get("target_number") or "").strip()  # zachowaj zgodność z istniejącym UI
+
+    svc = ScraperService()
+    sample_url = next(iter(svc.news_sites.values()))
+    started = time.monotonic()
+    html = svc._get(sample_url)  # best-effort ping
+    latency_ms = int((time.monotonic() - started) * 1000)
+
+    if not html:
+        return jsonify({"success": False, "error": "Brak odpowiedzi z serwisu news."}), 502
+
+    cfg["last_test_at"] = datetime.utcnow().isoformat() + "Z"
+    _save_news_config(cfg)
+    return jsonify(
+        {
+            "success": True,
+            "details": f"Połączenie OK ({latency_ms} ms)",
+            "latency_ms": latency_ms,
+            "source": sample_url,
+            "tested_at": cfg["last_test_at"],
+        }
+    )
+
+
+@webhooks_bp.post("/api/news/scrape")
+def api_news_scrape():
+    cfg = _load_news_config()
+    svc = ScraperService()
+    started_at = datetime.utcnow().isoformat() + "Z"
+    try:
+        results = svc.fetch_all_categories(build_faiss=True)
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("News scrape failed: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 502
+
+    completed_at = datetime.utcnow().isoformat() + "Z"
+    cfg["last_build_at"] = completed_at
+    saved_cfg = _save_news_config(cfg)
+
+    items = []
+    for category, content in results.items():
+        ok = bool(content) and not str(content).startswith("❌")
+        items.append({"category": category, "success": ok, "preview": (content or "")[:200]})
+
+    files = _list_scraped_files()
+    return jsonify(
+        {
+            "success": True,
+            "started_at": started_at,
+            "completed_at": completed_at,
+            "items": items,
+            "files": files,
+            "config": _serialize_news_config(saved_cfg),
+        }
+    )
+
+
+@webhooks_bp.get("/api/news/files")
+def api_news_files():
+    items = _list_scraped_files()
+    return jsonify({"items": items, "count": len(items)})
+
+
+@webhooks_bp.get("/api/news/files/<path:filename>")
+def api_news_file_content(filename: str):
+    data = _read_scraped_file_content(filename)
+    if data.get("error"):
+        return jsonify(data), 404
+    return jsonify(data)
+
+
+@webhooks_bp.delete("/api/news/files/<path:filename>")
+def api_news_file_delete(filename: str):
+    safe_name = os.path.basename(filename)
+    path = os.path.join(SCRAPED_DIR, safe_name)
+
+    if not os.path.exists(path):
+        return jsonify({"error": "Plik nie istnieje."}), 404
+
+    try:
+        os.remove(path)
+        return jsonify({"success": True, "removed": safe_name})
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Cannot delete scraped file %s: %s", path, exc)
+        return jsonify({"error": f"Nie udało się usunąć pliku: {exc}"}), 500
+
+
+@webhooks_bp.get("/api/news/indices")
+def api_news_indices():
+    payload = _faiss_indices_payload()
+    cfg = _load_news_config()
+    active_name = cfg.get("active_index", "faiss_openai_index")
+    for item in payload.get("items", []):
+        item["active"] = item.get("name") == active_name
+    return jsonify(payload)
+
+
+@webhooks_bp.post("/api/news/indices/active")
+def api_news_set_active_index():
+    payload = request.get_json(force=True, silent=True) or {}
+    name = (payload.get("name") or "").strip()
+    if not name:
+        return jsonify({"error": "Podaj nazwę indeksu."}), 400
+
+    available = [item.get("name") for item in _faiss_indices_payload().get("items", [])]
+    if name not in available:
+        return jsonify({"error": "Nie znaleziono indeksu."}), 404
+
+    cfg = _load_news_config()
+    cfg["active_index"] = name
+    saved = _save_news_config(cfg)
+
+    # Ensure minimal files exist for selected index
+    paths = _faiss_index_files(name)
+    os.makedirs(paths["base"], exist_ok=True)
+    try:
+        if not os.path.exists(paths["docs"]):
+            with open(paths["docs"], "w", encoding="utf-8") as f:
+                json.dump([], f)
+        if not os.path.exists(paths["npz"]):
+            try:
+                import numpy as _np
+                _np.savez_compressed(paths["npz"], embeddings=_np.zeros((0, 0)), ids=_np.array([], dtype=object))
+            except Exception:
+                # fallback: create empty file
+                open(paths["npz"], "a").close()
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.warning("Failed to initialize empty index files: %s", exc)
+
+    return jsonify({"active_index": saved.get("active_index")})
+
+
+@webhooks_bp.delete("/api/news/indices/<name>")
+def api_news_delete_index(name: str):
+    safe_name = (name or "").strip()
+    if not safe_name:
+        return jsonify({"error": "Podaj nazwę indeksu."}), 400
+
+    if safe_name != "faiss_openai_index":
+        return jsonify({"error": "Nieobsługiwany indeks."}), 400
+
+    result = _delete_faiss_index(safe_name)
+    return jsonify({"success": True, **result})
+
+
+@webhooks_bp.post("/api/news/test-faiss")
+def api_news_test_faiss():
+    """
+    Test FAISS query with custom prompt.
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    query = (payload.get("query") or "").strip()
+    
+    if not query:
+        return jsonify({"success": False, "error": "Podaj zapytanie (query)."}), 400
+    
+    try:
+        from app.faiss_service import FAISSService
+        
+        faiss_service = FAISSService()
+        loaded = faiss_service.load_index()
+        
+        if not loaded:
+            return jsonify({
+                "success": False,
+                "error": "Brak indeksu FAISS. Najpierw wykonaj scraping i zbuduj indeks."
+            }), 404
+        
+        # Wykonaj query
+        response = faiss_service.answer_query(query, top_k=5)
+        
+        if response.get("success"):
+            return jsonify({
+                "success": True,
+                "query": query,
+                "answer": response.get("answer", ""),
+                "llm_used": response.get("llm_used", False),
+                "count": response.get("count", 0)
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": response.get("error", "Nieznany błąd")
+            }), 500
+            
+    except Exception as exc:
+        current_app.logger.exception("FAISS test query failed: %s", exc)
+        return jsonify({
+            "success": False,
+            "error": f"Błąd zapytania: {exc}"
+        }), 500
+
+
+@webhooks_bp.post("/api/news/indices/build")
+def api_news_build_index():
+    """
+    Manually build FAISS index from existing scraped .txt files.
+    """
+    try:
+        from app.faiss_service import FAISSService
+        
+        faiss_service = FAISSService()
+        success = faiss_service.build_index_from_category_files(SCRAPED_DIR)
+        
+        if success:
+            cfg = _load_news_config()
+            cfg["last_build_at"] = datetime.utcnow().isoformat() + "Z"
+            _save_news_config(cfg)
+            
+            return jsonify({
+                "success": True,
+                "message": "Indeks FAISS został zbudowany pomyślnie",
+                "built_at": cfg["last_build_at"]
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": "Nie udało się zbudować indeksu. Sprawdź czy istnieją pliki .txt."
+            }), 500
+            
+    except Exception as exc:
+        current_app.logger.exception("FAISS build failed: %s", exc)
+        return jsonify({
+            "success": False,
+            "error": f"Błąd budowania indeksu: {exc}"
+        }), 500
 
 
 @webhooks_bp.post("/twilio/status")

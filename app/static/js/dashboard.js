@@ -56,6 +56,57 @@
   const aiTestStatus = document.getElementById('ai-test-status');
   const aiTestResult = document.getElementById('ai-test-result');
 
+  // News tab  
+  const newsAddRecipientForm = document.getElementById('news-add-recipient-form');
+  const newsRecipientPhone = document.getElementById('news-recipient-phone');
+  const newsRecipientTime = document.getElementById('news-recipient-time');
+  const newsRecipientPrompt = document.getElementById('news-recipient-prompt');
+  const newsAddSpinner = document.getElementById('news-add-spinner');
+  const newsRecipientsList = document.getElementById('news-recipients-list');
+  const newsRecipientsCount = document.getElementById('news-recipients-count');
+  const newsRecipientsRefreshBtn = document.getElementById('news-recipients-refresh-btn');
+  const newsForm = document.getElementById('news-config-form');
+  const newsNotificationEnabled = document.getElementById('news-notification-enabled');
+  const newsTargetNumber = document.getElementById('news-target-number');
+  const newsNotificationTime = document.getElementById('news-notification-time');
+  const newsNotificationPrompt = document.getElementById('news-notification-prompt');
+  const newsSaveBtn = document.getElementById('news-save-btn');
+  const newsSaveSpinner = newsSaveBtn?.querySelector('.spinner-border');
+  const newsStatusBadge = document.getElementById('news-status-badge');
+  const newsUpdatedAt = document.getElementById('news-updated-at');
+  const newsTestBtn = document.getElementById('news-test-btn');
+  const newsTestSpinner = newsTestBtn?.querySelector('.spinner-border');
+  const newsTestStatus = document.getElementById('news-test-status');
+  const newsLastTest = document.getElementById('news-last-test');
+  const newsTestTarget = document.getElementById('news-test-target');
+  const newsTestResult = document.getElementById('news-test-result');
+  const newsFaissQuery = document.getElementById('news-faiss-query');
+  const newsFaissTestBtn = document.getElementById('news-faiss-test-btn');
+  const newsFaissTestSpinner = newsFaissTestBtn?.querySelector('.spinner-border');
+  const newsFaissResult = document.getElementById('news-faiss-result');
+  const newsFaissAnswer = document.getElementById('news-faiss-answer');
+  const newsFaissMeta = document.getElementById('news-faiss-meta');
+  const newsLastBuild = document.getElementById('news-last-build');
+  const newsLastNotification = document.getElementById('news-last-notification');
+  const newsIndicesTableBody = document.querySelector('#news-indices-table tbody');
+  const newsIndicesError = document.getElementById('news-indices-error');
+  const newsIndicesCount = document.getElementById('news-indices-count');
+  const newsRefreshIndicesBtn = document.getElementById('news-refresh-indices-btn');
+  const newsScrapeBtn = document.getElementById('news-scrape-btn');
+  const newsScrapeSpinner = document.getElementById('news-scrape-spinner');
+  const newsScrapeStatus = document.getElementById('news-scrape-status');
+  const newsScrapeLog = document.getElementById('news-scrape-log');
+  const newsFilesGrid = document.getElementById('news-files-grid');
+  const newsFilesEmpty = document.getElementById('news-files-empty');
+  const newsFilesRefreshBtn = document.getElementById('news-files-refresh-btn');
+  const newsBuildIndexBtn = document.getElementById('news-build-index-btn');
+  const newsBuildIndexSpinner = document.getElementById('news-build-index-spinner');
+  const newsFileOverlay = document.getElementById('news-file-overlay');
+  const newsOverlayTitle = document.getElementById('news-overlay-title');
+  const newsOverlayMeta = document.getElementById('news-overlay-meta');
+  const newsOverlayContent = document.getElementById('news-overlay-content');
+  const newsOverlayCloseBtn = document.getElementById('news-overlay-close-btn');
+
   let currentFilter = 'all';
   let refreshTimer = null;
 
@@ -144,6 +195,28 @@
     } else {
       aiTestBtn.removeAttribute('disabled');
       aiTestSpinner?.classList.add('d-none');
+    }
+  };
+
+  const setNewsSaving = (isSaving) => {
+    if (!newsSaveBtn) return;
+    if (isSaving) {
+      newsSaveBtn.setAttribute('disabled', 'true');
+      newsSaveSpinner?.classList.remove('d-none');
+    } else {
+      newsSaveBtn.removeAttribute('disabled');
+      newsSaveSpinner?.classList.add('d-none');
+    }
+  };
+
+  const setNewsTesting = (isLoading) => {
+    if (!newsTestBtn) return;
+    if (isLoading) {
+      newsTestBtn.setAttribute('disabled', 'true');
+      newsTestSpinner?.classList.remove('d-none');
+    } else {
+      newsTestBtn.removeAttribute('disabled');
+      newsTestSpinner?.classList.add('d-none');
     }
   };
 
@@ -381,6 +454,616 @@
       </div>
     `;
     aiTestResult.classList.remove('d-none');
+  };
+
+  const renderNewsConfig = (config) => {
+    if (!newsForm) return;
+
+    const notificationEnabled = !!config?.notification_enabled;
+    if (newsNotificationEnabled) newsNotificationEnabled.checked = notificationEnabled;
+    if (newsTargetNumber) newsTargetNumber.value = config?.target_number || '';
+
+    const notificationTime = config?.notification_time || '08:00';
+    if (newsNotificationTime) newsNotificationTime.value = notificationTime;
+
+    const notificationPrompt = config?.notification_prompt || 'Wygeneruj krótkie podsumowanie najważniejszych newsów.';
+    if (newsNotificationPrompt) newsNotificationPrompt.value = notificationPrompt;
+
+    if (newsStatusBadge) {
+      newsStatusBadge.textContent = notificationEnabled ? 'Włączone' : 'Wyłączone';
+      newsStatusBadge.className = notificationEnabled
+        ? 'badge bg-success-subtle text-success-emphasis'
+        : 'badge bg-secondary-subtle text-secondary-emphasis';
+    }
+
+    if (newsUpdatedAt) {
+      newsUpdatedAt.textContent = config?.updated_at ? `Ostatnia aktualizacja: ${config.updated_at}` : '';
+    }
+
+    if (newsLastBuild) {
+      newsLastBuild.textContent = config?.last_build_at || '—';
+    }
+
+    if (newsLastNotification) {
+      newsLastNotification.textContent = config?.last_notification_at || '—';
+    }
+  };
+
+  const renderNewsTestResult = (payload) => {
+    if (!newsTestResult) return;
+    if (!payload) {
+      newsTestResult.classList.add('d-none');
+      newsTestResult.innerHTML = '';
+      return;
+    }
+
+    const ok = payload.success !== false;
+    const statusClass = ok ? 'alert-success' : 'alert-danger';
+    const details = escapeHtml(payload.details || payload.error || 'Brak szczegółów');
+    const latency = payload.latency_ms ? ` • ${payload.latency_ms} ms` : '';
+    const source = payload.source || 'API';
+    newsTestResult.innerHTML = `
+      <div class="fw-semibold mb-1">${ok ? 'Połączenie OK' : 'Błąd połączenia'}</div>
+      <div class="small text-muted">Źródło: ${escapeHtml(source)}${latency}</div>
+      <div class="mt-2">${details}</div>
+    `;
+    newsTestResult.className = `alert ${statusClass} border`;
+    newsTestResult.classList.remove('d-none');
+  };
+
+  const loadNewsConfig = async () => {
+    if (!newsForm) return;
+    try {
+      const data = await fetchJSON('/api/news/config');
+      renderNewsConfig(data);
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać konfiguracji News.', type: 'error' });
+    }
+  };
+
+  const testNewsFAISS = async () => {
+    const query = newsFaissQuery?.value.trim();
+    
+    if (!query) {
+      showToast({ title: 'Błąd', message: 'Wpisz zapytanie testowe.', type: 'error' });
+      return;
+    }
+
+    if (newsFaissTestSpinner) newsFaissTestSpinner.classList.remove('d-none');
+    if (newsFaissTestBtn) newsFaissTestBtn.setAttribute('disabled', 'true');
+    if (newsFaissResult) newsFaissResult.classList.add('d-none');
+
+    try {
+      const data = await fetchJSON('/api/news/test-faiss', {
+        method: 'POST',
+        body: JSON.stringify({ query })
+      });
+
+      if (data.success) {
+        if (newsFaissAnswer) newsFaissAnswer.textContent = data.answer || '(brak odpowiedzi)';
+        if (newsFaissMeta) {
+          newsFaissMeta.textContent = `LLM: ${data.llm_used ? 'Tak' : 'Nie'} • Wyniki: ${data.count || 0}`;
+        }
+        if (newsFaissResult) newsFaissResult.classList.remove('d-none');
+        showToast({ title: 'Test FAISS', message: 'Zapytanie wykonane pomyślnie.', type: 'success' });
+      } else {
+        showToast({ title: 'Błąd', message: data.error || 'Nie udało się wykonać zapytania.', type: 'error' });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się wykonać zapytania FAISS.', type: 'error' });
+    } finally {
+      if (newsFaissTestSpinner) newsFaissTestSpinner.classList.add('d-none');
+      if (newsFaissTestBtn) newsFaissTestBtn.removeAttribute('disabled');
+    }
+  };
+
+  const addNewsRecipient = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!newsAddRecipientForm) return;
+
+    const phone = newsRecipientPhone?.value.trim();
+    const time = newsRecipientTime?.value || '08:00';
+    const prompt = newsRecipientPrompt?.value.trim();
+
+    if (!phone || !prompt) {
+      newsAddRecipientForm.classList.add('was-validated');
+      return;
+    }
+
+    newsAddSpinner?.classList.remove('d-none');
+    try {
+      const data = await fetchJSON('/api/news/recipients', {
+        method: 'POST',
+        body: JSON.stringify({ phone, time, prompt })
+      });
+      
+      renderNewsRecipients(data.recipients || []);
+      newsAddRecipientForm.reset();
+      newsAddRecipientForm.classList.remove('was-validated');
+      showToast({ title: 'Dodano', message: 'Odbiorca został dodany do listy powiadomień.', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się dodać odbiorcy.', type: 'error' });
+    } finally {
+      newsAddSpinner?.classList.add('d-none');
+    }
+  };
+
+  const renderNewsRecipients = (recipients = []) => {
+    if (!newsRecipientsList) return;
+
+    newsRecipientsCount && (newsRecipientsCount.textContent = recipients.length);
+
+    if (!recipients.length) {
+      newsRecipientsList.innerHTML = '<p class="text-muted text-center py-4">Brak odbiorców</p>';
+      return;
+    }
+
+    const items = recipients.map(r => {
+      const id = r.id;
+      const phone = escapeHtml(r.phone || '');
+      const time = escapeHtml(r.time || '08:00');
+      const promptRaw = escapeHtml(r.prompt || '');
+      const prompt = promptRaw.length > 60 ? `${promptRaw.substring(0, 60)}...` : promptRaw;
+      const enabled = r.enabled;
+      const lastSent = r.last_sent_at ? new Date(r.last_sent_at).toLocaleString('pl-PL') : 'Nigdy';
+      const badge = enabled
+        ? '<span class="badge bg-success-subtle text-success-emphasis">Aktywny</span>'
+        : '<span class="badge bg-secondary-subtle text-secondary-emphasis">Wyłączony</span>';
+      const toggleLabel = enabled ? 'Off' : 'On';
+
+      return `
+        <div class="card mb-2 border">
+          <div class="card-body p-3">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="flex-grow-1">
+                <strong>${phone}</strong> ${badge}
+                <div class="small text-muted">Godzina: ${time}</div>
+                <div class="small text-muted">Ostatnio: ${lastSent}</div>
+                <div class="small text-muted mt-1" title="${escapeHtml(r.prompt || '')}">${prompt}</div>
+              </div>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-outline-success" onclick="sendNewsRecipient(${id})">
+                <i class="bi bi-send"></i> Wyślij
+              </button>
+              <button class="btn btn-outline-secondary" onclick="toggleNewsRecipient(${id})">${toggleLabel}</button>
+              <button class="btn btn-outline-danger" onclick="deleteNewsRecipient(${id})">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    newsRecipientsList.innerHTML = items;
+  };
+
+  const loadNewsRecipients = async () => {
+    try {
+      const data = await fetchJSON('/api/news/recipients');
+      renderNewsRecipients(data.recipients || []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  window.testNewsRecipient = async (id) => {
+    try {
+      const data = await fetchJSON(`/api/news/recipients/${id}/test`, { method: 'POST' });
+      if (data.success) {
+        alert(`Test (bez SMS):\n\n${data.message}`);
+      } else {
+        showToast({ title: 'Błąd', message: data.error, type: 'error' });
+      }
+    } catch (error) {
+      showToast({ title: 'Błąd', message: error.message, type: 'error' });
+    }
+  };
+
+  window.sendNewsRecipient = async (id) => {
+    if (!confirm('Czy na pewno chcesz wysłać powiadomienie teraz?')) return;
+    
+    try {
+      const data = await fetchJSON(`/api/news/recipients/${id}/send`, { method: 'POST' });
+      if (data.success) {
+        showToast({ title: 'Wysłano', message: `Powiadomienie wysłane do ${data.phone}`, type: 'success' });
+        loadNewsRecipients();
+      } else {
+        showToast({ title: 'Błąd', message: data.error, type: 'error' });
+      }
+    } catch (error) {
+      showToast({ title: 'Błąd', message: error.message, type: 'error' });
+    }
+  };
+
+  window.toggleNewsRecipient = async (id) => {
+    try {
+      const data = await fetchJSON(`/api/news/recipients/${id}/toggle`, { method: 'POST' });
+      if (data.success) {
+        renderNewsRecipients(data.recipients || []);
+        showToast({ title: 'Zaktualizowano', message: 'Status odbiorcy został zmieniony', type: 'success' });
+      }
+    } catch (error) {
+      showToast({ title: 'Błąd', message: error.message, type: 'error' });
+    }
+  };
+
+  window.deleteNewsRecipient = async (id) => {
+    if (!confirm('Czy na pewno chcesz usunąć tego odbiorce?')) return;
+    
+    try {
+      const data = await fetchJSON(`/api/news/recipients/${id}`, { method: 'DELETE' });
+      if (data.success) {
+        renderNewsRecipients(data.recipients || []);
+        showToast({ title: 'Usunięto', message: 'Odbiorca został usunięty', type: 'success' });
+      }
+    } catch (error) {
+      showToast({ title: 'Błąd', message: error.message, type: 'error' });
+    }
+  };
+
+  const renderNewsIndices = (items = []) => {
+    if (!newsIndicesTableBody) return;
+
+    if (!items.length) {
+      newsIndicesTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Brak danych.</td></tr>';
+      newsIndicesCount && (newsIndicesCount.textContent = '0');
+      return;
+    }
+
+    const rows = items.map((item) => {
+      const nameRaw = item.name || '—';
+      const name = escapeHtml(nameRaw);
+      const nameAttr = escapeHtml(nameRaw);
+      const createdAt = escapeHtml(item.created_at || '—');
+      const size = typeof item.size === 'number' ? `${item.size} vekt.` : escapeHtml(item.size || '—');
+      const status = escapeHtml(item.status || (item.active ? 'aktywny' : 'gotowy'));
+      const badge = item.active
+        ? '<span class="badge bg-success-subtle text-success-emphasis">aktywna</span>'
+        : '<span class="badge bg-secondary-subtle text-secondary-emphasis">dostępna</span>';
+      const disabled = item.active ? 'disabled' : '';
+
+      const deleteBtn = item.exists
+        ? `<button class="btn btn-sm btn-outline-danger ms-2" data-action="news-delete-index">Usuń</button>`
+        : '';
+
+      return `
+        <tr data-name="${nameAttr}">
+          <td class="text-nowrap">${name}</td>
+          <td class="text-nowrap">${createdAt}</td>
+          <td class="text-nowrap">${size}</td>
+          <td class="text-nowrap">${badge}<br><small class="text-muted">${status}</small></td>
+          <td class="text-nowrap d-flex gap-2">
+            <button class="btn btn-sm btn-outline-primary" data-action="news-set-active" ${disabled}>Ustaw aktywną</button>
+            ${deleteBtn}
+          </td>
+        </tr>
+      `;
+    });
+
+    newsIndicesTableBody.innerHTML = rows.join('');
+    newsIndicesCount && (newsIndicesCount.textContent = String(items.length));
+  };
+
+  const renderNewsIndicesSkeleton = () => {
+    if (!newsIndicesTableBody) return;
+    const row = `
+      <tr>
+        <td colspan="5">
+          <div class="skeleton skeleton-row">
+            <div class="skeleton-line skeleton-line--short mb-2"></div>
+            <div class="skeleton-line skeleton-line--full mb-1"></div>
+            <div class="skeleton-line skeleton-line--medium"></div>
+          </div>
+        </td>
+      </tr>
+    `;
+    newsIndicesTableBody.innerHTML = row + row;
+    newsIndicesCount && (newsIndicesCount.textContent = '—');
+  };
+
+  const showNewsIndicesError = (message) => {
+    if (!newsIndicesError) return;
+    newsIndicesError.textContent = message;
+    newsIndicesError.classList.remove('d-none');
+  };
+
+  const clearNewsIndicesError = () => {
+    if (!newsIndicesError) return;
+    newsIndicesError.classList.add('d-none');
+    newsIndicesError.textContent = '';
+  };
+
+  const loadNewsIndices = async () => {
+    if (!newsIndicesTableBody) return;
+    clearNewsIndicesError();
+    renderNewsIndicesSkeleton();
+    try {
+      const data = await fetchJSON('/api/news/indices');
+      renderNewsIndices(data.items || []);
+    } catch (error) {
+      console.error(error);
+      renderNewsIndices([]);
+      showNewsIndicesError(error.message || 'Nie udało się pobrać listy indeksów.');
+    }
+  };
+
+  const setActiveNewsIndex = async (name) => {
+    if (!name) return;
+    try {
+      await fetchJSON('/api/news/indices/active', {
+        method: 'POST',
+        body: JSON.stringify({ name })
+      });
+      showToast({ title: 'Zmieniono', message: `Aktywowano bazę: ${name}`, type: 'success' });
+      await loadNewsIndices();
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się ustawić aktywnej bazy.', type: 'error' });
+    }
+  };
+
+  const handleNewsIndicesAction = async (event) => {
+    const actionBtn = event.target.closest('button[data-action]');
+    if (!actionBtn) return;
+    const row = actionBtn.closest('tr[data-name]');
+    if (!row) return;
+    const name = row.getAttribute('data-name');
+    const action = actionBtn.dataset.action;
+
+    if (action === 'news-set-active') {
+      await setActiveNewsIndex(name);
+    }
+
+    if (action === 'news-delete-index') {
+      await deleteNewsIndex(name);
+    }
+  };
+
+  const deleteNewsIndex = async (name) => {
+    if (!name) return;
+    const ok = confirm(`Usunąć indeks ${name}? Pliki indeksu zostaną skasowane.`);
+    if (!ok) return;
+    try {
+      const res = await fetchJSON(`/api/news/indices/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      if (res.success) {
+        showToast({ title: 'Usunięto', message: `Indeks ${name} został skasowany.`, type: 'success' });
+        await loadNewsIndices();
+      } else {
+        showToast({ title: 'Błąd', message: res.error || 'Nie udało się usunąć indeksu.', type: 'error' });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Operacja nieudana.', type: 'error' });
+    }
+  };
+
+  const renderNewsFiles = (items = []) => {
+    if (!newsFilesGrid) return;
+
+    if (!items.length) {
+      newsFilesGrid.innerHTML = '<div class="col-12 text-center text-muted py-4">Brak plików. Uruchom skrapowanie, aby zobaczyć kafelki.</div>';
+      return;
+    }
+
+    const cards = items.map((file) => {
+      const category = escapeHtml(file.category || file.name || '—');
+      const size = file.size_bytes ? `${(file.size_bytes / 1024).toFixed(1)} KB` : '—';
+      const updated = file.updated_at ? new Date(file.updated_at).toLocaleString() : '—';
+      const format = escapeHtml(file.format || 'txt');
+      const fileName = escapeHtml(file.name || '');
+
+      return `
+        <div class="col-lg-4 col-md-6">
+          <div class="card shadow-sm border-0 news-file-card position-relative" data-filename="${fileName}">
+            <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2" data-action="delete-file" data-filename="${fileName}">
+              <i class="bi bi-trash"></i>
+            </button>
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h6 class="mb-0 text-truncate flex-grow-1">${category}</h6>
+                <span class="badge bg-primary-subtle text-primary-emphasis ms-2">${format}</span>
+              </div>
+              <div class="small text-muted">
+                <div class="text-truncate" title="${fileName}">${fileName}</div>
+                <div class="d-flex justify-content-between mt-1">
+                  <span>${size}</span>
+                  <span>${updated.split(',')[0]}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    newsFilesGrid.innerHTML = cards.join('');
+  };
+
+  const loadNewsFiles = async () => {
+    if (!newsFilesGrid) return;
+    try {
+      const data = await fetchJSON('/api/news/files');
+      renderNewsFiles(data.items || []);
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać listy plików.', type: 'error' });
+    }
+  };
+
+  const openNewsFileOverlay = async (filename) => {
+    if (!newsFileOverlay || !filename) return;
+
+    try {
+      const data = await fetchJSON(`/api/news/files/${encodeURIComponent(filename)}`);
+      if (data.error) {
+        showToast({ title: 'Błąd', message: data.error, type: 'error' });
+        return;
+      }
+
+      const category = filename.replace(/\.(txt|json)$/i, '').replace(/_/g, ' ');
+      if (newsOverlayTitle) newsOverlayTitle.textContent = category;
+      if (newsOverlayMeta) {
+        const size = data.size_bytes ? `${(data.size_bytes / 1024).toFixed(1)} KB` : '—';
+        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString() : '—';
+        newsOverlayMeta.textContent = `${size} • ${updated}`;
+      }
+      if (newsOverlayContent) {
+        const content = escapeHtml(data.content || '(pusty plik)');
+        newsOverlayContent.innerHTML = `<pre class="mb-0">${content}</pre>`;
+      }
+
+      newsFileOverlay.classList.remove('d-none');
+      newsFileOverlay.classList.add('news-overlay--visible');
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się wczytać pliku.', type: 'error' });
+    }
+  };
+
+  const closeNewsFileOverlay = () => {
+    if (!newsFileOverlay) return;
+    newsFileOverlay.classList.remove('news-overlay--visible');
+    setTimeout(() => {
+      newsFileOverlay.classList.add('d-none');
+    }, 300);
+  };
+
+  const handleNewsFileCardClick = (event) => {
+    const deleteBtn = event.target.closest('button[data-action="delete-file"]');
+    if (deleteBtn) {
+      const fname = deleteBtn.getAttribute('data-filename');
+      if (fname) deleteNewsFile(fname);
+      event.stopPropagation();
+      return;
+    }
+
+    const card = event.target.closest('.news-file-card');
+    if (!card) return;
+    const filename = card.getAttribute('data-filename');
+    if (filename) openNewsFileOverlay(filename);
+  };
+
+  const deleteNewsFile = async (filename) => {
+    if (!filename) return;
+    const confirmDelete = confirm(`Usunąć plik ${filename}?`);
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetchJSON(`/api/news/files/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+      if (res.success) {
+        showToast({ title: 'Usunięto', message: `Plik ${filename} został usunięty.`, type: 'success' });
+        await loadNewsFiles();
+      } else {
+        showToast({ title: 'Błąd', message: res.error || 'Nie udało się usunąć pliku.', type: 'error' });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się usunąć pliku.', type: 'error' });
+    }
+  };
+
+  const buildNewsIndex = async () => {
+    if (!newsBuildIndexBtn) return;
+    if (newsBuildIndexBtn.hasAttribute('disabled')) return;
+
+    newsBuildIndexBtn.setAttribute('disabled', 'true');
+    newsBuildIndexSpinner?.classList.remove('d-none');
+
+    try {
+      const data = await fetchJSON('/api/news/indices/build', { method: 'POST' });
+
+      if (!data.success) {
+        showToast({ title: 'Błąd', message: data.error || 'Nie udało się zbudować indeksu.', type: 'error' });
+        return;
+      }
+
+      showToast({ title: 'Sukces', message: data.message || 'Indeks FAISS został zbudowany.', type: 'success' });
+      
+      if (newsLastBuild && data.built_at) newsLastBuild.textContent = data.built_at;
+      
+      await loadNewsIndices();
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się zbudować indeksu.', type: 'error' });
+    } finally {
+      newsBuildIndexBtn.removeAttribute('disabled');
+      newsBuildIndexSpinner?.classList.add('d-none');
+    }
+  };
+
+  const runNewsScrape = async () => {
+    if (!newsScrapeBtn) return;
+
+    if (newsScrapeBtn.hasAttribute('disabled')) return;
+
+    newsScrapeBtn.setAttribute('disabled', 'true');
+    newsScrapeSpinner?.classList.remove('d-none');
+    if (newsScrapeStatus) newsScrapeStatus.textContent = 'Pobieranie...';
+    if (newsScrapeLog) {
+      newsScrapeLog.classList.remove('d-none');
+      newsScrapeLog.textContent = 'Rozpoczynam skrapowanie kategorii...';
+    }
+
+    try {
+      const data = await fetchJSON('/api/news/scrape', { method: 'POST' });
+
+      if (!data.success) {
+        if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
+        if (newsScrapeLog) newsScrapeLog.textContent = data.error || 'Skrapowanie nie powiodło się.';
+        showToast({ title: 'Błąd', message: data.error || 'Skrapowanie nie powiodło się.', type: 'error' });
+        return;
+      }
+
+      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
+      const summary = `Pobrano ${data.items?.length || 0} kategorii. FAISS odbudowany.`;
+      if (newsScrapeLog) newsScrapeLog.textContent = summary;
+      showToast({ title: 'Sukces', message: summary, type: 'success' });
+
+      if (newsLastBuild && data.completed_at) newsLastBuild.textContent = data.completed_at;
+
+      await Promise.all([loadNewsFiles(), loadNewsIndices()]);
+    } catch (error) {
+      console.error(error);
+      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
+      if (newsScrapeLog) newsScrapeLog.textContent = error.message || 'Błąd serwera.';
+      showToast({ title: 'Błąd', message: error.message || 'Skrapowanie nie powiodło się.', type: 'error' });
+    } finally {
+      newsScrapeBtn.removeAttribute('disabled');
+      newsScrapeSpinner?.classList.add('d-none');
+    }
+  };
+
+  const runNewsTest = async () => {
+    if (!newsTestBtn) return;
+    setNewsTesting(true);
+    renderNewsTestResult(null);
+    if (newsTestStatus) newsTestStatus.textContent = 'Łączenie z API...';
+
+    try {
+      const payload = {};
+      const overrideTarget = newsTestTarget?.value.trim();
+      if (overrideTarget) payload.target_number = overrideTarget;
+      const data = await fetchJSON('/api/news/test', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      renderNewsTestResult(data);
+      if (newsTestStatus) newsTestStatus.textContent = data?.success === false ? 'Błąd połączenia.' : 'Połączenie OK';
+      if (newsLastTest && data?.tested_at) newsLastTest.textContent = data.tested_at;
+    } catch (error) {
+      console.error(error);
+      renderNewsTestResult({ success: false, error: error.message || 'Błąd połączenia.' });
+      if (newsTestStatus) newsTestStatus.textContent = error.message || 'Błąd połączenia.';
+    } finally {
+      setNewsTesting(false);
+    }
   };
 
   const loadReminders = async () => {
@@ -1044,6 +1727,44 @@
       loadReminders();
     }
 
+    if (newsAddRecipientForm) {
+      newsAddRecipientForm.addEventListener('submit', addNewsRecipient);
+      newsRecipientsRefreshBtn?.addEventListener('click', loadNewsRecipients);
+      newsFaissTestBtn?.addEventListener('click', testNewsFAISS);
+      loadNewsRecipients();
+    }
+
+    if (newsIndicesTableBody) {
+      newsIndicesTableBody.addEventListener('click', handleNewsIndicesAction);
+      newsRefreshIndicesBtn?.addEventListener('click', loadNewsIndices);
+      loadNewsIndices();
+    }
+
+    if (newsScrapeBtn) {
+      newsScrapeBtn.addEventListener('click', runNewsScrape);
+    }
+
+    if (newsBuildIndexBtn) {
+      newsBuildIndexBtn.addEventListener('click', buildNewsIndex);
+    }
+
+    if (newsFilesGrid) {
+      newsFilesGrid.addEventListener('click', handleNewsFileCardClick);
+      newsFilesRefreshBtn?.addEventListener('click', loadNewsFiles);
+      loadNewsFiles();
+    }
+
+    if (newsOverlayCloseBtn) {
+      newsOverlayCloseBtn.addEventListener('click', closeNewsFileOverlay);
+    }
+
+    if (newsFileOverlay) {
+      const backdrop = newsFileOverlay.querySelector('.news-overlay__backdrop');
+      if (backdrop) {
+        backdrop.addEventListener('click', closeNewsFileOverlay);
+      }
+    }
+
     if (aiForm) {
       aiForm.addEventListener('submit', submitAiConfig);
       loadAiConfig();
@@ -1056,6 +1777,7 @@
     }
 
     aiTestBtn?.addEventListener('click', runAiTest);
+    newsTestBtn?.addEventListener('click', runNewsTest);
   };
 
   document.addEventListener('visibilitychange', () => {
