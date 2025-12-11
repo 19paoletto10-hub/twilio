@@ -1228,8 +1228,12 @@ def api_test_news_recipient(recipient_id: int):
     
     try:
         from app.faiss_service import FAISSService
-        
-        faiss_service = FAISSService()
+
+        try:
+            faiss_service = FAISSService()
+        except RuntimeError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 400
+
         loaded = faiss_service.load_index()
         
         if not loaded:
@@ -1290,7 +1294,11 @@ def api_send_news_recipient(recipient_id: int):
                 "error": "Nieprawidłowy numer telefonu odbiorcy (wymagany format E.164).",
             }), 400
 
-        faiss_service = FAISSService()
+        try:
+            faiss_service = FAISSService()
+        except RuntimeError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 400
+
         faiss_service.load_index()
 
         # Generuj wiadomość
@@ -1442,6 +1450,42 @@ def api_news_file_delete(filename: str):
         return jsonify({"error": f"Nie udało się usunąć pliku: {exc}"}), 500
 
 
+@webhooks_bp.get("/api/news/faiss/status")
+def api_news_faiss_status():
+    """Zwraca status indeksu FAISS oraz konfiguracji modeli."""
+    try:
+        from app.faiss_service import FAISSService
+
+        try:
+            faiss_service = FAISSService()
+        except RuntimeError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 400
+
+        status = faiss_service.get_index_status()
+        vector_count = 0
+        loaded = False
+
+        try:
+            loaded = faiss_service.load_index()
+            if loaded and faiss_service.vector_store and getattr(faiss_service.vector_store, "index", None):
+                vector_count = int(getattr(faiss_service.vector_store.index, "ntotal", 0))
+        except Exception as exc:  # noqa: BLE001
+            current_app.logger.warning("FAISS status load failed: %s", exc)
+
+        payload = {
+            **status,
+            "loaded": loaded,
+            "vector_count": vector_count,
+            "embedding_model": faiss_service.embeddings.model,
+            "chat_model": faiss_service.chat_model,
+        }
+        return jsonify({"success": True, "status": payload})
+
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("FAISS status endpoint failed: %s", exc)
+        return jsonify({"success": False, "error": f"Błąd statusu FAISS: {exc}"}), 500
+
+
 @webhooks_bp.get("/api/news/indices")
 def api_news_indices():
     payload = _faiss_indices_payload()
@@ -1514,7 +1558,11 @@ def api_news_test_faiss():
     try:
         from app.faiss_service import FAISSService
         
-        faiss_service = FAISSService()
+        try:
+            faiss_service = FAISSService()
+        except RuntimeError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 400
+
         loaded = faiss_service.load_index()
         
         if not loaded:
@@ -1532,7 +1580,11 @@ def api_news_test_faiss():
                 "query": query,
                 "answer": response.get("answer", ""),
                 "llm_used": response.get("llm_used", False),
-                "count": response.get("count", 0)
+                "count": response.get("count", 0),
+                "results": response.get("results", []),
+                "context_preview": response.get("context_preview", ""),
+                "search_info": response.get("search_info", {}),
+                "chat_model": response.get("chat_model"),
             })
         else:
             return jsonify({
@@ -1556,7 +1608,10 @@ def api_news_build_index():
     try:
         from app.faiss_service import FAISSService
         
-        faiss_service = FAISSService()
+        try:
+            faiss_service = FAISSService()
+        except RuntimeError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 400
         success = faiss_service.build_index_from_category_files(SCRAPED_DIR)
         
         if success:

@@ -106,6 +106,22 @@
   const newsOverlayMeta = document.getElementById('news-overlay-meta');
   const newsOverlayContent = document.getElementById('news-overlay-content');
   const newsOverlayCloseBtn = document.getElementById('news-overlay-close-btn');
+  const newsFaissStatusPill = document.getElementById('news-faiss-status-pill');
+  const newsFaissStatusUpdated = document.getElementById('news-faiss-status-updated');
+  const newsFaissStatusMeta = document.getElementById('news-faiss-status-meta');
+  const newsFaissStatusSize = document.getElementById('news-faiss-status-size');
+  const newsFaissEmbedding = document.getElementById('news-faiss-embedding');
+  const newsFaissChat = document.getElementById('news-faiss-chat');
+  const newsFaissVectors = document.getElementById('news-faiss-vectors');
+  const newsFaissIndexPath = document.getElementById('news-faiss-index-path');
+  const newsFaissSnapshot = document.getElementById('news-faiss-snapshot');
+  const newsFaissStatusError = document.getElementById('news-faiss-status-error');
+  const newsFaissStatusRefreshBtn = document.getElementById('news-faiss-status-refresh-btn');
+  const newsFaissQuickTestBtn = document.getElementById('news-faiss-quick-test-btn');
+  const newsFaissSnippets = document.getElementById('news-faiss-snippets');
+  const newsFaissSnippetsList = document.getElementById('news-faiss-snippets-list');
+
+  const DEFAULT_FAISS_PROMPT = 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
 
   let currentFilter = 'all';
   let refreshTimer = null;
@@ -163,6 +179,16 @@
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+
+  const formatBytes = (bytes = 0) => {
+    if (!Number.isFinite(bytes) || bytes <= 0) {
+      return '0 B';
+    }
+    const units = ['B', 'KB', 'MB', 'GB'];
+    const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+    const value = bytes / 1024 ** index;
+    return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[index]}`;
+  };
 
   // Reminders helpers
   const setReminderSaving = (isSaving) => {
@@ -511,6 +537,109 @@
     newsTestResult.classList.remove('d-none');
   };
 
+  const renderFaissSnippets = (items = []) => {
+    if (!newsFaissSnippets || !newsFaissSnippetsList) return;
+
+    if (!Array.isArray(items) || !items.length) {
+      newsFaissSnippets.classList.add('d-none');
+      newsFaissSnippetsList.innerHTML = '';
+      return;
+    }
+
+    const html = items.slice(0, 5).map((item, idx) => {
+      const category = escapeHtml(item.category || `Fragment ${idx + 1}`);
+      const content = escapeHtml(item.content || '').replace(/\n/g, '<br>');
+      return `
+        <div class="list-group-item">
+          <div class="fw-semibold mb-1">${category}</div>
+          <div>${content}</div>
+        </div>
+      `;
+    }).join('');
+
+    newsFaissSnippetsList.innerHTML = html;
+    newsFaissSnippets.classList.remove('d-none');
+  };
+
+  const renderFaissStatus = (status) => {
+    if (!newsFaissStatusPill) return;
+
+    if (!status) {
+      newsFaissStatusPill.textContent = 'Brak danych';
+      newsFaissStatusPill.className = 'badge bg-secondary-subtle text-secondary-emphasis';
+      newsFaissStatusMeta && (newsFaissStatusMeta.textContent = 'Ścieżka: —');
+      newsFaissStatusSize && (newsFaissStatusSize.textContent = 'Rozmiar: —');
+      newsFaissEmbedding && (newsFaissEmbedding.textContent = '—');
+      newsFaissChat && (newsFaissChat.textContent = '—');
+      newsFaissVectors && (newsFaissVectors.textContent = '0');
+      newsFaissIndexPath && (newsFaissIndexPath.textContent = '—');
+      newsFaissSnapshot && (newsFaissSnapshot.textContent = '—');
+      return;
+    }
+
+    const exists = Boolean(status.exists);
+    const loaded = Boolean(status.loaded);
+    let badgeClass = 'badge bg-danger-subtle text-danger-emphasis';
+    let label = 'Brak indeksu';
+
+    if (loaded) {
+      badgeClass = 'badge bg-success-subtle text-success-emphasis';
+      label = 'Indeks gotowy';
+    } else if (exists) {
+      badgeClass = 'badge bg-warning-subtle text-warning-emphasis';
+      label = 'Pliki do załadowania';
+    }
+
+    newsFaissStatusPill.className = badgeClass;
+    newsFaissStatusPill.textContent = label;
+
+    if (newsFaissStatusMeta) {
+      newsFaissStatusMeta.textContent = status.index_path ? `Ścieżka: ${status.index_path}` : 'Ścieżka: —';
+    }
+    if (newsFaissStatusSize) {
+      newsFaissStatusSize.textContent = `Rozmiar: ${formatBytes(status.size_bytes || 0)}`;
+    }
+    if (newsFaissEmbedding) {
+      newsFaissEmbedding.textContent = status.embedding_model || '—';
+    }
+    if (newsFaissChat) {
+      newsFaissChat.textContent = status.chat_model || '—';
+    }
+    if (newsFaissVectors) {
+      newsFaissVectors.textContent = status.vector_count != null ? status.vector_count : '0';
+    }
+    if (newsFaissIndexPath) {
+      newsFaissIndexPath.textContent = status.index_file || '—';
+    }
+    if (newsFaissSnapshot) {
+      newsFaissSnapshot.textContent = status.docs_snapshot_exists ? 'Tak' : 'Nie';
+    }
+    if (newsFaissStatusUpdated) {
+      const now = new Date();
+      newsFaissStatusUpdated.textContent = `odświeżono ${now.toLocaleString('pl-PL')}`;
+    }
+
+    newsFaissStatusError?.classList.add('d-none');
+  };
+
+  const loadFaissStatus = async () => {
+    if (!newsFaissStatusPill) return;
+    try {
+      const data = await fetchJSON('/api/news/faiss/status');
+      if (data.success) {
+        renderFaissStatus(data.status);
+      } else {
+        throw new Error(data.error || 'Nie udało się pobrać statusu FAISS.');
+      }
+    } catch (error) {
+      console.error(error);
+      if (newsFaissStatusError) {
+        newsFaissStatusError.textContent = error.message || 'Nie udało się pobrać statusu FAISS.';
+        newsFaissStatusError.classList.remove('d-none');
+      }
+    }
+  };
+
   const loadNewsConfig = async () => {
     if (!newsForm) return;
     try {
@@ -522,29 +651,38 @@
     }
   };
 
-  const testNewsFAISS = async () => {
-    const query = newsFaissQuery?.value.trim();
-    
-    if (!query) {
+  const testNewsFAISS = async (customQuery = null) => {
+    const querySource = typeof customQuery === 'string' ? customQuery.trim() : (newsFaissQuery?.value.trim() || '');
+
+    if (!querySource) {
       showToast({ title: 'Błąd', message: 'Wpisz zapytanie testowe.', type: 'error' });
       return;
+    }
+
+    if (!newsFaissQuery?.value.trim() && customQuery) {
+      newsFaissQuery.value = customQuery;
     }
 
     if (newsFaissTestSpinner) newsFaissTestSpinner.classList.remove('d-none');
     if (newsFaissTestBtn) newsFaissTestBtn.setAttribute('disabled', 'true');
     if (newsFaissResult) newsFaissResult.classList.add('d-none');
+    renderFaissSnippets([]);
 
     try {
       const data = await fetchJSON('/api/news/test-faiss', {
         method: 'POST',
-        body: JSON.stringify({ query })
+        body: JSON.stringify({ query: querySource })
       });
 
       if (data.success) {
         if (newsFaissAnswer) newsFaissAnswer.textContent = data.answer || '(brak odpowiedzi)';
         if (newsFaissMeta) {
-          newsFaissMeta.textContent = `LLM: ${data.llm_used ? 'Tak' : 'Nie'} • Wyniki: ${data.count || 0}`;
+          const llmLabel = data.llm_used ? 'tak' : 'nie';
+          const fragments = data.count ?? 0;
+          const chatModel = data.chat_model || 'n/d';
+          newsFaissMeta.textContent = `Model: ${chatModel} • LLM: ${llmLabel} • Fragmenty: ${fragments}`;
         }
+        renderFaissSnippets(data.results || []);
         if (newsFaissResult) newsFaissResult.classList.remove('d-none');
         showToast({ title: 'Test FAISS', message: 'Zapytanie wykonane pomyślnie.', type: 'success' });
       } else {
@@ -1730,8 +1868,11 @@
     if (newsAddRecipientForm) {
       newsAddRecipientForm.addEventListener('submit', addNewsRecipient);
       newsRecipientsRefreshBtn?.addEventListener('click', loadNewsRecipients);
-      newsFaissTestBtn?.addEventListener('click', testNewsFAISS);
+      newsFaissTestBtn?.addEventListener('click', () => testNewsFAISS());
+      newsFaissStatusRefreshBtn?.addEventListener('click', loadFaissStatus);
+      newsFaissQuickTestBtn?.addEventListener('click', () => testNewsFAISS(DEFAULT_FAISS_PROMPT));
       loadNewsRecipients();
+      loadFaissStatus();
     }
 
     if (newsIndicesTableBody) {

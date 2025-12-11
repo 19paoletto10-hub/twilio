@@ -388,6 +388,45 @@
 
       <div class="tab-pane fade" id="tab-news" role="tabpanel" aria-labelledby="tab-news-btn" tabindex="0">
         <div class="row g-4">
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-white border-0 pb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">FAISS + OpenAI</p>
+                  <h2 class="h5 mb-0">Status bazy wiedzy</h2>
+                </div>
+                <div class="btn-group btn-group-sm" role="group">
+                  <button class="btn btn-outline-secondary" id="news-faiss-status-refresh-btn">Odśwież status</button>
+                  <button class="btn btn-outline-primary" id="news-faiss-quick-test-btn">Szybki test</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row g-3 align-items-center">
+                  <div class="col-md-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                      <span class="badge bg-secondary-subtle text-secondary-emphasis" id="news-faiss-status-pill">Ładowanie...</span>
+                      <small class="text-muted" id="news-faiss-status-updated">—</small>
+                    </div>
+                    <div class="small text-muted" id="news-faiss-status-meta">Ścieżka: —</div>
+                    <div class="small text-muted" id="news-faiss-status-size">Rozmiar: —</div>
+                  </div>
+                  <div class="col-md-4">
+                    <ul class="list-unstyled small mb-0">
+                      <li>Embedding: <strong id="news-faiss-embedding">—</strong></li>
+                      <li>Chat model: <strong id="news-faiss-chat">—</strong></li>
+                      <li>Wektory w indeksie: <strong id="news-faiss-vectors">0</strong></li>
+                    </ul>
+                  </div>
+                  <div class="col-md-4 text-md-end">
+                    <div class="small text-muted">Plik indeksu: <span id="news-faiss-index-path">—</span></div>
+                    <div class="small text-muted">Snapshot dokumentów: <span id="news-faiss-snapshot">—</span></div>
+                  </div>
+                </div>
+                <div class="alert alert-danger d-none mt-3" id="news-faiss-status-error"></div>
+              </div>
+            </div>
+          </div>
+
           <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
               <div class="card-header bg-white border-0 pb-0">
@@ -474,6 +513,11 @@
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <div class="mt-3 d-none" id="news-faiss-snippets">
+                  <p class="text-muted small mb-2">Fragmenty użyte w odpowiedzi:</p>
+                  <div class="list-group small" id="news-faiss-snippets-list"></div>
                 </div>
 
                 <div class="mt-3 small text-muted">

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Twilio Chat App – ver3.0.2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 2rem auto; max-width: 900px; line-height: 1.6; color: #222; }
+    h1, h2, h3 { color: #111; }
+    code { background: #f5f5f5; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.95em; }
+    pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    .tag { font-family: monospace; background: #eef; padding: 0.1rem 0.4rem; border-radius: 3px; }
+    .meta { font-size: 0.9rem; color: #555; margin-bottom: 1.5rem; }
+    ul { margin-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Twilio Chat App – <span class="tag">ver3.0.2</span></h1>
+  <p class="meta">
+    Release tag: <code>ver3.0.2</code><br />
+    Data wydania: 2025-12-11<br />
+    Środowisko referencyjne: Docker (Python 3.12, gunicorn)
+  </p>
+
+  <h2>Podsumowanie</h2>
+  <p>
+    Moduł News/RAG otrzymał kompletny pulpit kontrolny: indeks FAISS korzysta wyłącznie z
+    embeddingów OpenAI, raportuje stan i liczbę wektorów, a panel WWW udostępnia szybki test
+    promptu oraz podgląd fragmentów źródłowych użytych w odpowiedzi.
+  </p>
+
+  <h2>Technologie i środowisko</h2>
+  <ul>
+    <li>Język: Python 3.12 (obraz bazowy <code>python:3.12-slim</code>).</li>
+    <li>Framework backendowy: Flask 3.0.3.</li>
+    <li>Serwer HTTP: <code>gunicorn</code> (śledzony w <code>requirements.txt</code>).</li>
+    <li>Baza danych: SQLite (<code>data/app.db</code>).</li>
+    <li>Integracje:
+      <ul>
+        <li>Twilio (<code>twilio==9.3.1</code>) – SMS/MMS, webhooki.</li>
+        <li>OpenAI (<code>openai==1.59.3</code>) – embeddingi i generowanie odpowiedzi.</li>
+        <li>LangChain 0.3 (<code>langchain-core</code>, <code>langchain-community</code>, <code>langchain-text-splitters</code>).</li>
+      </ul>
+    </li>
+    <li>Deployment: Docker / docker-compose, port 3000, healthcheck na <code>/api/health</code>.</li>
+  </ul>
+
+  <h2>Zakres zmian</h2>
+
+  <h3>1. FAISS tylko z OpenAI</h3>
+  <ul>
+    <li><code>FAISSService</code> usuwa fallback hashujący – brak klucza <code>SECOND_OPENAI</code>/<code>OPENAI_API_KEY</code> natychmiast zgłasza błąd.</li>
+    <li>Zapisuje komplet plików (<code>index.faiss</code>, <code>index.pkl</code>, <code>documents.json</code>) i zwraca <code>context_preview</code> oraz listę fragmentów dla każdego zapytania.</li>
+  </ul>
+
+  <h3>2. Nowe API diagnostyczne</h3>
+  <ul>
+    <li><code>/api/news/faiss/status</code> udostępnia rozmiar indeksu, liczbę wektorów oraz używane modele.</li>
+    <li>Zaktualizowane <code>/api/news/test-faiss</code> (oraz akcje typu „test odbiorcy”, „Wyślij teraz”, „Build index”) mają spójne komunikaty o braku kluczy i indeksu oraz zwracają dodatkowe dane do panelu.</li>
+  </ul>
+
+  <h3>3. Panel „News po AI”</h3>
+  <ul>
+    <li>Karta statusowa pokazuje stan indeksu, modele i datę ostatniego odświeżenia wraz z informacją o plikach.</li>
+    <li>Przycisk „Szybki test” uruchamia domyślny prompt i prezentuje odpowiedź wraz z listą użytych fragmentów.</li>
+    <li>Sekcja „Fragmenty użyte w odpowiedzi” pozwala audytować źródła, które zasiliły odpowiedź LLM.</li>
+  </ul>
+
+  <h3>4. Zależności i deployment</h3>
+  <ul>
+    <li><code>requirements.txt</code> zawiera <code>gunicorn</code> oraz <code>langchain-text-splitters</code>; po aktualizacji wykonaj <code>pip install -r requirements.txt</code>.</li>
+    <li>Dockerowy build staje się powtarzalny, bo wszystkie runtime dependencies są teraz jawnie zadeklarowane.</li>
+  </ul>
+
+  <h2>Kompatybilność i upgrade</h2>
+  <ul>
+    <li>Ustaw <code>SECOND_OPENAI</code> (lub <code>OPENAI_API_KEY</code>) zanim zbudujesz indeks – brak klucza od razu zatrzyma operację.</li>
+    <li>Zainstaluj nowe pakiety: <code>pip install -r requirements.txt</code>.</li>
+    <li>Po wdrożeniu odśwież panel i kliknij „Odśwież status”, aby potwierdzić, że indeks jest dostępny; w razie potrzeby uruchom „Scrape + Build”.</li>
+  </ul>
+
+  <h2>Tworzenie GitHub Release</h2>
+  <ol>
+    <li>Na GitHubie wybierz <strong>Draft a new release</strong>.</li>
+    <li>Ustaw tag i tytuł na <code>ver3.0.2</code> / <code>ver3.0.2 – News &amp; FAISS control plane</code>.</li>
+    <li>Skopiuj treść z pliku <code>deploy/releases/ver3.0.2.md</code> lub załącz ten dokument HTML.</li>
+    <li>Opublikuj release przyciskiem <strong>Publish release</strong>.</li>
+  </ol>
+</body>
+</html>

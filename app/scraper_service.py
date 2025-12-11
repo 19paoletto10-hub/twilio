@@ -7,7 +7,7 @@ import re
 import time
 import unicodedata
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
 from urllib.robotparser import RobotFileParser
@@ -19,6 +19,9 @@ try:
     import trafilatura
 except Exception:  # pragma: no cover
     trafilatura = None  # type: ignore
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 
 # =============================================================================
@@ -54,13 +57,13 @@ class Article:
         category: str,
         scraped_at: Optional[datetime] = None,
     ) -> "Article":
-        dt = scraped_at or datetime.utcnow()
+        dt = scraped_at or datetime.now(timezone.utc)
         return cls(
             url=url,
             title=(title or "").strip(),
             text=(text or "").strip(),
             category=category,
-            scraped_at=dt.isoformat() + "Z",
+            scraped_at=dt.isoformat().replace("+00:00", "Z"),
         )
 
     def to_dict(self) -> Dict:
@@ -187,20 +190,6 @@ class ScraperService:
 
         self.scraped_cache: Dict[str, str] = {}
 
-        # Professional: connection pooling with session
-        self.session = requests.Session()
-        adapter = requests.adapters.HTTPAdapter(
-            pool_connections=10,
-            pool_maxsize=20,
-            max_retries=requests.adapters.Retry(
-                total=3,
-                backoff_factor=0.5,
-                status_forcelist=[429, 500, 502, 503, 504],
-            )
-        )
-        self.session.mount("http://", adapter)
-        self.session.mount("https://", adapter)
-
         self.http_headers = {
             "User-Agent": user_agent
             or (
@@ -218,28 +207,14 @@ class ScraperService:
     def _sleep(self) -> None:
         time.sleep(self.request_delay_sec)
 
-    def _get(self, url: str, retry_count: int = 2) -> Optional[str]:
-        """Fetch URL with retry logic and better error handling."""
-        for attempt in range(retry_count + 1):
-            try:
-                resp = self.session.get(url, headers=self.http_headers, timeout=self.timeout_sec)
-                resp.raise_for_status()
-                logging.debug("Successfully fetched %s (attempt %d)", url, attempt + 1)
-                return resp.text
-            except requests.Timeout:
-                logging.warning("Timeout fetching %s (attempt %d/%d)", url, attempt + 1, retry_count + 1)
-                if attempt < retry_count:
-                    time.sleep(1.5 ** attempt)  # exponential backoff
-                    continue
-            except requests.HTTPError as exc:
-                logging.warning("HTTP %s for %s: %s", exc.response.status_code if exc.response else '???', url, exc)
-                return None
-            except requests.RequestException as exc:
-                logging.warning("Network error for %s: %s", url, exc)
-                if attempt < retry_count:
-                    time.sleep(1.0)
-                    continue
-        return None
+    def _get(self, url: str) -> Optional[str]:
+        try:
+            resp = requests.get(url, headers=self.http_headers, timeout=self.timeout_sec)
+            resp.raise_for_status()
+            return resp.text
+        except requests.RequestException as exc:
+            logger.warning("HTTP error for %s: %s", url, exc)
+            return None
 
     def can_scrape(self, url: str) -> bool:
         """
@@ -249,9 +224,9 @@ class ScraperService:
         try:
             parsed = urlparse(url)
             robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
-            resp = self.session.get(robots_url, headers=self.http_headers, timeout=10)
+            resp = requests.get(robots_url, headers=self.http_headers, timeout=10)
             if resp.status_code != 200:
-                logging.debug("Robots status=%s for %s, assuming allowed.", resp.status_code, robots_url)
+                logger.debug("Robots status=%s for %s, assuming allowed.", resp.status_code, robots_url)
                 return True
 
             rp = RobotFileParser()
@@ -259,10 +234,10 @@ class ScraperService:
 
             allowed = rp.can_fetch("*", url)
             if not allowed:
-                logging.warning("Robots.txt disallows: %s", url)
+                logger.warning("Robots.txt disallows: %s", url)
             return allowed
         except Exception as exc:  # noqa: BLE001
-            logging.debug("Robots check failed for %s: %s, assuming allowed.", url, exc)
+            logger.debug("Robots check failed for %s: %s, assuming allowed.", url, exc)
             return True
 
     # -------------------------------------------------------------------------
@@ -346,33 +321,26 @@ class ScraperService:
         Tries trafilatura first, then BeautifulSoup fallback.
         """
         if not self.can_scrape(url):
-            logging.debug("Robots.txt disallows scraping %s", url)
             return "", ""
 
-        # 1) Trafilatura (preferred for content extraction)
+        # 1) Trafilatura
         if trafilatura:
             try:
                 downloaded = trafilatura.fetch_url(url)
                 if downloaded:
-                    extracted = trafilatura.extract(
-                        downloaded, 
-                        include_comments=False, 
-                        include_tables=False,
-                        output_format='txt'
-                    )
-                    if extracted and len(extracted.strip()) > 100:  # minimum viable content
+                    extracted = trafilatura.extract(downloaded, include_comments=False, include_tables=False)
+                    if extracted:
                         title = ""
                         try:
                             soup = BeautifulSoup(downloaded, "html.parser")
                             title = self._extract_title_bs(soup)
-                        except Exception as exc:
-                            logging.debug("Title extraction failed: %s", exc)
+                        except Exception:
                             title = ""
                         return title, clean_article_text(extracted)
             except Exception as exc:  # noqa: BLE001
-                logging.debug("Trafilatura failed for %s: %s", url, exc)
+                logger.debug("Trafilatura failed: %s | %s", url, exc)
 
-        # 2) Requests + BS4 (fallback)
+        # 2) Requests + BS4
         html = self._get(url)
         if not html:
             return "", ""
@@ -390,23 +358,17 @@ class ScraperService:
                 paragraphs.append(txt)
 
         raw_text = "\n".join(paragraphs)
-        cleaned = clean_article_text(raw_text)
-        
-        if len(cleaned) < 100:
-            logging.debug("Article too short after cleaning: %s", url)
-            return title, ""
-            
-        return title, cleaned
+        return title, clean_article_text(raw_text)
 
     # -------------------------------------------------------------------------
     # Category Scraping + Saving
     # -------------------------------------------------------------------------
     def scrape_category(self, category: str, url: str) -> List[Article]:
-        logging.info("Scraping category: %s | %s", category, url)
+        logger.info("Scraping category: %s | %s", category, url)
 
         html = self._get(url)
         if not html:
-            logging.warning("Failed to fetch category page: %s", url)
+            logger.warning("Failed to fetch category page: %s", url)
             return []
 
         links = self.extract_article_links(url, html)
@@ -454,13 +416,13 @@ class ScraperService:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump([a.to_dict() for a in articles], f, ensure_ascii=False, indent=2)
 
-        logging.info("Saved category '%s' -> %s", category, txt_path)
+        logger.info("Saved category '%s' -> %s", category, txt_path)
         return txt_path, json_path
 
     # -------------------------------------------------------------------------
     # Public API
     # -------------------------------------------------------------------------
-    def fetch_all_categories(self, *, build_faiss: bool = True, clean_old: bool = True) -> Dict[str, str]:
+    def fetch_all_categories(self, *, build_faiss: bool = True) -> Dict[str, str]:
         """
         Scrape all configured categories.
 
@@ -468,35 +430,18 @@ class ScraperService:
             {category_name: combined_text_or_error_string}
 
         Side effects:
-            - optionally cleans old files from SCRAPED_DIR (if clean_old=True)
             - saves per-category .txt/.json
             - optionally builds FAISS index via app.faiss_service.FAISSService
         """
-        # Clean old scraped files before new scrape
-        if clean_old and os.path.isdir(SCRAPED_DIR):
-            logging.info("Cleaning old scraped files from %s", SCRAPED_DIR)
-            for filename in os.listdir(SCRAPED_DIR):
-                if filename.endswith((".txt", ".json")):
-                    file_path = os.path.join(SCRAPED_DIR, filename)
-                    try:
-                        os.remove(file_path)
-                        logging.debug("Removed old file: %s", filename)
-                    except Exception as exc:
-                        logging.warning("Failed to remove %s: %s", filename, exc)
-        
         results: Dict[str, str] = {}
-        total = len(self.news_sites)
-        
-        logging.info("Starting scrape for %d categories", total)
 
-        for idx, (category, url) in enumerate(self.news_sites.items(), 1):
-            logging.info("[%d/%d] Processing category: %s", idx, total, category)
+        for category, url in self.news_sites.items():
             try:
                 articles = self.scrape_category(category, url)
 
                 if not articles:
                     msg = f"❌ Brak artykułów dla kategorii {category}"
-                    logging.warning(msg)
+                    logger.warning(msg)
                     results[category] = msg
                     self._sleep()
                     continue
@@ -504,7 +449,7 @@ class ScraperService:
                 combined_text = "\n\n".join(a.text for a in articles).strip()
                 if not combined_text:
                     msg = f"❌ Pusta treść po czyszczeniu dla {category}"
-                    logging.warning(msg)
+                    logger.warning(msg)
                     results[category] = msg
                     self._sleep()
                     continue
@@ -512,16 +457,12 @@ class ScraperService:
                 self._save_category(category, articles)
                 self.scraped_cache[category] = combined_text
                 results[category] = combined_text
-                logging.info("✅ [%d/%d] %s: %d articles, %d chars", idx, total, category, len(articles), len(combined_text))
 
             except Exception as exc:  # noqa: BLE001
-                logging.exception("Error scraping category %s", category)
+                logger.exception("Error scraping category %s", category)
                 results[category] = f"❌ Błąd podczas pobierania: {exc}"
             finally:
                 self._sleep()
-
-        successful = sum(1 for v in results.values() if not str(v).startswith("❌"))
-        logging.info("Scraping completed: %d/%d categories successful", successful, total)
 
         if build_faiss:
             self._build_faiss_from_results(results)
@@ -539,11 +480,11 @@ class ScraperService:
             faiss_service = FAISSService()
             ok = faiss_service.build_index_from_scraped_content(results)
             if ok:
-                logging.info("✅ FAISS index created/updated from Business Insider categories.")
+                logger.info("✅ FAISS index created/updated from Business Insider categories.")
             else:
-                logging.warning("⚠️ FAISS build skipped (no valid content).")
+                logger.warning("⚠️ FAISS build skipped (no valid content).")
         except Exception as exc:  # noqa: BLE001
-            logging.warning("FAISS auto-build failed/skipped: %s", exc)
+            logger.warning("FAISS auto-build failed/skipped: %s", exc)
 
     def get_category_full_content(self, category: str) -> Optional[str]:
         """

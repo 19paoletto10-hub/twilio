@@ -1,5 +1,43 @@
 # Changelog
 
+## ver3.0.2 (News / FAISS control plane)
+
+### Podsumowanie
+
+Release skupia się na profesjonalizacji modułu News/RAG: baza FAISS korzysta teraz
+wyłącznie z embeddingów OpenAI, dashboard dostał dedykowaną sekcję statusową, a
+API ułatwia testowanie i diagnostykę bezpośrednio z panelu. Dzięki temu operator
+widzi w jednym miejscu stan indeksu, liczbę wektorów i kontekst odpowiedzi.
+
+### Najważniejsze zmiany
+
+- **FAISSService = tylko OpenAI** – usunięto fallbacki hashujące, serwis wymaga
+  poprawnie ustawionego `SECOND_OPENAI`/`OPENAI_API_KEY`, raportuje brak
+  konfiguracji i zapisuje snapshot dokumentów. Zapytania zwracają teraz również
+  użyty kontekst (`context_preview`) i listę fragmentów.
+- **Nowe API diagnostyczne** – endpoint `/api/news/faiss/status` udostępnia
+  metadane indeksu (rozmiar, liczba wektorów, modele). Wszystkie akcje związane
+  z News/RAG (test odbiorcy, wymuszenie wysyłki, ręczne budowanie indeksu,
+  `/api/news/test-faiss`) mają twardszą walidację kluczy i informują, gdy brakuje
+  indeksu lub uprawnień do OpenAI.
+- **Panel „News po AI”** – rozbudowana karta statusowa pokazuje stan indeksu,
+  modele i datę ostatniego odświeżenia; dodano szybki test promptu, listę
+  fragmentów użytych w odpowiedzi oraz komunikaty o błędach prosto z API.
+- **Zależności** – w `requirements.txt` pojawiły się pakiety
+  `langchain-text-splitters` oraz `gunicorn`, co odzwierciedla rzeczywiste
+  środowisko uruchomieniowe i aktualną integrację z LangChain 0.3.
+
+### Kompatybilność i upgrade
+
+- Przed budową indeksu FAISS ustaw `SECOND_OPENAI=sk-...`; brak klucza kończy się
+  błędem już przy starcie serwisu.
+- Jeśli masz własne automatyzacje wokół `/api/news/test-faiss`, możesz teraz
+  korzystać z pola `results` i `context_preview`, aby pokazywać operatorom
+  fragmenty źródłowe.
+- Pozostałe moduły aplikacji (AI chat, auto-reply, webhooki Twilio) działają jak
+  dotychczas – upgrade wymaga jedynie przeładowania frontendu i instalacji
+  nowych zależności Pythona.
+
 ## ver3.0.0 (AI auto-reply & Twilio client cleanup)
 
 ### Podsumowanie
