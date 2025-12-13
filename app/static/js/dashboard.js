@@ -61,6 +61,7 @@
   const newsRecipientPhone = document.getElementById('news-recipient-phone');
   const newsRecipientTime = document.getElementById('news-recipient-time');
   const newsRecipientPrompt = document.getElementById('news-recipient-prompt');
+  const newsRecipientAllCat = document.getElementById('news-recipient-allcat');
   const newsAddSpinner = document.getElementById('news-add-spinner');
   const newsRecipientsList = document.getElementById('news-recipients-list');
   const newsRecipientsCount = document.getElementById('news-recipients-count');
@@ -86,6 +87,7 @@
   const newsFaissResult = document.getElementById('news-faiss-result');
   const newsFaissAnswer = document.getElementById('news-faiss-answer');
   const newsFaissMeta = document.getElementById('news-faiss-meta');
+  const newsFaissAllCat = document.getElementById('news-faiss-allcat');
   const newsLastBuild = document.getElementById('news-last-build');
   const newsLastNotification = document.getElementById('news-last-notification');
   const newsIndicesTableBody = document.querySelector('#news-indices-table tbody');
@@ -125,7 +127,13 @@
   const newsFaissRestoreInput = document.getElementById('news-faiss-restore-input');
   const newsFaissBackupStatus = document.getElementById('news-faiss-backup-status');
 
-  const DEFAULT_FAISS_PROMPT = 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
+  const DEFAULT_NEWS_PROMPT = window.NEWS_DEFAULT_PROMPT || 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
+  const ALL_CATEGORIES_PROMPT = window.NEWS_ALL_CATEGORIES_PROMPT || (
+    'Przygotuj profesjonalne streszczenie wszystkich kategorii newsów. ' +
+    'Dla każdej kategorii wypisz nagłówek i 2-3 wypunktowania z konkretami. ' +
+    'Jeśli brakuje danych, dopisz informację "brak danych".'
+  );
+  const DEFAULT_FAISS_PROMPT = DEFAULT_NEWS_PROMPT;
   const FAISS_BACKUP_MAX_BYTES = 250 * 1024 * 1024; // 250 MB limit zgodny z backendem
 
   let currentFilter = 'all';
@@ -246,6 +254,36 @@
     return message;
   };
 
+  const lockTextareaPrompt = (textarea, lock, forcedValue, fallbackValue = '') => {
+    if (!textarea) return;
+    if (lock) {
+      if (textarea.dataset.previousValue === undefined && textarea.value !== forcedValue) {
+        textarea.dataset.previousValue = textarea.value;
+      }
+      textarea.value = forcedValue;
+      textarea.setAttribute('readonly', 'true');
+      textarea.classList.add('bg-light', 'text-muted');
+    } else {
+      const restore = textarea.dataset.previousValue;
+      textarea.value = restore !== undefined ? restore : fallbackValue;
+      textarea.removeAttribute('readonly');
+      textarea.classList.remove('bg-light', 'text-muted');
+      delete textarea.dataset.previousValue;
+    }
+  };
+
+  const syncRecipientPromptMode = () => {
+    const lock = !!newsRecipientAllCat?.checked;
+    lockTextareaPrompt(newsRecipientPrompt, lock, ALL_CATEGORIES_PROMPT, DEFAULT_NEWS_PROMPT);
+  };
+
+  const syncFaissPromptMode = () => {
+    if (!newsFaissQuery) return;
+    const lock = !!newsFaissAllCat?.checked;
+    const fallbackValue = newsFaissQuery.dataset.previousValue ?? newsFaissQuery.value;
+    lockTextareaPrompt(newsFaissQuery, lock, ALL_CATEGORIES_PROMPT, fallbackValue);
+  };
+
   // Reminders helpers
   const setReminderSaving = (isSaving) => {
     if (!reminderSaveBtn) return;
@@ -316,6 +354,9 @@
       const badge = enabled
         ? '<span class="badge bg-success-subtle text-success-emphasis">aktywne</span>'
         : '<span class="badge bg-secondary-subtle text-secondary-emphasis">wstrzymane</span>';
+      const modeBadge = item.use_all_categories
+        ? '<span class="badge bg-primary-subtle text-primary-emphasis ms-2">wszystkie kategorie</span>'
+        : '<span class="badge bg-info-subtle text-info-emphasis ms-2">prompt niestandardowy</span>';
       const intervalMinutes = Math.round((item.interval_seconds || 0) / 60);
       const lastSent = item.last_sent_at || '—';
       const nextRun = item.next_run_at || '—';
@@ -548,7 +589,7 @@
     const notificationTime = config?.notification_time || '08:00';
     if (newsNotificationTime) newsNotificationTime.value = notificationTime;
 
-    const notificationPrompt = config?.notification_prompt || 'Wygeneruj krótkie podsumowanie najważniejszych newsów.';
+    const notificationPrompt = config?.notification_prompt || DEFAULT_NEWS_PROMPT;
     if (newsNotificationPrompt) newsNotificationPrompt.value = notificationPrompt;
 
     if (newsStatusBadge) {
@@ -794,14 +835,17 @@
   };
 
   const testNewsFAISS = async (customQuery = null) => {
-    const querySource = typeof customQuery === 'string' ? customQuery.trim() : (newsFaissQuery?.value.trim() || '');
+    const useAllCategories = !!newsFaissAllCat?.checked;
+    let querySource = typeof customQuery === 'string' ? customQuery.trim() : (newsFaissQuery?.value.trim() || '');
 
-    if (!querySource) {
+    if (useAllCategories) {
+      querySource = querySource || ALL_CATEGORIES_PROMPT;
+    } else if (!querySource) {
       showToast({ title: 'Błąd', message: 'Wpisz zapytanie testowe.', type: 'error' });
       return;
     }
 
-    if (!newsFaissQuery?.value.trim() && customQuery) {
+    if (typeof customQuery === 'string' && newsFaissQuery) {
       newsFaissQuery.value = customQuery;
     }
 
@@ -811,9 +855,13 @@
     renderFaissSnippets([]);
 
     try {
+      const payload = { query: querySource };
+      if (useAllCategories) {
+        payload.mode = 'all_categories';
+      }
       const data = await fetchJSON('/api/news/test-faiss', {
         method: 'POST',
-        body: JSON.stringify({ query: querySource })
+        body: JSON.stringify(payload)
       });
 
       if (data.success) {
@@ -822,7 +870,8 @@
           const llmLabel = data.llm_used ? 'tak' : 'nie';
           const fragments = data.count ?? 0;
           const chatModel = data.chat_model || 'n/d';
-          newsFaissMeta.textContent = `Model: ${chatModel} • LLM: ${llmLabel} • Fragmenty: ${fragments}`;
+          const modeLabel = data.mode === 'all_categories' ? 'wszystkie kategorie' : 'standard';
+          newsFaissMeta.textContent = `Model: ${chatModel} • Tryb: ${modeLabel} • LLM: ${llmLabel} • Fragmenty: ${fragments}`;
         }
         renderFaissSnippets(data.results || []);
         if (newsFaissResult) newsFaissResult.classList.remove('d-none');
@@ -962,6 +1011,7 @@
     const phone = newsRecipientPhone?.value.trim();
     const time = newsRecipientTime?.value || '08:00';
     const prompt = newsRecipientPrompt?.value.trim();
+    const useAllCategories = !!newsRecipientAllCat?.checked;
 
     if (!phone || !prompt) {
       newsAddRecipientForm.classList.add('was-validated');
@@ -972,11 +1022,15 @@
     try {
       const data = await fetchJSON('/api/news/recipients', {
         method: 'POST',
-        body: JSON.stringify({ phone, time, prompt })
+        body: JSON.stringify({ phone, time, prompt, use_all_categories: useAllCategories })
       });
       
       renderNewsRecipients(data.recipients || []);
       newsAddRecipientForm.reset();
+      if (newsRecipientPrompt) {
+        delete newsRecipientPrompt.dataset.previousValue;
+      }
+      syncRecipientPromptMode();
       newsAddRecipientForm.classList.remove('was-validated');
       showToast({ title: 'Dodano', message: 'Odbiorca został dodany do listy powiadomień.', type: 'success' });
     } catch (error) {
@@ -997,17 +1051,23 @@
       return;
     }
 
-    const items = recipients.map(r => {
+    const items = recipients.map((r) => {
       const id = r.id;
       const phone = escapeHtml(r.phone || '');
       const time = escapeHtml(r.time || '08:00');
       const promptRaw = escapeHtml(r.prompt || '');
       const prompt = promptRaw.length > 60 ? `${promptRaw.substring(0, 60)}...` : promptRaw;
-      const enabled = r.enabled;
+      const promptLine = r.use_all_categories
+        ? 'Profesjonalny raport dla wszystkich kategorii'
+        : prompt;
+      const enabled = Boolean(r.enabled);
       const lastSent = r.last_sent_at ? new Date(r.last_sent_at).toLocaleString('pl-PL') : 'Nigdy';
       const badge = enabled
         ? '<span class="badge bg-success-subtle text-success-emphasis">Aktywny</span>'
         : '<span class="badge bg-secondary-subtle text-secondary-emphasis">Wyłączony</span>';
+      const modeBadge = r.use_all_categories
+        ? '<span class="badge bg-primary-subtle text-primary-emphasis ms-2">Wszystkie kategorie</span>'
+        : '<span class="badge bg-info-subtle text-info-emphasis ms-2">Własny prompt</span>';
       const toggleLabel = enabled ? 'Off' : 'On';
 
       return `
@@ -1015,10 +1075,10 @@
           <div class="card-body p-3">
             <div class="d-flex justify-content-between align-items-start mb-2">
               <div class="flex-grow-1">
-                <strong>${phone}</strong> ${badge}
+                <strong>${phone}</strong> ${badge}${modeBadge}
                 <div class="small text-muted">Godzina: ${time}</div>
                 <div class="small text-muted">Ostatnio: ${lastSent}</div>
-                <div class="small text-muted mt-1" title="${escapeHtml(r.prompt || '')}">${prompt}</div>
+                <div class="small text-muted mt-1" title="${escapeHtml(r.prompt || '')}">${promptLine}</div>
               </div>
             </div>
             <div class="btn-group btn-group-sm" role="group">
@@ -2187,15 +2247,25 @@
 
     if (newsAddRecipientForm) {
       newsAddRecipientForm.addEventListener('submit', addNewsRecipient);
+      newsRecipientAllCat?.addEventListener('change', syncRecipientPromptMode);
       newsRecipientsRefreshBtn?.addEventListener('click', loadNewsRecipients);
       newsFaissTestBtn?.addEventListener('click', () => testNewsFAISS());
       newsFaissStatusRefreshBtn?.addEventListener('click', loadFaissStatus);
-      newsFaissQuickTestBtn?.addEventListener('click', () => testNewsFAISS(DEFAULT_FAISS_PROMPT));
+      newsFaissQuickTestBtn?.addEventListener('click', () => {
+        if (newsFaissAllCat) {
+          newsFaissAllCat.checked = false;
+          syncFaissPromptMode();
+        }
+        testNewsFAISS(DEFAULT_FAISS_PROMPT);
+      });
       newsFaissBackupBtn?.addEventListener('click', downloadFaissBackup);
       newsFaissRestoreBtn?.addEventListener('click', triggerFaissRestoreDialog);
       newsFaissRestoreInput?.addEventListener('change', handleFaissRestoreInputChange);
+      newsFaissAllCat?.addEventListener('change', syncFaissPromptMode);
       loadNewsRecipients();
       loadFaissStatus();
+      syncRecipientPromptMode();
+      syncFaissPromptMode();
     }
 
     if (newsIndicesTableBody) {

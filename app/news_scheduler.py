@@ -38,7 +38,13 @@ def start_news_scheduler(app: Flask, *, check_interval_seconds: int = 60) -> Non
             time.sleep(check_interval_seconds)
             try:
                 with app.app_context():
-                    from .webhooks import _load_news_config, _save_news_config
+                    from .webhooks import (
+                        _load_news_config,
+                        _save_news_config,
+                        ALL_CATEGORIES_PROMPT,
+                        DEFAULT_NEWS_PROMPT,
+                        DEFAULT_PER_CATEGORY_K,
+                    )
                     from .faiss_service import FAISSService
 
                     cfg = _load_news_config()
@@ -62,7 +68,10 @@ def start_news_scheduler(app: Flask, *, check_interval_seconds: int = 60) -> Non
                         notification_time = recipient.get("time", "08:00")
                         raw_phone = recipient.get("phone") or ""
                         phone = recipient.get("phone_normalized") or normalize_contact(raw_phone)
-                        prompt = recipient.get("prompt", "Wygeneruj krótkie podsumowanie newsów.")
+                        use_all_categories = bool(recipient.get("use_all_categories", True))
+                        prompt = (recipient.get("prompt") or "").strip() or (
+                            ALL_CATEGORIES_PROMPT if use_all_categories else DEFAULT_NEWS_PROMPT
+                        )
                         
                         if not phone or not recipient_id:
                             continue
@@ -100,14 +109,26 @@ def start_news_scheduler(app: Flask, *, check_interval_seconds: int = 60) -> Non
                         
                         # Sprawdź czy to odpowiedni czas (±1 minuta)
                         if now.hour == hour and abs(now.minute - minute) <= 1:
-                            logger.info("News notification triggered for recipient %d at %s", recipient_id, now.strftime("%H:%M"))
+                            mode_label = "ALL-CAT" if use_all_categories else "STANDARD"
+                            logger.info(
+                                "News notification triggered for recipient %d at %s (mode=%s)",
+                                recipient_id,
+                                now.strftime("%H:%M"),
+                                mode_label,
+                            )
                             
                             try:
                                 # Generate summary from FAISS
                                 faiss_service = FAISSService()
                                 faiss_service.load_index()
                                 
-                                response = faiss_service.answer_query_all_categories(prompt, per_category_k=2)
+                                if use_all_categories:
+                                    response = faiss_service.answer_query_all_categories(
+                                        prompt,
+                                        per_category_k=DEFAULT_PER_CATEGORY_K,
+                                    )
+                                else:
+                                    response = faiss_service.answer_query(prompt, top_k=5)
                                 today_str = today.strftime("%Y-%m-%d")  
                                 
                                 if response.get("success") and response.get("answer"):

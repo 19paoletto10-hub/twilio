@@ -454,8 +454,18 @@
 
                   <div class="mb-3">
                     <label for="news-recipient-prompt" class="form-label">Prompt dla AI</label>
-                    <textarea class="form-control" id="news-recipient-prompt" rows="3" placeholder="np. Wygeneruj krótkie podsumowanie najważniejszych newsów ekonomicznych..." required></textarea>
+                    <textarea class="form-control" id="news-recipient-prompt" rows="3" required>{{ news_all_categories_prompt }}</textarea>
                     <div class="form-text">Opisz jak AI ma wygenerować wiadomość</div>
+                  </div>
+
+                  <div class="form-check form-switch mb-4">
+                    <input class="form-check-input" type="checkbox" id="news-recipient-allcat" checked>
+                    <label class="form-check-label" for="news-recipient-allcat">
+                      Użyj profesjonalnego raportu dla wszystkich kategorii
+                    </label>
+                    <div class="form-text">
+                      Zablokuje prompt i użyje gotowego wzorca opisującego każdą kategorię osobno.
+                    </div>
                   </div>
 
                   <button type="submit" class="btn btn-primary">
@@ -499,6 +509,16 @@
                   <label for="news-faiss-query" class="form-label">Zapytanie testowe</label>
                   <textarea class="form-control" id="news-faiss-query" rows="3" placeholder="np. Jakie są najważniejsze informacje ekonomiczne?"></textarea>
                   <div class="form-text">Wpisz pytanie lub prompt, a AI wygeneruje odpowiedź na podstawie newsów.</div>
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="news-faiss-allcat">
+                  <label class="form-check-label" for="news-faiss-allcat">
+                    Profesjonalne streszczenie wszystkich kategorii
+                  </label>
+                  <div class="form-text">
+                    Używa gotowego promptu i funkcji pokrywającej każdą kategorię osobną sekcją.
+                  </div>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
@@ -637,5 +657,9 @@
 {% endblock %}
 
 {% block scripts %}
+  <script>
+    window.NEWS_DEFAULT_PROMPT = {{ news_default_prompt|tojson }};
+    window.NEWS_ALL_CATEGORIES_PROMPT = {{ news_all_categories_prompt|tojson }};
+  </script>
   <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 {% endblock %}

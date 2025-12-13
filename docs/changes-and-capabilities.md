@@ -27,6 +27,8 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
   - auto-odświeżanie listy wiadomości i statystyk, szybka wysyłka SMS;
   - pełne formularze dla auto-reply, AI (konfiguracja + test OpenAI), przypomnień, newsów (odbiorcy, test FAISS, scraping, budowa indeksu, podgląd plików, ustawienie aktywnej bazy);
   - skeletony ładowania, toasty, badge statusów.
+- Tryb „ALL‑CATEGORIES” jest sterowany checkboxem w UI (test FAISS i odbiorcy News) i mapuje się na flagę API `use_all_categories` – operator widzi jednoznacznie, czy streszczenie ma pokryć wszystkie kategorie.
+- Historia wiadomości (kolumna treści) ma stałą wysokość wierszy; dłuższe wiadomości są skracane w tabeli, co stabilizuje layout na dużej liczbie rekordów.
 - Sekcja backupu FAISS w zakładce News: przycisk eksportu zip, uploader importu (z walidacją postępu), wskaźnik kompletności backupu oraz toasty z raportem `removed/missing/failed` po czyszczeniu indeksu.
 - Widok „Bazy FAISS” wykorzystuje wspólne helpery czasu (data + godzina w lokalnej strefie), więc UI jest spójny z listą wiadomości oraz logami schedulerów.
 - Ulepszona estetyka w [app/static/css/app.css](app/static/css/app.css): gradientowa nawigacja, karty, kafelki plików news, overlay podglądu pliku, dopasowanie do nowych sekcji.

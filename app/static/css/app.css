@@ -107,10 +107,15 @@ body {
 }
 
 .messages-body {
-  white-space: pre-wrap;
+  white-space: pre-line;
   word-break: break-word;
   line-height: 1.35;
   font-size: 0.95rem;
+  max-height: 4.5rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
 
 .messages-actions {

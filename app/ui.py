@@ -4,6 +4,8 @@ from urllib.parse import unquote
 
 from flask import Blueprint, current_app, render_template, jsonify
 
+from .webhooks import ALL_CATEGORIES_PROMPT, DEFAULT_NEWS_PROMPT
+
 ui_bp = Blueprint("ui", __name__)
 
 
@@ -22,6 +24,8 @@ def dashboard():
         app_env=app_settings.env,
         app_debug=app_settings.debug,
         has_sender_identity=has_sender_identity,
+        news_default_prompt=DEFAULT_NEWS_PROMPT,
+        news_all_categories_prompt=ALL_CATEGORIES_PROMPT,
     )
 
 

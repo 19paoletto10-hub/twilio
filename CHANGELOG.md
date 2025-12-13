@@ -1,5 +1,31 @@
 # Changelog
 
+## ver3.1.0 (All-categories News mode + dashboard UX hardening)
+
+### Podsumowanie
+
+Wydanie domyka tryb podsumowania newsów „ALL‑CATEGORIES” jako funkcję konfigurowalną
+z poziomu panelu i API (per‑odbiorca i per‑test), a dodatkowo porządkuje UX w panelu:
+wyniki pokazują tryb, prompty są spójne z wybranym trybem, a historia wiadomości ma
+stabilny układ tabeli (stała wysokość wierszy w kolumnie treści).
+
+### Najważniejsze zmiany
+
+- **News/RAG – tryb ALL‑CATEGORIES jako opcja** – flagę `use_all_categories` można
+  ustawiać w UI (test FAISS + odbiorcy) i przesyłać w API; scheduler respektuje
+  ustawienie per‑odbiorca.
+- **Prompty per‑tryb** – aplikacja utrzymuje osobny prompt dla STANDARD oraz
+  ALL‑CATEGORIES, co ogranicza „dryf” promptów i stabilizuje format odpowiedzi.
+- **Dashboard – czytelność historii** – kolumna „Treść” w historii wiadomości ma
+  stałą wysokość wierszy (dłuższe teksty są skracane), co poprawia skanowalność.
+
+### Kompatybilność i upgrade
+
+- Brak zmian łamiących w webhookach Twilio i modułach AI/auto‑reply.
+- Jeśli integrujesz się z endpointami News, możesz (opcjonalnie) zacząć wysyłać
+  `use_all_categories`; w przeciwnym razie zachowanie pozostaje zgodne z domyślną
+  konfiguracją (ALL‑CATEGORIES włączone).
+
 ## ver3.0.2 (News / FAISS control plane)
 
 ### Podsumowanie

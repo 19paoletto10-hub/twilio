@@ -55,6 +55,15 @@ NEWS_CONFIG_PATH = os.path.join(DATA_DIR, "news_config.json")
 MAX_FAISS_BACKUP_BYTES = 250 * 1024 * 1024  # 250 MB safety limit
 
 
+DEFAULT_NEWS_PROMPT = "Wygeneruj krótkie podsumowanie najważniejszych newsów."
+ALL_CATEGORIES_PROMPT = (
+    "Przygotuj profesjonalne, polskie streszczenie wszystkich kategorii newsów. "
+    "Dla KAŻDEJ kategorii wypisz nagłówek oraz 2-3 wypunktowania z najważniejszymi faktami. "
+    "Uwzględniaj konkrety (liczby, decyzje, konsekwencje). Jeśli brak danych, napisz 'brak danych'."
+)
+DEFAULT_PER_CATEGORY_K = 2
+
+
 FAISS_BACKUP_FILES = [
     {"name": "index.faiss", "path": os.path.join(FAISS_INDEX_PATH, "index.faiss"), "required": True, "purge": True},
     {"name": "index.pkl", "path": os.path.join(FAISS_INDEX_PATH, "index.pkl"), "required": True, "purge": True},
@@ -339,6 +348,18 @@ def _load_news_config() -> Dict[str, Any]:
                     base.update(stored)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.warning("News config load failed: %s", exc)
+    normalized_recipients: List[Dict[str, Any]] = []
+    for recipient in base.get("recipients", []):
+        if not isinstance(recipient, dict):
+            continue
+        recipient.setdefault("use_all_categories", True)
+        prompt_value = (recipient.get("prompt") or "").strip()
+        if recipient["use_all_categories"]:
+            recipient["prompt"] = prompt_value or ALL_CATEGORIES_PROMPT
+        else:
+            recipient["prompt"] = prompt_value or DEFAULT_NEWS_PROMPT
+        normalized_recipients.append(recipient)
+    base["recipients"] = normalized_recipients
     return base
 
 
@@ -1185,12 +1206,15 @@ def api_add_news_recipient():
     phone = (payload.get("phone") or "").strip()
     prompt = (payload.get("prompt") or "").strip()
     time_str = (payload.get("time") or "08:00").strip()
+    use_all_categories = bool(payload.get("use_all_categories", True))
     
     if not phone:
         return jsonify({"error": "Podaj numer telefonu."}), 400
     
-    if not prompt:
-        prompt = "Wygeneruj krótkie podsumowanie najważniejszych newsów."
+    if use_all_categories:
+        prompt = ALL_CATEGORIES_PROMPT
+    elif not prompt:
+        prompt = DEFAULT_NEWS_PROMPT
     
     # Walidacja formatu czasu (HH:MM, 24h)
     import re
@@ -1226,7 +1250,8 @@ def api_add_news_recipient():
         "time": time_str,
         "enabled": True,
         "created_at": datetime.utcnow().isoformat() + "Z",
-        "last_sent_at": None
+        "last_sent_at": None,
+        "use_all_categories": use_all_categories,
     }
     
     recipients.append(new_recipient)
@@ -1312,9 +1337,14 @@ def api_test_news_recipient(recipient_id: int):
                 "error": "Brak indeksu FAISS. Najpierw wykonaj scraping."
             }), 404
         
-        # Użyj promptu odbiorcy
-        prompt = recipient.get("prompt", "Wygeneruj krótkie podsumowanie newsów.")
-        response = faiss_service.answer_query(prompt, top_k=5)
+        use_all_categories = bool(recipient.get("use_all_categories", True))
+        prompt = (recipient.get("prompt") or "").strip() or (
+            ALL_CATEGORIES_PROMPT if use_all_categories else DEFAULT_NEWS_PROMPT
+        )
+        if use_all_categories:
+            response = faiss_service.answer_query_all_categories(prompt, per_category_k=DEFAULT_PER_CATEGORY_K)
+        else:
+            response = faiss_service.answer_query(prompt, top_k=5)
         
         if response.get("success") and response.get("answer"):
             message = f"📰 News Test:\n\n{response['answer']}"
@@ -1323,7 +1353,8 @@ def api_test_news_recipient(recipient_id: int):
                 "recipient_id": recipient_id,
                 "phone": recipient.get("phone"),
                 "message": message,
-                "llm_used": response.get("llm_used", False)
+                "llm_used": response.get("llm_used", False),
+                "mode": "all_categories" if use_all_categories else "standard",
             })
         else:
             return jsonify({
@@ -1371,9 +1402,14 @@ def api_send_news_recipient(recipient_id: int):
 
         faiss_service.load_index()
 
-        # Generuj wiadomość
-        prompt = recipient.get("prompt", "Wygeneruj krótkie podsumowanie newsów.")
-        response = faiss_service.answer_query(prompt, top_k=5)
+        use_all_categories = bool(recipient.get("use_all_categories", True))
+        prompt = (recipient.get("prompt") or "").strip() or (
+            ALL_CATEGORIES_PROMPT if use_all_categories else DEFAULT_NEWS_PROMPT
+        )
+        if use_all_categories:
+            response = faiss_service.answer_query_all_categories(prompt, per_category_k=DEFAULT_PER_CATEGORY_K)
+        else:
+            response = faiss_service.answer_query(prompt, top_k=5)
 
         if not response.get("success") or not response.get("answer"):
             return jsonify({
@@ -1414,6 +1450,7 @@ def api_send_news_recipient(recipient_id: int):
                 "recipient_id": recipient_id,
                 "phone": phone,
                 "message_sid": result.get("sid"),
+                "mode": "all_categories" if use_all_categories else "standard",
             })
         else:
             return jsonify({
@@ -1722,8 +1759,13 @@ def api_news_test_faiss():
     """
     payload = request.get_json(force=True, silent=True) or {}
     query = (payload.get("query") or "").strip()
+    mode = str(payload.get("mode") or "standard").strip().lower()
+    per_category_k = int(payload.get("per_category_k") or DEFAULT_PER_CATEGORY_K)
+    top_k = int(payload.get("top_k") or 5)
     
-    if not query:
+    if mode == "all_categories":
+        query = query or ALL_CATEGORIES_PROMPT
+    elif not query:
         return jsonify({"success": False, "error": "Podaj zapytanie (query)."}), 400
     
     try:
@@ -1743,10 +1785,13 @@ def api_news_test_faiss():
             }), 404
         
         # Wykonaj query
-        response = faiss_service.answer_query(query, top_k=5)
+        if mode == "all_categories":
+            response = faiss_service.answer_query_all_categories(query, per_category_k=max(1, per_category_k))
+        else:
+            response = faiss_service.answer_query(query, top_k=max(1, top_k))
         
         if response.get("success"):
-            return jsonify({
+            payload = {
                 "success": True,
                 "query": query,
                 "answer": response.get("answer", ""),
@@ -1756,7 +1801,11 @@ def api_news_test_faiss():
                 "context_preview": response.get("context_preview", ""),
                 "search_info": response.get("search_info", {}),
                 "chat_model": response.get("chat_model"),
-            })
+                "mode": "all_categories" if mode == "all_categories" else "standard",
+            }
+            if mode == "all_categories":
+                payload["per_category_k"] = max(1, per_category_k)
+            return jsonify(payload)
         else:
             return jsonify({
                 "success": False,

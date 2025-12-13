@@ -264,6 +264,8 @@ Panel jest responsywny (Bootstrap 5) i składa się z kilku głównych widoków:
   - zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie),
   - sekcja „Backup FAISS” z przyciskiem pobrania zipa oraz uploaderem przywracającym indeks/dokumenty.
 
+Uwaga UX: w historii wiadomości kolumna „Treść” ma stałą wysokość wierszy – dłuższe teksty są skracane (dla czytelności tabeli).
+
 ---
 
 ## News / FAISS / RAG
@@ -292,9 +294,20 @@ Aplikacja potrafi:
 
 ### Tryb podsumowania kategorii
 
-- `FAISSService` ma tryb `answer_query_all_categories` – wymusza pobranie fragmentów z każdej kategorii i przygotowuje sekcjami "kategoria → bullets".
-- Scheduler newsów korzysta właśnie z tego trybu (`per_category_k`), dzięki czemu dzienne powiadomienia SMS zawsze obejmują wszystkie kategorie.
-- Fallback (bez LLM) pozostaje aktywny – gdy brak klucza lub kontekstu, użytkownik dostaje informacyjny listing kategorii/fragmentów.
+System wspiera dwa tryby generowania podsumowania:
+
+- **STANDARD** – klasyczne streszczenie z top‑K fragmentów niezależnie od kategorii.
+- **ALL‑CATEGORIES** – wymusza pobranie fragmentów z każdej kategorii i układa wynik sekcjami „kategoria → bullets”.
+
+Szczegóły techniczne i operacyjne:
+
+- `FAISSService` udostępnia tryb `answer_query_all_categories` (oraz wyszukiwanie cross‑category), wykorzystywany przez scheduler i API.
+- Tryb jest sterowany flagą `use_all_categories`:
+  - w UI (zakładka News): checkbox w **teście FAISS** oraz w formularzu **dodawania/edycji odbiorcy**,
+  - w API (np. `/api/news/test-faiss`, `/api/news/recipients`): pole `use_all_categories` w payload.
+- Domyślnie `use_all_categories` jest włączone (dla testu FAISS i nowych odbiorców), aby dzienne powiadomienia zawsze obejmowały wszystkie kategorie.
+- Prompt jest rozdzielony na wariant STANDARD i ALL‑CATEGORIES (dzięki temu operator ma spójne wyniki bez ręcznego „przepisywania” promptu).
+- Fallback (bez LLM) pozostaje aktywny – gdy brakuje klucza lub indeksu, użytkownik dostaje informacyjny listing kategorii/fragmentów.
 
 ### Odbudowa indeksu FAISS
 
