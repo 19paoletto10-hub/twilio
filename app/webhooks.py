@@ -39,6 +39,8 @@ from .database import (
     upsert_message,
     delete_message_by_sid,
     list_conversations,
+    list_conversation_message_refs,
+    delete_conversation_messages,
 )
 from .scraper_service import ScraperService, SCRAPED_DIR, DATA_DIR
 from .faiss_service import (
@@ -64,6 +66,9 @@ FAISS_BACKUP_FILES = [
 
 
 webhooks_bp = Blueprint("webhooks", __name__)
+
+
+CHAT_HISTORY_LIMIT = 50
 
 
 def _datetime_to_iso(value: Optional[datetime]) -> Optional[str]:
@@ -1933,18 +1938,19 @@ def api_conversations():
 
 @webhooks_bp.get("/api/conversations/<path:participant>")
 def api_conversation_detail(participant: str):
-    limit_raw = request.args.get("limit", "200")
-    try:
-        limit = max(1, min(int(limit_raw), 500))
-    except ValueError:
-        limit = 200
-
     normalized_participant = unquote(participant).strip()
     if not normalized_participant:
         return jsonify({"error": "Participant is required."}), 400
 
-    _maybe_sync_messages(limit=limit)
-    messages = list_messages(limit=limit, participant=normalized_participant, ascending=True)
+    normalized_contact_value = normalize_contact(normalized_participant)
+    query_kwargs: Dict[str, Any]
+    if normalized_contact_value:
+        query_kwargs = {"participant_normalized": normalized_contact_value}
+    else:
+        query_kwargs = {"participant": normalized_participant}
+
+    _maybe_sync_messages(limit=CHAT_HISTORY_LIMIT)
+    messages = list_messages(limit=CHAT_HISTORY_LIMIT, ascending=True, **query_kwargs)
     return jsonify(
         {
             "participant": normalized_participant,
@@ -2039,10 +2045,94 @@ def api_redact_message(sid: str):
 def api_delete_message(sid: str):
     twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
     try:
-        twilio_client.delete_message(sid)
+        remote_deleted = twilio_client.delete_message(sid)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Unable to delete message %s", sid)
-        return jsonify({"error": str(exc)}), 400
+        return jsonify({"error": f"Nie udało się usunąć wiadomości na Twilio: {exc}"}), 502
 
-    delete_message_by_sid(sid)
-    return jsonify({"sid": sid, "deleted": True})
+    if not remote_deleted:
+        current_app.logger.warning("Twilio did not confirm deletion for SID %s", sid)
+        return jsonify({"error": "Twilio nie potwierdziło usunięcia wiadomości."}), 502
+
+    deleted_local = delete_message_by_sid(sid)
+    return jsonify({
+        "sid": sid,
+        "deleted_remote": True,
+        "deleted_local": bool(deleted_local),
+    })
+
+
+@webhooks_bp.delete("/api/conversations/<path:participant>")
+def api_delete_conversation(participant: str):
+    participant_value = unquote(participant).strip()
+    if not participant_value:
+        return jsonify({"error": "Participant is required."}), 400
+
+    normalized_value = normalize_contact(participant_value)
+    try:
+        message_refs = list_conversation_message_refs(
+            participant=participant_value,
+            participant_normalized=normalized_value or None,
+        )
+    except ValueError:
+        return jsonify({"error": "Brak identyfikatora rozmowy."}), 400
+
+    if not message_refs:
+        return jsonify({"error": "Nie znaleziono rozmowy."}), 404
+
+    missing_sid_ids = [ref["id"] for ref in message_refs if not (ref.get("sid") or "").strip()]
+    if missing_sid_ids:
+        return (
+            jsonify(
+                {
+                    "error": "Nie wszystkie wiadomości w wątku mają SID Twilio."
+                    " Usuń je ręcznie po zsynchronizowaniu.",
+                    "missing_local_ids": missing_sid_ids,
+                }
+            ),
+            409,
+        )
+
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+    failed: List[Dict[str, Any]] = []
+    for ref in message_refs:
+        sid = ref.get("sid")
+        if not sid:
+            continue
+        try:
+            remote_deleted = twilio_client.delete_message(sid)
+        except Exception as exc:  # noqa: BLE001
+            current_app.logger.warning(
+                "Unable to delete message %s during conversation cleanup", sid, exc_info=True
+            )
+            failed.append({"sid": sid, "error": str(exc)})
+            continue
+
+        if not remote_deleted:
+            current_app.logger.warning(
+                "Twilio did not confirm deletion for conversation message %s", sid
+            )
+            failed.append({"sid": sid, "error": "Twilio nie potwierdziło usunięcia"})
+
+    if failed:
+        return (
+            jsonify(
+                {
+                    "error": "Nie udało się usunąć wszystkich wiadomości na Twilio.",
+                    "failed": failed,
+                }
+            ),
+            502,
+        )
+
+    deleted_local = delete_conversation_messages(
+        participant=participant_value,
+        participant_normalized=normalized_value or None,
+    )
+    return jsonify(
+        {
+            "participant": participant_value,
+            "deleted_remote": len(message_refs),
+            "deleted_local": deleted_local,
+        }
+    )

@@ -13,6 +13,7 @@
   const totalMessagesEl = document.getElementById('chat-total-messages');
   const lastUpdatedEl = document.getElementById('chat-last-updated');
   const refreshBtn = document.getElementById('chat-refresh-btn');
+  const deleteConversationBtn = document.getElementById('chat-delete-conversation-btn');
   const form = document.getElementById('chat-send-form');
   const messageInput = document.getElementById('chat-message-input');
   const sendBtn = document.getElementById('chat-send-btn');
@@ -30,11 +31,25 @@
       ...options
     });
 
-    if (!response.ok) {
-      throw new Error(`Błąd podczas pobierania danych (${response.status})`);
+    const text = await response.text();
+    let data = null;
+    if (text) {
+      try {
+        data = JSON.parse(text);
+      } catch (error) {
+        console.error('Nieprawidłowy JSON w odpowiedzi', error);
+      }
     }
 
-    return response.json();
+    if (!response.ok) {
+      const errorMessage = (data && data.error) || `Błąd podczas pobierania danych (${response.status})`;
+      const err = new Error(errorMessage);
+      err.status = response.status;
+      err.payload = data;
+      throw err;
+    }
+
+    return data ?? {};
   };
 
   const escapeHtml = (value = '') =>
@@ -92,12 +107,17 @@
       const status = item.status ? item.status : isInbound ? 'odebrano' : 'wysłano';
       const body = escapeHtml(item.body || '');
       const errorLine = item.error ? `<div class="chat-bubble__error">${escapeHtml(item.error)}</div>` : '';
+      const sid = item.sid ? String(item.sid) : '';
+      const deleteAction = sid
+        ? `<button type="button" class="btn btn-link p-0 text-danger chat-delete-message" data-sid="${sid}">Usuń</button>`
+        : '';
 
       return `
         <div class="${bubbleClass}">
           <div class="chat-bubble__meta">
             <span>${author}</span>
             <span>${timestamp}</span>
+            ${deleteAction ? `<span class="chat-bubble__actions">${deleteAction}</span>` : ''}
           </div>
           <div class="chat-bubble__body">${body.replace(/\n/g, '<br>')}</div>
           <div class="chat-bubble__status">Status: ${status}</div>
@@ -118,7 +138,7 @@
     }
 
     try {
-      const data = await fetchJSON(`/api/conversations/${participantParam}?limit=400`);
+      const data = await fetchJSON(`/api/conversations/${participantParam}`);
       renderThread(data.items || []);
       if (totalMessagesEl) {
         totalMessagesEl.textContent = data.count ?? 0;
@@ -148,6 +168,64 @@
   };
 
   const normalizeRecipient = () => participant.replace(/^whatsapp:/i, '');
+
+  const deleteMessage = async (sid) => {
+    if (!sid) {
+      return;
+    }
+    const confirmed = window.confirm('Czy na pewno chcesz usunąć tę wiadomość? Operacja jest nieodwracalna.');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await fetchJSON(`/api/messages/${encodeURIComponent(sid)}`, { method: 'DELETE' });
+      showToast({ title: 'Usunięto', message: 'Wiadomość została usunięta na Twilio i lokalnie.', type: 'success' });
+      await refreshThread();
+    } catch (error) {
+      console.error(error);
+      const message = error?.message || 'Nie udało się usunąć wiadomości.';
+      showToast({ title: 'Błąd', message, type: 'error' });
+    }
+  };
+
+  const toggleConversationDeleteState = (pending) => {
+    if (!deleteConversationBtn) {
+      return;
+    }
+    if (pending) {
+      deleteConversationBtn.setAttribute('disabled', 'true');
+      deleteConversationBtn.classList.add('disabled');
+    } else {
+      deleteConversationBtn.removeAttribute('disabled');
+      deleteConversationBtn.classList.remove('disabled');
+    }
+  };
+
+  const handleConversationDelete = async () => {
+    if (!participant) {
+      return;
+    }
+    const confirmed = window.confirm('Czy na pewno chcesz usunąć cały wątek? Wszystkie wiadomości zostaną także skasowane z Twilio.');
+    if (!confirmed) {
+      return;
+    }
+
+    toggleConversationDeleteState(true);
+    try {
+      await fetchJSON(`/api/conversations/${participantParam}`, { method: 'DELETE' });
+      showToast({ title: 'Usunięto', message: 'Rozmowa została wyczyszczona.', type: 'success' });
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1200);
+    } catch (error) {
+      console.error(error);
+      const message = error?.message || 'Nie udało się usunąć rozmowy.';
+      showToast({ title: 'Błąd', message, type: 'error' });
+    } finally {
+      toggleConversationDeleteState(false);
+    }
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -197,6 +275,17 @@
     }
 
     refreshBtn?.addEventListener('click', () => refreshThread());
+    deleteConversationBtn?.addEventListener('click', handleConversationDelete);
+    threadEl?.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      if (target.classList.contains('chat-delete-message')) {
+        const sid = target.dataset.sid;
+        deleteMessage(sid);
+      }
+    });
     form?.addEventListener('submit', handleSubmit);
     refreshThread();
     startAutoRefresh();

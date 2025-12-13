@@ -137,8 +137,10 @@ class TwilioService:
     def redact_message(self, sid: str):
         return self.client.messages(sid).update(body="")
 
-    def delete_message(self, sid: str) -> None:
-        self.client.messages(sid).delete()
+    def delete_message(self, sid: str) -> bool:
+        """Delete message on Twilio and return bool flag."""
+        result = self.client.messages(sid).delete()
+        return bool(result)
 
     @staticmethod
     def _encode_content_variables(value: Dict[str, Any] | str) -> str:

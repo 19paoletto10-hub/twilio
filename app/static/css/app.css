@@ -98,6 +98,33 @@ body {
   max-width: 220px;
 }
 
+.messages-table td {
+  vertical-align: top;
+}
+
+.messages-table .messages-participant {
+  max-width: none;
+}
+
+.messages-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.35;
+  font-size: 0.95rem;
+}
+
+.messages-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+@media (min-width: 768px) {
+  .messages-actions {
+    flex-direction: row;
+  }
+}
+
 .messages-participant__number {
   font-weight: 600;
   font-size: 0.9rem;

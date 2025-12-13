@@ -1857,13 +1857,6 @@
     return date.toLocaleString();
   };
 
-  const buildMessagePreview = (body) => {
-    const text = (body || '').trim();
-    if (!text) return '';
-    if (text.length <= 100) return text;
-    return `${text.slice(0, 97)}…`;
-  };
-
   const buildParticipantDisplay = (raw, direction) => {
     const value = (raw || '').trim();
     if (!value) {
@@ -1921,9 +1914,9 @@
 
   const renderMessagesSkeleton = () => {
     if (!tableBody) return;
-    const skeletonRow = (idx) => `
+    const skeletonRow = () => `
       <tr>
-        <td colspan="6">
+        <td colspan="7">
           <div class="skeleton skeleton-row">
             <div class="d-flex justify-content-between mb-2">
               <div class="skeleton-line skeleton-line--short me-2"></div>
@@ -1940,7 +1933,7 @@
 
   const renderMessages = (items) => {
     if (!items.length) {
-      tableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">Brak wiadomości do wyświetlenia.</td></tr>';
+      tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Brak wiadomości do wyświetlenia.</td></tr>';
       return;
     }
 
@@ -1955,14 +1948,23 @@
       const chatCell = chatUrl
         ? `<a class="btn btn-outline-primary btn-sm" href="${chatUrl}">Otwórz</a>`
         : '—';
-      const bodyPreview = escapeHtml(buildMessagePreview(item.body));
+      const rawBody = (item.body || '').trim();
+      const bodyTitle = rawBody || 'Brak treści';
+      const bodyHtml = rawBody ? escapeHtml(rawBody).replace(/\n/g, '<br>') : '<span class="text-muted">Brak treści</span>';
       const rowClasses = ['messages-row'];
       if (chatUrl) {
         rowClasses.push('messages-row--clickable');
       }
+      const sid = (item.sid || '').trim();
+      const actionsCell = sid
+        ? `<div class="messages-actions">
+            <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-message" data-sid="${sid}">Usuń</button>
+          </div>`
+        : '<span class="text-muted small">Brak SID</span>';
       const rowAttrs = [
         `class="${rowClasses.join(' ')}"`,
-        chatUrl ? `data-chat-url="${chatUrl}"` : ''
+        chatUrl ? `data-chat-url="${chatUrl}"` : '',
+        sid ? `data-message-sid="${sid}"` : ''
       ].filter(Boolean).join(' ');
 
       return `
@@ -1975,12 +1977,13 @@
             </div>
           </td>
           <td>
-            <div class="text-truncate-1" title="${bodyPreview}">${bodyPreview}</div>
+            <div class="messages-body" title="${escapeHtml(bodyTitle)}">${bodyHtml}</div>
           </td>
           <td class="text-nowrap">
             ${statusCell}
             ${errorLine}
           </td>
+          <td>${actionsCell}</td>
           <td class="text-nowrap">${chatCell}</td>
           <td class="text-nowrap">
             <div class="messages-datetime" title="${escapeHtml(fullLabel)}">
@@ -2008,6 +2011,39 @@
     if (!url) return;
 
     window.location.href = url;
+  };
+
+  const handleMessagesActionClick = async (event) => {
+    const trigger = event.target.closest('[data-action="delete-message"]');
+    if (!trigger) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const sid = trigger.dataset.sid;
+    if (!sid) {
+      showToast({ title: 'Błąd', message: 'Brak identyfikatora wiadomości do usunięcia.', type: 'error' });
+      return;
+    }
+
+    const confirmed = window.confirm('Czy na pewno chcesz usunąć tę wiadomość? Operacja jest trwała i obejmuje również Twilio.');
+    if (!confirmed) {
+      return;
+    }
+
+    trigger.setAttribute('disabled', 'true');
+    try {
+      await fetchJSON(`/api/messages/${encodeURIComponent(sid)}`, { method: 'DELETE' });
+      showToast({ title: 'Usunięto', message: 'Wiadomość została skasowana.', type: 'success' });
+      await refreshMessages();
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error?.message || 'Nie udało się usunąć wiadomości.', type: 'error' });
+    } finally {
+      trigger.removeAttribute('disabled');
+    }
   };
 
   const refreshMessages = async () => {
@@ -2130,6 +2166,7 @@
       form.addEventListener('submit', submitForm);
       filterButtons.forEach((button) => button.addEventListener('click', handleFilterClick));
       tableBody.addEventListener('click', handleMessagesRowClick);
+      tableBody.addEventListener('click', handleMessagesActionClick);
       refreshMessages();
       refreshStats();
       startAutoRefresh();

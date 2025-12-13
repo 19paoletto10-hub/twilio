@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from flask import current_app, g
 
@@ -531,6 +531,51 @@ def list_messages(
     if ascending:
         items.reverse()
     return items
+
+
+def _conversation_filter_clause(
+    participant: Optional[str],
+    participant_normalized: Optional[str],
+) -> Tuple[str, List[Any]]:
+    if participant_normalized:
+        normalized_value = normalize_contact(participant_normalized)
+        if normalized_value:
+            normalized_to = _normalized_sql("to_number")
+            normalized_from = _normalized_sql("from_number")
+            clause = f"(({normalized_to}) = ? OR ({normalized_from}) = ?)"
+            return clause, [normalized_value, normalized_value]
+
+    if participant:
+        trimmed = participant.strip()
+        if trimmed:
+            clause = "(to_number = ? OR from_number = ?)"
+            return clause, [trimmed, trimmed]
+
+    raise ValueError("Participant filter is required")
+
+
+def list_conversation_message_refs(
+    *,
+    participant: str,
+    participant_normalized: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    clause, params = _conversation_filter_clause(participant, participant_normalized)
+    conn = _get_connection()
+    query = f"SELECT id, sid FROM messages WHERE {clause} ORDER BY datetime(created_at) ASC, id ASC"
+    rows = conn.execute(query, params).fetchall()
+    return [_row_to_dict(row) for row in rows]
+
+
+def delete_conversation_messages(
+    *,
+    participant: str,
+    participant_normalized: Optional[str] = None,
+) -> int:
+    clause, params = _conversation_filter_clause(participant, participant_normalized)
+    conn = _get_connection()
+    cursor = conn.execute(f"DELETE FROM messages WHERE {clause}", params)
+    conn.commit()
+    return cursor.rowcount
 
 
 def list_conversations(limit: int = 30) -> List[Dict[str, Any]]:
