@@ -4,11 +4,11 @@ import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from flask import current_app, g
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 _NORMALIZE_PREFIXES = ("whatsapp:", "sms:", "mms:", "client:", "sip:")
 _NORMALIZE_STRIP_CHARS = (" ", "-", "(", ")", ".", "_")
@@ -158,6 +158,41 @@ def _create_base_schema(conn: sqlite3.Connection) -> None:
         );
         INSERT OR IGNORE INTO ai_config (id, enabled, model, temperature, enabled_source, updated_at, target_number_normalized)
              VALUES (1, 0, 'gpt-4o-mini', 0.7, 'db', '', '');
+
+        CREATE TABLE IF NOT EXISTS multi_sms_batches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            body TEXT NOT NULL,
+            sender_identity TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            error TEXT,
+            total_recipients INTEGER NOT NULL DEFAULT 0,
+            success_count INTEGER NOT NULL DEFAULT 0,
+            failure_count INTEGER NOT NULL DEFAULT 0,
+            invalid_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            scheduled_at TEXT,
+            started_at TEXT,
+            completed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS multi_sms_recipients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            batch_id INTEGER NOT NULL REFERENCES multi_sms_batches(id) ON DELETE CASCADE,
+            number_raw TEXT,
+            number_normalized TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            sid TEXT,
+            error TEXT,
+            created_at TEXT NOT NULL,
+            sent_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_multi_sms_batch_status
+            ON multi_sms_batches(status, datetime(scheduled_at));
+        CREATE INDEX IF NOT EXISTS idx_multi_sms_recipient_batch
+            ON multi_sms_recipients(batch_id);
+        CREATE INDEX IF NOT EXISTS idx_multi_sms_recipient_status
+            ON multi_sms_recipients(batch_id, status);
         """
     )
 
@@ -223,6 +258,57 @@ def _migration_add_ai_enabled_source(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_add_multi_sms_tables(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS multi_sms_batches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            body TEXT NOT NULL,
+            sender_identity TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            error TEXT,
+            total_recipients INTEGER NOT NULL DEFAULT 0,
+            success_count INTEGER NOT NULL DEFAULT 0,
+            failure_count INTEGER NOT NULL DEFAULT 0,
+            invalid_count INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            scheduled_at TEXT,
+            started_at TEXT,
+            completed_at TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS multi_sms_recipients (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            batch_id INTEGER NOT NULL REFERENCES multi_sms_batches(id) ON DELETE CASCADE,
+            number_raw TEXT,
+            number_normalized TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            sid TEXT,
+            error TEXT,
+            created_at TEXT NOT NULL,
+            sent_at TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_multi_sms_batch_status
+            ON multi_sms_batches(status, datetime(scheduled_at));
+        CREATE INDEX IF NOT EXISTS idx_multi_sms_recipient_batch
+            ON multi_sms_recipients(batch_id);
+        CREATE INDEX IF NOT EXISTS idx_multi_sms_recipient_status
+            ON multi_sms_recipients(batch_id, status);
+        """
+    )
+
+
+def _ensure_multi_sms_tables(conn: sqlite3.Connection) -> None:
+    has_batches = _table_exists(conn, "multi_sms_batches")
+    has_recipients = _table_exists(conn, "multi_sms_recipients")
+
+    if has_batches and has_recipients:
+        return
+
+    _migration_add_multi_sms_tables(conn)
+
+
 def _ensure_schema() -> None:
     db_path = Path(current_app.config["APP_SETTINGS"].db_path)
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -262,6 +348,12 @@ def _ensure_schema() -> None:
             if current_version < 6:
                 _migration_add_ai_enabled_source(conn)
                 current_version = 6
+
+            if current_version < 7:
+                _migration_add_multi_sms_tables(conn)
+                current_version = 7
+
+        _ensure_multi_sms_tables(conn)
 
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()
@@ -949,6 +1041,297 @@ def list_due_scheduled_messages(limit: int = 20) -> List[Dict[str, Any]]:
         (now, limit),
     ).fetchall()
     return [_row_to_dict(row) for row in rows]
+
+
+# Multi-SMS batches & recipients
+
+
+def _serialize_multi_sms_batch(row: Optional[sqlite3.Row]) -> Dict[str, Any]:
+    if row is None:
+        return {}
+
+    total = int(row["total_recipients"] or 0)
+    success = int(row["success_count"] or 0)
+    failure = int(row["failure_count"] or 0)
+    invalid = int(row["invalid_count"] or 0)
+    pending = max(total - success - failure - invalid, 0)
+
+    return {
+        "id": int(row["id"]),
+        "body": row["body"],
+        "sender_identity": row["sender_identity"],
+        "status": row["status"],
+        "error": row["error"],
+        "total_recipients": total,
+        "success_count": success,
+        "failure_count": failure,
+        "invalid_count": invalid,
+        "pending_count": pending,
+        "created_at": row["created_at"],
+        "scheduled_at": row["scheduled_at"],
+        "started_at": row["started_at"],
+        "completed_at": row["completed_at"],
+    }
+
+
+def _serialize_multi_sms_recipient(row: Optional[sqlite3.Row]) -> Dict[str, Any]:
+    if row is None:
+        return {}
+
+    return {
+        "id": int(row["id"]),
+        "batch_id": int(row["batch_id"]),
+        "number_raw": row["number_raw"],
+        "number_normalized": row["number_normalized"],
+        "status": row["status"],
+        "sid": row["sid"],
+        "error": row["error"],
+        "created_at": row["created_at"],
+        "sent_at": row["sent_at"],
+    }
+
+
+def create_multi_sms_batch(
+    *,
+    body: str,
+    recipients: Sequence[str],
+    sender_identity: Optional[str] = None,
+    scheduled_at: Optional[str] = None,
+) -> Dict[str, Any]:
+    cleaned: List[Tuple[str, Optional[str]]] = []
+    seen: Set[str] = set()
+    for value in recipients:
+        raw = (str(value or "").strip())
+        if not raw:
+            continue
+        normalized = normalize_contact(raw)
+        key = (normalized or raw).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        cleaned.append((raw, normalized))
+
+    if not cleaned:
+        raise ValueError("Provide at least one valid recipient number.")
+
+    conn = _get_connection()
+    now = _utc_timestamp()
+    scheduled_value = scheduled_at or now
+
+    invalid_count = sum(1 for _, normalized in cleaned if not normalized)
+
+    cursor = conn.execute(
+        """
+        INSERT INTO multi_sms_batches (
+            body,
+            sender_identity,
+            status,
+            error,
+            total_recipients,
+            success_count,
+            failure_count,
+            invalid_count,
+            created_at,
+            scheduled_at
+        ) VALUES (?, ?, 'pending', NULL, ?, 0, 0, ?, ?, ?)
+        """,
+        (body, sender_identity, len(cleaned), invalid_count, now, scheduled_value),
+    )
+    batch_id = int(cursor.lastrowid)
+
+    for raw, normalized in cleaned:
+        status = 'pending' if normalized else 'invalid'
+        error = None if normalized else 'Nie udało się znormalizować numeru.'
+        conn.execute(
+            """
+            INSERT INTO multi_sms_recipients (
+                batch_id,
+                number_raw,
+                number_normalized,
+                status,
+                sid,
+                error,
+                created_at,
+                sent_at
+            ) VALUES (?, ?, ?, ?, NULL, ?, ?, NULL)
+            """,
+            (batch_id, raw, normalized, status, error, now),
+        )
+
+    conn.commit()
+    return get_multi_sms_batch(batch_id)
+
+
+def get_multi_sms_batch(batch_id: int) -> Optional[Dict[str, Any]]:
+    conn = _get_connection()
+    row = conn.execute(
+        "SELECT * FROM multi_sms_batches WHERE id = ?",
+        (batch_id,),
+    ).fetchone()
+    return _serialize_multi_sms_batch(row) if row else None
+
+
+def list_multi_sms_batches(limit: int = 20) -> List[Dict[str, Any]]:
+    conn = _get_connection()
+    rows = conn.execute(
+        """
+        SELECT *
+          FROM multi_sms_batches
+      ORDER BY datetime(created_at) DESC, id DESC
+         LIMIT ?
+        """,
+        (limit,),
+    ).fetchall()
+    return [_serialize_multi_sms_batch(row) for row in rows]
+
+
+def list_multi_sms_recipients(
+    batch_id: int,
+    *,
+    statuses: Optional[Sequence[str]] = None,
+) -> List[Dict[str, Any]]:
+    conn = _get_connection()
+    query = "SELECT * FROM multi_sms_recipients WHERE batch_id = ?"
+    params: List[Any] = [batch_id]
+
+    if statuses:
+        filtered = [status.strip() for status in statuses if status and status.strip()]
+        if filtered:
+            placeholders = ",".join(["?"] * len(filtered))
+            query += f" AND status IN ({placeholders})"
+            params.extend(filtered)
+
+    query += " ORDER BY id ASC"
+    rows = conn.execute(query, params).fetchall()
+    return [_serialize_multi_sms_recipient(row) for row in rows]
+
+
+def reserve_next_multi_sms_batch() -> Optional[Dict[str, Any]]:
+    conn = _get_connection()
+    now = _utc_timestamp()
+    row = conn.execute(
+        """
+        SELECT id
+          FROM multi_sms_batches
+         WHERE status = 'pending'
+           AND (scheduled_at IS NULL OR datetime(scheduled_at) <= datetime(?))
+           AND EXISTS (
+                SELECT 1 FROM multi_sms_recipients r
+                 WHERE r.batch_id = multi_sms_batches.id
+                   AND r.status = 'pending'
+            )
+      ORDER BY datetime(created_at) ASC, id ASC
+         LIMIT 1
+        """,
+        (now,),
+    ).fetchone()
+
+    if not row:
+        return None
+
+    batch_id = int(row["id"])
+    cursor = conn.execute(
+        """
+        UPDATE multi_sms_batches
+           SET status = 'processing',
+               started_at = COALESCE(started_at, ?)
+         WHERE id = ? AND status = 'pending'
+        """,
+        (now, batch_id),
+    )
+    conn.commit()
+
+    if cursor.rowcount == 0:
+        return None
+    return get_multi_sms_batch(batch_id)
+
+
+def update_multi_sms_batch_status(
+    batch_id: int,
+    *,
+    status: str,
+    error: Optional[str] = None,
+    completed: bool = False,
+) -> Optional[Dict[str, Any]]:
+    conn = _get_connection()
+    fields = ["status = ?"]
+    params: List[Any] = [status]
+
+    if error is not None:
+        fields.append("error = ?")
+        params.append(error or None)
+
+    if completed:
+        fields.append("completed_at = ?")
+        params.append(_utc_timestamp())
+
+    params.append(batch_id)
+    conn.execute(f"UPDATE multi_sms_batches SET {', '.join(fields)} WHERE id = ?", params)
+    conn.commit()
+    return get_multi_sms_batch(batch_id)
+
+
+def update_multi_sms_recipient(
+    recipient_id: int,
+    *,
+    status: str,
+    sid: Optional[str] = None,
+    error: Optional[str] = None,
+    sent_at: Optional[str] = None,
+) -> None:
+    conn = _get_connection()
+    conn.execute(
+        """
+        UPDATE multi_sms_recipients
+           SET status = ?,
+               sid = ?,
+               error = ?,
+               sent_at = CASE WHEN ? IS NOT NULL THEN ? ELSE sent_at END
+         WHERE id = ?
+        """,
+        (status, sid, error, sent_at, sent_at, recipient_id),
+    )
+    conn.commit()
+
+
+def recalc_multi_sms_counters(batch_id: int) -> Dict[str, int]:
+    conn = _get_connection()
+    row = conn.execute(
+        """
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) AS success,
+            SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) AS failed,
+            SUM(CASE WHEN status = 'invalid' THEN 1 ELSE 0 END) AS invalid
+          FROM multi_sms_recipients
+         WHERE batch_id = ?
+        """,
+        (batch_id,),
+    ).fetchone()
+
+    total = int(row["total"] or 0)
+    success = int(row["success"] or 0)
+    failed = int(row["failed"] or 0)
+    invalid = int(row["invalid"] or 0)
+
+    conn.execute(
+        """
+        UPDATE multi_sms_batches
+           SET total_recipients = ?,
+               success_count = ?,
+               failure_count = ?,
+               invalid_count = ?
+         WHERE id = ?
+        """,
+        (total, success, failed, invalid, batch_id),
+    )
+    conn.commit()
+    return {
+        "total": total,
+        "success": success,
+        "failed": failed,
+        "invalid": invalid,
+    }
 
 
 def _env_bool(value: Optional[str]) -> Optional[bool]:

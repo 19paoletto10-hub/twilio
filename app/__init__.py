@@ -8,6 +8,7 @@ from .ui import ui_bp
 from .auto_reply import start_auto_reply_worker
 from .reminder import start_reminder_worker
 from .news_scheduler import start_news_scheduler
+from .multi_sms import start_multi_sms_worker
 
 
 def create_app() -> Flask:
@@ -36,6 +37,8 @@ def create_app() -> Flask:
     start_reminder_worker(app)
     # Background scheduler: News notifications
     start_news_scheduler(app)
+    # Background worker: Multi-recipient SMS batches
+    start_multi_sms_worker(app)
 
     @app.get("/api/health")
     def api_health():

@@ -440,3 +440,25 @@ body {
   line-height: 1.6;
   color: #212529;
 }
+
+/* Multi-SMS */
+.multi-sms-card {
+  border-radius: 0.85rem;
+}
+
+.multi-sms-recipients {
+  margin-top: 0.75rem;
+  display: none;
+}
+
+.multi-sms-recipients.show {
+  display: block;
+}
+
+.multi-sms-recipient-list .list-group-item {
+  border-color: #eef0f3;
+}
+
+.multi-sms-recipient-main {
+  min-width: 220px;
+}

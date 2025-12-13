@@ -1,5 +1,38 @@
 # Changelog
 
+## ver3.1.2 (Multi-SMS batches & release hygiene)
+
+### Podsumowanie
+
+Release 3.1.2 dodaje pełny moduł Multi-SMS: worker w tle, tabele w SQLite,
+REST API oraz zakładkę w panelu WWW. Dzięki temu operator może przygotować
+batch z poziomu UI lub API i monitorować postęp wysyłki. Wydanie dostarcza też
+skrypt budowania paczek release, aby publiczne artefakty nie zawierały
+wrażliwych danych (`data/`, `X1_data/`, `.env`).
+
+### Najważniejsze zmiany
+
+- **Worker & schema v7** – [app/multi_sms.py](app/multi_sms.py) przetwarza batch'e,
+  a [app/database.py](app/database.py) dodaje tabele `multi_sms_batches` oraz
+  `multi_sms_recipients` wraz z migracją i licznikami sukcesów/błędów.
+- **Panel „Multi-SMS”** – [app/templates/dashboard.html](app/templates/dashboard.html)
+  i [app/static/js/dashboard.js](app/static/js/dashboard.js) umożliwiają tworzenie
+  zadań, obserwowanie historii i rozwijanie statusów odbiorców.
+- **REST API** – [app/webhooks.py](app/webhooks.py) udostępnia endpointy
+  `POST/GET /api/multi-sms/batches` + szczegóły odbiorców, z walidacją limitów.
+- **Release hygiene** – [scripts/prepare_release_bundle.sh](scripts/prepare_release_bundle.sh)
+  buduje katalog `release/dist/<tag>/` zawierający tylko kod i dokumentację,
+  co ułatwia publikację paczek bez sekretów.
+
+### Kompatybilność i upgrade
+
+- Migracja schematu do wersji 7 uruchamia się automatycznie – przed aktualizacją
+  wykonaj backup `data/app.db`.
+- Multi-SMS wymaga skonfigurowanego `TWILIO_DEFAULT_FROM` lub Messaging Service SID;
+  bez tego API zwróci błąd.
+- Przed publikacją release uruchom `./scripts/prepare_release_bundle.sh ver3.1.2`
+  i załącz wygenerowaną paczkę (bez `data/`, `X1_data/`, `.env`).
+
 ## ver3.1.1 (Precise ALL-CATEGORIES summaries)
 
 ### Podsumowanie
