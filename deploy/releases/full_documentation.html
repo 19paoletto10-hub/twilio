@@ -583,14 +583,13 @@
 
         <section id="deploy" class="card">
           <h2>Deployment & generowanie PDF</h2>
-          <p class="lead">Plik HTML jest przygotowany do konwersji do PDF. Poniżej przykładowe polecenia do wygenerowania wysokiej jakości PDF lokalnie.</p>
+          <p class="lead">Plik HTML jest przygotowany do konwersji do PDF. Dla spójnych rezultatów rekomendowane jest użycie silnika drukowania z obsługą CSS <span class="code">@media print</span>.</p>
           <h4 id="download">Jak wygenerować PDF</h4>
-          <p class="muted">Rekomendowane: użyj headless Chrome lub wkhtmltopdf. Poniżej znajdują się dwie metody.</p>
-          <h5>Headless Chrome</h5>
-          <pre class="code">google-chrome --headless --disable-gpu --no-sandbox --print-to-pdf=twilio-chat-app.pdf file://$(pwd)/deploy/releases/full_documentation.html</pre>
+          <p class="muted">Najprościej: użyj funkcji „Drukuj” w przeglądarce (zaznacz <em>drukuj tła</em>, format A4). Alternatywnie można użyć wkhtmltopdf.</p>
+          <h5>Druk z przeglądarki</h5>
+          <pre class="code">Otwórz deploy/releases/full_documentation.html → Ctrl/Cmd+P → Zapisz jako PDF</pre>
           <h5>wkhtmltopdf</h5>
-          <pre class="code">wkhtmltopdf deploy/releases/full_documentation.html twilio-chat-app.pdf</pre>
-          <p class="muted">Obie metody pozwalają na generację zaawansowanego, paginowanego PDF z poprawnymi stylami CSS. Jeżeli potrzebujesz, przygotuję skrypt automatyzujący proces — udostępniłem przykładowe skrypty w katalogu `scripts/`.</p>
+          <pre class="code">wkhtmltopdf --enable-local-file-access --print-media-type deploy/releases/full_documentation.html twilio-chat-app.pdf</pre>
         </section>
       </main>
 

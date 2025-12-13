@@ -5,17 +5,25 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Twilio Chat App — Marketing Overview</title>
   <style>
-    body{font-family:system-ui,Arial,sans-serif;margin:0;background:#f6f8fb;color:#1f2937}
+    :root{--bg:#f6f8fb;--card:#ffffff;--text:#1f2937;--muted:#6b7280;--accent:#0b5ed7;--border:#eef2ff}
+    body{font-family:system-ui,Arial,sans-serif;margin:0;background:var(--bg);color:var(--text)}
     .wrap{max-width:1000px;margin:36px auto;padding:20px}
     header{display:flex;justify-content:space-between;align-items:center}
     h1{margin:0;font-size:1.5rem}
-    .meta{color:#6b7280}
-    section{background:#fff;padding:20px;border-radius:8px;margin-top:18px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
-    .screenshot img{max-width:100%;height:auto;border-radius:6px;border:1px solid #eef2ff}
-    .screenshot .cap{color:#6b7280;font-size:0.9rem;margin-top:8px}
+    .meta{color:var(--muted)}
+    section{background:var(--card);padding:20px;border-radius:10px;margin-top:18px;box-shadow:0 6px 20px rgba(15,23,42,0.06)}
+    .screenshot img{max-width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
+    .screenshot .cap{color:var(--muted);font-size:0.95rem;margin-top:10px}
     .two{display:grid;grid-template-columns:1fr 320px;gap:18px}
     @media(max-width:920px){.two{grid-template-columns:1fr}}
-    .cta{display:inline-block;background:#0b5ed7;color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none}
+    .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none}
+    .pill{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef4ff;border:1px solid #dbeafe;color:#0b5ed7;font-weight:600;font-size:0.9rem}
+    @media print{
+      body{background:#fff}
+      .wrap{margin:0;max-width:none}
+      section{box-shadow:none;border:1px solid #eef2fb}
+      a.cta{display:none}
+    }
   </style>
 </head>
 <body>
@@ -23,14 +31,14 @@
     <header>
       <div>
         <h1>Twilio Chat App — Pełna prezentacja</h1>
-        <div class="meta">ver3.0.1 • 2025-12-10</div>
+        <div class="meta">ver3.1.0 • 2025-12-13</div>
       </div>
       <a class="cta" href="#download">Pobierz PDF</a>
     </header>
 
     <section>
       <h2>Executive Summary</h2>
-      <p>Twilio Chat App dostarcza firmom kompletny kanał komunikacji SMS/MMS z panelem operatora, automatyzacją odpowiedzi oraz integracją z modelami AI. Rozwiązanie jest gotowe do wdrożenia w środowisku produkcyjnym i zapewnia pełną kontrolę danych.</p>
+      <p>Twilio Chat App dostarcza firmom kompletny kanał komunikacji SMS/MMS z panelem operatora, automatyzacją odpowiedzi, kampaniami Multi‑SMS oraz integracją z modelami AI i modułem FAISS/RAG. Rozwiązanie jest gotowe do wdrożenia w środowisku produkcyjnym i zapewnia pełną kontrolę danych.</p>
     </section>
 
     <section class="two">
@@ -39,8 +47,9 @@
         <ul>
           <li>Webhooki Twilio i REST API</li>
           <li>Auto‑reply (szablon) i AI auto‑reply (OpenAI)</li>
-          <li>Historia wiadomości i widok czatu</li>
-          <li>Scheduler przypomnień</li>
+          <li>Historia wiadomości, widok czatu i tryb AI preview</li>
+          <li>Scheduler przypomnień i broadcasty Multi‑SMS</li>
+          <li>News / FAISS / RAG – kuracja treści prosto z panelu</li>
         </ul>
       </div>
       <aside>
@@ -52,51 +61,71 @@
     <section>
       <h3>Panel główny</h3>
       <div class="screenshot">
-        <img src="../../screen_twilio_git/Panel%20glowny.jpg" alt="Panel glowny">
-        <div class="cap">Widok statystyk i formularz wysyłki — centralne miejsce pracy operatora.</div>
+        <img src="../../app/screenshot/panel_wiadomosci.jpg" alt="Panel główny — Wiadomości">
+        <div class="cap">Dashboard operatora: statystyki, szybka wysyłka i historia wiadomości w jednym miejscu.</div>
       </div>
     </section>
 
     <section>
       <h3>Historia wiadomości</h3>
       <div class="screenshot">
-        <img src="../../screen_twilio_git/historia%20wiadomosci%20-%20przychodzace.jpg" alt="Historia wiadomości">
-        <div class="cap">Czytelna tabela z filtrem kierunku, meta kanału i szybkim dostępem do czatu.</div>
+        <img src="../../app/screenshot/panel_wiadomosci.jpg" alt="Historia wiadomości">
+        <div class="cap">Czytelna tabela z filtrem kierunku, meta i szybkim dostępem do czatu.</div>
       </div>
     </section>
 
     <section>
       <h3>Auto‑odpowiedź</h3>
       <div class="screenshot">
-        <img src="../../screen_twilio_git/auto%20odpowiedz%20widok.jpg" alt="Auto odpowiedz">
-        <div class="cap">Prosty przełącznik i pole treści — gotowe do natychmiastowego uruchomienia.</div>
+        <img src="../../app/screenshot/panel_autoodpowiedz.jpg" alt="Auto‑odpowiedź">
+        <div class="cap">Jedno miejsce do sterowania automatycznymi odpowiedziami: przełącznik ON/OFF, treść i status działania.</div>
       </div>
     </section>
 
     <section>
       <h3>Przypomnienia</h3>
       <div class="screenshot">
-        <img src="../../screen_twilio_git/przypomnienie%20-%20widok.jpg" alt="Przypomnienia">
+        <img src="../../app/screenshot/panel_przypomnienie.jpg" alt="Przypomnienia">
         <div class="cap">Kampanie cykliczne: planowanie, wstrzymywanie i przegląd historii wysyłek.</div>
+      </div>
+    </section>
+
+    <section>
+      <h3>Multi‑SMS & kampanie jednorazowe</h3>
+      <div class="screenshot">
+        <img src="../../app/screenshot/panel_multi_sms.jpg" alt="Multi‑SMS">
+        <div class="cap"><span class="pill">Nowość 3.1.0</span> Jednorazowe kampanie do wielu numerów: kolejka w tle, historia batchy, liczniki sukcesów/błędów i szczegóły per odbiorca.</div>
+      </div>
+    </section>
+
+    <section>
+      <h3>News / FAISS / RAG</h3>
+      <div class="screenshot">
+        <img src="../../app/screenshot/panel_news1.jpg" alt="News panel 1">
+        <div class="cap">Moduł newsów: zarządzanie źródłami, plikami scrapów, budowa indeksu FAISS oraz testy zapytań.</div>
+      </div>
+      <div style="height:12px"></div>
+      <div class="screenshot">
+        <img src="../../app/screenshot/panel_news2.jpg" alt="News panel 2">
+        <div class="cap">Operacje w panelu: lista indeksów, stan backupu, działania administracyjne i szybkie testy RAG.</div>
       </div>
     </section>
 
     <section>
       <h3>AI / Widok czatu</h3>
       <div class="screenshot">
-        <img src="../../screen_twilio_git/AI%20screen1.jpg" alt="AI 1">
-        <div class="cap">Podgląd konwersacji z AI — testowanie promptów i wyników.</div>
-      </div>
-      <div style="height:12px"></div>
-      <div class="screenshot">
-        <img src="../../screen_twilio_git/AI%20screen2.jpg" alt="AI 2">
-        <div class="cap">Dymki wiadomości, statusy i metadane — pełna kontrola operatora.</div>
+        <img src="../../app/screenshot/panel_ai.jpg" alt="AI">
+        <div class="cap">Integracja AI: konfiguracja modelu, test połączenia, podgląd rozmowy i kontrola trybu działania.</div>
       </div>
     </section>
 
     <section id="download">
       <h3>Generowanie PDF</h3>
-      <p>Użyj skryptu <code>./scripts/generate_pdf_chrome.sh</code> lub <code>wkhtmltopdf</code>. Upewnij się, że obrazy w katalogu <code>screen_twilio_git</code> są aktualne.</p>
+      <p>
+        Użyj funkcji „Drukuj → Zapisz jako PDF” w przeglądarce lub narzędzia <code>wkhtmltopdf</code>.
+        Screenshoty są przechowywane w katalogu <code>app/screenshot/</code> i są osadzone w dokumencie jako obrazy JPG.
+      </p>
+      <p class="meta">Wydruk do PDF: dokument jest responsywny, a w trybie druku automatycznie upraszcza tło i cienie.</p>
     </section>
 
   </div>

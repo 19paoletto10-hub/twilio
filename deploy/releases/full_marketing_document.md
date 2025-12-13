@@ -95,7 +95,7 @@
  ## 6. Recommended Next Steps (business/ops)
 
  1. Uzupełnij zrzuty ekranów w katalogu `screen_twilio_git` o wysokiej rozdzielczości pliki PNG/JPEG.
- 2. Wygeneruj PDF korzystając ze skryptu `./scripts/generate_pdf_chrome.sh` lub `wkhtmltopdf`.
+2. Wygeneruj PDF używając „Drukuj → Zapisz jako PDF” w przeglądarce lub narzędzia `wkhtmltopdf`.
  3. Rozważ: krótkie szkolenie dla zespołu operatorów (30–60 min) z zakresu: workflow dashboard, zarządzanie auto‑reply, eskalacje do konsultantów.
  4. Uruchom audyt uprawnień i polityk rotacji API key dla OpenAI w środowisku produkcyjnym.
 
