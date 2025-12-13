@@ -12,11 +12,12 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
   - Przypomnienia: CRUD `/api/reminders` (cykliczne SMS).
   - News/RAG: odbiorcy (`/api/news/recipients*`), test łączności, ręczny send, scraping (`/api/news/scrape`), budowa indeksu (`/api/news/indices/build`), test FAISS (`/api/news/test-faiss`), zarządzanie plikami i indeksami.
 - RAG/FAISS warstwa w [app/faiss_service.py](app/faiss_service.py):
-  - build/load/save indeksu z fallbackiem MinimalVectorStore; odbudowa z samych `docs.json`;
+  - build/load/save indeksu z fallbackiem MinimalVectorStore; odbudowa z `docs.json(l)` lub `articles.jsonl`, multi-source build z per-art. chunków;
   - wyszukiwanie semantyczne + odpowiedzi LLM (NewsOpenAIService) lub fallback tekstowy;
+  - tryb `answer_query_all_categories`/`search_all_categories`, który wymusza pokrycie każdej kategorii, używany m.in. przez scheduler newsów;
   - użycie modeli OpenAI z klucza SECOND_OPENAI / fallback hash embeddings.
-- Scraper Business Insider w [app/scraper_service.py](app/scraper_service.py): pobiera kategorie, czyści treść, zapisuje `.txt` i `.json`, opcjonalnie triggeruje budowę FAISS.
-- Harmonogram newsów w [app/news_scheduler.py](app/news_scheduler.py): pętla w tle (co minutę) wysyła dzienne powiadomienia SMS do aktywnych odbiorców z konfigiem godziny, pilnuje `last_sent_at` i waliduje numery.
+- Scraper Business Insider w [app/scraper_service.py](app/scraper_service.py): sesja z retry + robots cache, czyści treść, zapisuje `.txt` i `.json`, a także kanoniczny store `X1_data/articles.jsonl` (dedup hash/URL) wykorzystywany przez FAISS; opcjonalnie triggeruje budowę indeksu.
+- Harmonogram newsów w [app/news_scheduler.py](app/news_scheduler.py): pętla w tle (co minutę) wysyła dzienne powiadomienia SMS do aktywnych odbiorców z konfigiem godziny, pilnuje `last_sent_at`, waliduje numery i korzysta z trybu podsumowania wszystkich kategorii.
 - Inicjalizacja serwisów i workerów w [app/__init__.py](app/__init__.py): start auto-reply worker, scheduler przypomnień, scheduler news, healthcheck `/api/health`.
 
 ## Kluczowe zmiany (frontend / UX)

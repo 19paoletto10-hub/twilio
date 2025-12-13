@@ -107,7 +107,8 @@ def start_news_scheduler(app: Flask, *, check_interval_seconds: int = 60) -> Non
                                 faiss_service = FAISSService()
                                 faiss_service.load_index()
                                 
-                                response = faiss_service.answer_query(prompt, top_k=5)
+                                response = faiss_service.answer_query_all_categories(prompt, per_category_k=2)
+                                today_str = today.strftime("%Y-%m-%d")  
                                 
                                 if response.get("success") and response.get("answer"):
                                     message = f"📰 News ({today_str}):\n\n{response['answer']}"

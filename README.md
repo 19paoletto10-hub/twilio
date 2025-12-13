@@ -153,8 +153,9 @@ Tipy operacyjne:
 ## Dane i backup
 
 - Baza: `data/app.db` (SQLite). Backup: snapshot pliku + lock w czasie kopiowania (np. `sqlite3 .backup`).
+- Kanoniczny store artykułów: `X1_data/articles.jsonl` (deduplikacja po URL + hash treści, źródło prawdy dla FAISS/RAG).
+- Snapshot chunków: `X1_data/documents.jsonl` (preferowane) oraz `X1_data/documents.json` (legacy) – pozwalają odbudować indeks nawet bez plików binarnych FAISS.
 - Indeks FAISS: `X1_data/faiss_openai_index/` (`index.faiss` lub `index.npz` + `docs.json`).
-- Snapshot dokumentów: `X1_data/documents.json` (pozwala odbudować indeks nawet bez plików binarnych FAISS).
 - Surowe scrapes: `X1_data/business_insider_scrapes/*.txt|json`.
 - Zalecany backup prod: cały `X1_data/` + `data/app.db`. Przywrócenie: odtworzyć katalogi, uruchomić aplikację, sprawdzić `/api/news/test-faiss`.
 
@@ -251,8 +252,9 @@ Panel jest responsywny (Bootstrap 5) i składa się z kilku głównych widoków:
 
 ### Pliki i indeks
 
-- źródła tekstów: `X1_data/business_insider_scrapes/` (`.txt` i `.json`),
-- snapshot dokumentów: `X1_data/documents.json`,
+- kanoniczny store artykułów: `X1_data/articles.jsonl` (per-URL metadane, dedup i hash treści wykorzystywany przez FAISS),
+- snapshot chunków: `X1_data/documents.jsonl` (preferowany) + `X1_data/documents.json` (legacy preview/debug),
+- surowe źródła tekstów: `X1_data/business_insider_scrapes/` (`.txt` i `.json` per kategoria),
 - indeks FAISS / MinimalVectorStore: `X1_data/faiss_openai_index/` (`index.faiss` / `index.npz` + `docs.json`).
 
 Aplikacja potrafi:
@@ -262,16 +264,22 @@ Aplikacja potrafi:
 3. **Testować zapytania** – endpoint `/api/news/test-faiss`, w UI: pole zapytania + wynik (liczba trafień, odpowiedź modelu).
 4. **Zarządzać plikami** – usuwać pojedyncze pliki scrapów lub cały indeks z poziomu panelu.
 
+### Tryb podsumowania kategorii
+
+- `FAISSService` ma tryb `answer_query_all_categories` – wymusza pobranie fragmentów z każdej kategorii i przygotowuje sekcjami "kategoria → bullets".
+- Scheduler newsów korzysta właśnie z tego trybu (`per_category_k`), dzięki czemu dzienne powiadomienia SMS zawsze obejmują wszystkie kategorie.
+- Fallback (bez LLM) pozostaje aktywny – gdy brak klucza lub kontekstu, użytkownik dostaje informacyjny listing kategorii/fragmentów.
+
 ### Odbudowa indeksu FAISS
 
 Kod `FAISSService` został napisany tak, aby odtworzenie indeksu było przewidywalne i bezpieczne:
 
-- przy zapisie (`save_faiss_index`) tworzony jest komplet plików (`index.faiss` lub `index.npz` + `docs.json`),
+- przy zapisie (`save_faiss_index`) tworzony jest komplet plików (`index.faiss` lub `index.npz` + `docs.json` oraz snapshot `documents.jsonl`),
 - przy odczycie (`load_faiss_index`):
   1. najpierw ładowany jest pełny indeks FAISS, jeśli istnieje,
   2. jeśli jest tylko `index.npz`, używany jest `MinimalVectorStore`,
-  3. jeśli istnieje samo `docs.json` – indeks jest **rekonstruowany od zera** wyłącznie z dokumentów,
-  4. dodatkowo, jeśli brakuje plików dla `faiss_openai_index`, ale istnieje globalny snapshot `X1_data/documents.json`, serwis spróbuje odbudować indeks na jego podstawie.
+  3. jeśli istnieje samo `docs.json` lub `documents.jsonl` – indeks jest **rekonstruowany od zera** wyłącznie z dokumentów,
+  4. dodatkowo, jeśli brakuje plików dla `faiss_openai_index`, ale istnieje globalny snapshot `X1_data/documents.jsonl` / `X1_data/documents.json`, serwis spróbuje odbudować indeks na jego podstawie.
 
 W praktyce: **backup katalogu `X1_data/` wystarcza do pełnej odbudowy indeksu**.
 
