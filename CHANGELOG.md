@@ -1,5 +1,32 @@
 # Changelog
 
+## ver3.1.1 (Precise ALL-CATEGORIES summaries)
+
+### Podsumowanie
+
+Wydanie doprecyzowuje zachowanie trybu podsumowania newsów "ALL‑CATEGORIES".
+Model otrzymuje osobne, wyraźnie oznaczone konteksty dla każdej kategorii oraz
+jasne instrukcje co do formatu odpowiedzi (nagłówek + 2–3 krótkie zdania na
+kategorię, bez wypunktowań). Dzięki temu streszczenia są bardziej
+przewidywalne i nie mieszają faktów między kategoriami.
+
+### Najważniejsze zmiany
+
+- **News/RAG – kontekst per kategoria** – `answer_query_all_categories()`
+  buduje osobne konteksty FAISS dla każdej kategorii z kontrolowanym budżetem
+  znaków, co poprawia separację tematów i ułatwia debugowanie.
+- **Stabilny format ALL‑CATEGORIES** – prompty wymagają formatu
+  "Kategoria: <nazwa>" + 2–3 krótkie zdania (bez wypunktowań) oraz jawnego
+  komunikatu `brak danych`, gdy FAISS nie zwraca fragmentów.
+- **Spójne prompty backendowe** – `ALL_CATEGORIES_PROMPT` i prompty w
+  `FAISSService` opisują tę samą, jednoznaczną semantykę trybu ALL‑CATEGORIES.
+
+### Kompatybilność i upgrade
+
+- Brak zmian łamiących w webhookach Twilio oraz modułach AI/auto‑reply.
+- Istniejąca konfiguracja odbiorców (`use_all_categories`) pozostaje ważna –
+  zmienia się jedynie sposób budowy kontekstu i format odpowiedzi.
+
 ## ver3.1.0 (All-categories News mode + dashboard UX hardening)
 
 ### Podsumowanie

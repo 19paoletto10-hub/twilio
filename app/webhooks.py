@@ -58,7 +58,7 @@ MAX_FAISS_BACKUP_BYTES = 250 * 1024 * 1024  # 250 MB safety limit
 DEFAULT_NEWS_PROMPT = "Wygeneruj krótkie podsumowanie najważniejszych newsów."
 ALL_CATEGORIES_PROMPT = (
     "Przygotuj profesjonalne, polskie streszczenie wszystkich kategorii newsów. "
-    "Dla KAŻDEJ kategorii wypisz nagłówek oraz 2-3 wypunktowania z najważniejszymi faktami. "
+    "Każdą kategorię analizuj oddzielnie. Dla KAŻDEJ kategorii wypisz nagłówek oraz 2-3 zdania z najważniejszymi faktami (bez wypunktowań). "
     "Uwzględniaj konkrety (liczby, decyzje, konsekwencje). Jeśli brak danych, napisz 'brak danych'."
 )
 DEFAULT_PER_CATEGORY_K = 2
