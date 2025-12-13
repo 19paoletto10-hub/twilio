@@ -2,6 +2,7 @@
 
 > Produkcyjny serwer SMS oparty o Flask + Twilio, z panelem www, AI auto‑reply i wyszukiwaniem semantycznym (FAISS). Dokument napisany z perspektywy twórcy i dewelopera, który ma to realnie utrzymywać.
 
+> Zaprojektowana aplikacja to panel do **zarządzania komunikacją SMS** (Twilio), który umożliwia wysyłkę pojedynczych i masowych wiadomości, automatyczne odpowiedzi oraz cykliczne przypomnienia z jednego miejsca. Zawiera **moduł AI** oparty o OpenAI, który może prowadzić rozmowy, generować treści oraz tworzyć raporty/summaries na podstawie zebranych danych. Dodatkowo wykorzystuje **bazę wiedzy FAISS (RAG)** zasilaną skrapowanymi newsami, dzięki czemu potrafi odpowiadać na pytania i wysyłać odbiorcom uporządkowane powiadomienia tematyczne.
 ---
 
 ## Spis treści
