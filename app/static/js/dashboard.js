@@ -127,6 +127,17 @@
   const newsFaissRestoreInput = document.getElementById('news-faiss-restore-input');
   const newsFaissBackupStatus = document.getElementById('news-faiss-backup-status');
 
+  // Multi-SMS tab
+  const multiSmsForm = document.getElementById('multi-sms-form');
+  const multiSmsRecipientsField = document.getElementById('multi-sms-recipients');
+  const multiSmsBodyField = document.getElementById('multi-sms-body');
+  const multiSmsSubmitBtn = document.getElementById('multi-sms-submit-btn');
+  const multiSmsSubmitSpinner = multiSmsSubmitBtn?.querySelector('.spinner-border');
+  const multiSmsHistory = document.getElementById('multi-sms-history');
+  const multiSmsHistoryEmpty = document.getElementById('multi-sms-history-empty');
+  const multiSmsRefreshBtn = document.getElementById('multi-sms-refresh-btn');
+  const multiSmsBatchCount = document.getElementById('multi-sms-batch-count');
+
   const DEFAULT_NEWS_PROMPT = window.NEWS_DEFAULT_PROMPT || 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
   const ALL_CATEGORIES_PROMPT = window.NEWS_ALL_CATEGORIES_PROMPT || (
     'Przygotuj profesjonalne streszczenie wszystkich kategorii newsów. ' +
@@ -1450,6 +1461,208 @@
     }
   };
 
+  // Multi-SMS helpers
+  const setMultiSmsSubmitting = (isSubmitting) => {
+    if (!multiSmsSubmitBtn) return;
+    if (isSubmitting) {
+      multiSmsSubmitBtn.setAttribute('disabled', 'true');
+      multiSmsSubmitSpinner?.classList.remove('d-none');
+    } else {
+      multiSmsSubmitBtn.removeAttribute('disabled');
+      multiSmsSubmitSpinner?.classList.add('d-none');
+    }
+  };
+
+  const multiSmsStatusBadge = (status) => {
+    const normalized = (status || '').toLowerCase();
+    const map = {
+      pending: 'bg-warning-subtle text-warning-emphasis',
+      processing: 'bg-info-subtle text-info-emphasis',
+      completed: 'bg-success-subtle text-success-emphasis',
+      completed_with_errors: 'bg-danger-subtle text-danger-emphasis',
+      failed: 'bg-danger-subtle text-danger-emphasis'
+    };
+    const labelMap = {
+      pending: 'oczekuje',
+      processing: 'w trakcie',
+      completed: 'zakończone',
+      completed_with_errors: 'zakończone z błędami',
+      failed: 'niepowodzenie'
+    };
+    const cls = map[normalized] || 'bg-secondary-subtle text-secondary-emphasis';
+    const label = labelMap[normalized] || normalized || 'nieznany';
+    return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+  };
+
+  const renderMultiSmsRecipients = (recipients = []) => {
+    if (!recipients.length) {
+      return '<p class="text-muted small mb-0">Brak odbiorców.</p>';
+    }
+
+    const statusIcons = {
+      sent: '✅',
+      failed: '⚠️',
+      invalid: '🚫',
+      pending: '⏳',
+      processing: '⏳'
+    };
+
+    return `
+      <ul class="list-group multi-sms-recipient-list">
+        ${recipients
+          .map((r) => {
+            const status = (r.status || '').toLowerCase();
+            const icon = statusIcons[status] || '•';
+            const number = escapeHtml(r.number_normalized || r.number_raw || '—');
+            const err = r.error ? `<div class="small text-danger mt-1">${escapeHtml(r.error)}</div>` : '';
+            const sentAt = r.sent_at ? `<div class="small text-muted">${escapeHtml(formatDateTime(r.sent_at))}</div>` : '';
+            return `
+              <li class="list-group-item d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div class="multi-sms-recipient-main">
+                  <div class="fw-semibold">${icon} ${number}</div>
+                  ${sentAt}
+                  ${err}
+                </div>
+                <span class="badge bg-light text-muted border">${escapeHtml(status || '—')}</span>
+              </li>
+            `;
+          })
+          .join('')}
+      </ul>
+    `;
+  };
+
+  const renderMultiSmsHistory = (items = []) => {
+    if (!multiSmsHistory) return;
+
+    if (!items.length) {
+      multiSmsHistory.innerHTML = '<div class="text-center text-muted py-4">Brak wysyłek Multi-SMS.</div>';
+      multiSmsBatchCount && (multiSmsBatchCount.textContent = '0');
+      return;
+    }
+
+    multiSmsBatchCount && (multiSmsBatchCount.textContent = String(items.length));
+
+    const cards = items.map((batch) => {
+      const createdAt = formatDateTime(batch.created_at);
+      const status = multiSmsStatusBadge(batch.status);
+      const bodyPreview = escapeHtml(batch.body || '');
+      const total = batch.total_recipients ?? 0;
+      const sent = batch.success_count ?? 0;
+      const failed = batch.failure_count ?? 0;
+      const invalid = batch.invalid_count ?? 0;
+      const pending = batch.pending_count ?? Math.max(total - sent - failed - invalid, 0);
+      const errorLine = batch.error ? `<div class="text-danger small mt-1">${escapeHtml(batch.error)}</div>` : '';
+      const recipients = Array.isArray(batch.recipients) ? batch.recipients : [];
+      const batchId = batch.id;
+
+      return `
+        <div class="card border mb-3 multi-sms-card" data-batch-id="${batchId}">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start gap-2 mb-2 flex-wrap">
+              <div>
+                <div class="text-uppercase text-muted small mb-1">Wiadomość</div>
+                <div class="fw-semibold">${bodyPreview || '<span class="text-muted">(pusta treść)</span>'}</div>
+                ${errorLine}
+              </div>
+              <div class="text-end">
+                ${status}
+                <div class="small text-muted">${escapeHtml(createdAt)}</div>
+                <div class="small text-muted">${escapeHtml(batch.sender_identity || '')}</div>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+              <span class="badge bg-light text-muted border">Łącznie: ${total}</span>
+              <span class="badge bg-success-subtle text-success-emphasis">Wysłane: ${sent}</span>
+              <span class="badge bg-warning-subtle text-warning-emphasis">Oczekujące: ${pending}</span>
+              <span class="badge bg-danger-subtle text-danger-emphasis">Błędy: ${failed}</span>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis">Niepoprawne: ${invalid}</span>
+            </div>
+            <button class="btn btn-sm btn-outline-primary" data-action="toggle-recipients" data-target="recipients-${batchId}">
+              Odbiorcy (${recipients.length || total})
+            </button>
+            <div class="multi-sms-recipients collapse" id="recipients-${batchId}">
+              ${renderMultiSmsRecipients(recipients)}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    multiSmsHistory.innerHTML = cards.join('');
+  };
+
+  const handleMultiSmsToggleClick = (event) => {
+    const toggleBtn = event.target.closest('button[data-action="toggle-recipients"]');
+    if (!toggleBtn) return;
+    const targetId = toggleBtn.getAttribute('data-target');
+    if (!targetId) return;
+    const panel = document.getElementById(targetId);
+    if (!panel) return;
+    panel.classList.toggle('show');
+  };
+
+  const loadMultiSmsBatches = async () => {
+    if (!multiSmsHistory) return;
+    try {
+      multiSmsHistory.innerHTML = '<div class="text-muted py-3">Ładowanie...</div>';
+      const data = await fetchJSON('/api/multi-sms/batches?limit=20&include_recipients=1');
+      renderMultiSmsHistory(data.items || []);
+    } catch (error) {
+      console.error(error);
+      multiSmsHistory.innerHTML = `<div class="text-danger">${escapeHtml(error.message || 'Nie udało się pobrać historii Multi-SMS.')}</div>`;
+    }
+  };
+
+  const submitMultiSms = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!multiSmsForm) return;
+    if (!multiSmsForm.checkValidity()) {
+      multiSmsForm.classList.add('was-validated');
+      return;
+    }
+
+    const recipientsText = multiSmsRecipientsField?.value || '';
+    const body = multiSmsBodyField?.value.trim() || '';
+
+    if (!recipientsText.trim() || !body) {
+      multiSmsForm.classList.add('was-validated');
+      return;
+    }
+
+    setMultiSmsSubmitting(true);
+
+    try {
+      const res = await fetchJSON('/api/multi-sms/batches', {
+        method: 'POST',
+        body: JSON.stringify({
+          recipients: recipientsText,
+          body
+        })
+      });
+
+      const batch = res.batch;
+      const total = batch?.total_recipients ?? 0;
+      const invalid = batch?.invalid_count ?? 0;
+      showToast({
+        title: 'Zadanie utworzone',
+        message: `Multi-SMS zapisane. Odbiorców: ${total}${invalid ? `, niepoprawne: ${invalid}` : ''}.`,
+        type: 'success'
+      });
+
+      multiSmsForm.reset();
+      multiSmsForm.classList.remove('was-validated');
+      await loadMultiSmsBatches();
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się utworzyć zadania Multi-SMS.', type: 'error' });
+    } finally {
+      setMultiSmsSubmitting(false);
+    }
+  };
+
   const buildNewsIndex = async () => {
     if (!newsBuildIndexBtn) return;
     if (newsBuildIndexBtn.hasAttribute('disabled')) return;
@@ -2312,6 +2525,13 @@
 
     aiTestBtn?.addEventListener('click', runAiTest);
     newsTestBtn?.addEventListener('click', runNewsTest);
+
+    if (multiSmsForm) {
+      multiSmsForm.addEventListener('submit', submitMultiSms);
+      multiSmsRefreshBtn?.addEventListener('click', loadMultiSmsBatches);
+      multiSmsHistory?.addEventListener('click', handleMultiSmsToggleClick);
+      loadMultiSmsBatches();
+    }
   };
 
   document.addEventListener('visibilitychange', () => {

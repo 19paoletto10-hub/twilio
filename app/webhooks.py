@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 import shutil
 import tempfile
 import time
@@ -41,6 +42,12 @@ from .database import (
     list_conversations,
     list_conversation_message_refs,
     delete_conversation_messages,
+)
+from .database import (
+    create_multi_sms_batch,
+    get_multi_sms_batch,
+    list_multi_sms_batches,
+    list_multi_sms_recipients,
 )
 from .scraper_service import ScraperService, SCRAPED_DIR, DATA_DIR
 from .faiss_service import (
@@ -323,6 +330,40 @@ def _mask_secret(value: Optional[str]) -> Optional[str]:
     if len(trimmed) <= 4:
         return "•" * len(trimmed)
     return "•" * (len(trimmed) - 4) + trimmed[-4:]
+
+
+def _split_multi_sms_numbers(raw_value: str) -> List[str]:
+    normalized = raw_value.replace("\r", "\n")
+    parts = re.split(r"[,;\n]+", normalized)
+    return [part.strip() for part in parts if part and part.strip()]
+
+
+def _extract_multi_sms_recipients(payload: Dict[str, Any]) -> List[str]:
+    raw = payload.get("recipients")
+    if isinstance(raw, str):
+        numbers = _split_multi_sms_numbers(raw)
+    elif isinstance(raw, (list, tuple)):
+        numbers = [str(item).strip() for item in raw if str(item).strip()]
+    else:
+        merged = (
+            payload.get("numbers")
+            or payload.get("targets")
+            or payload.get("numbers_text")
+            or payload.get("recipients_text")
+            or ""
+        )
+        numbers = _split_multi_sms_numbers(str(merged)) if merged else []
+
+    return numbers
+
+
+def _sender_identity_label() -> str:
+    settings = current_app.config["TWILIO_SETTINGS"]
+    if settings.messaging_service_sid:
+        return f"Messaging Service {settings.messaging_service_sid}"
+    if settings.default_from:
+        return settings.default_from
+    return ""
 
 
 # ---------------------------------------------------------------------------
@@ -1957,6 +1998,86 @@ def api_send_message():
     _persist_twilio_message(message)
 
     return jsonify({"sid": message.sid, "status": message.status})
+
+
+@webhooks_bp.post("/api/multi-sms/batches")
+def api_create_multi_sms_batch():
+    payload = request.get_json(force=True, silent=True) or {}
+    body = (payload.get("body") or "").strip()
+    recipients = _extract_multi_sms_recipients(payload)
+
+    if not body:
+        return jsonify({"error": "Treść wiadomości jest wymagana."}), 400
+
+    if not recipients:
+        return jsonify({"error": "Dodaj co najmniej jeden numer odbiorcy."}), 400
+
+    max_recipients = 250
+    if len(recipients) > max_recipients:
+        return jsonify({"error": f"Maksymalnie {max_recipients} odbiorców na jedno zadanie."}), 400
+
+    settings = current_app.config["TWILIO_SETTINGS"]
+    has_sender = bool(
+        (settings.default_from and settings.default_from.strip())
+        or (settings.messaging_service_sid and settings.messaging_service_sid.strip())
+    )
+    if not has_sender:
+        return jsonify({"error": "Skonfiguruj TWILIO_DEFAULT_FROM lub Messaging Service SID."}), 400
+
+    try:
+        batch = create_multi_sms_batch(
+            body=body,
+            recipients=recipients,
+            sender_identity=_sender_identity_label(),
+            scheduled_at=None,
+        )
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    return jsonify({"batch": batch}), 201
+
+
+@webhooks_bp.get("/api/multi-sms/batches")
+def api_list_multi_sms_batches():
+    limit_raw = request.args.get("limit", "20")
+    try:
+        limit = max(1, min(int(limit_raw), 200))
+    except ValueError:
+        limit = 20
+
+    include_recipients = (request.args.get("include_recipients") or "").strip().lower() in {"1", "true", "yes", "y"}
+
+    items = list_multi_sms_batches(limit=limit)
+    if include_recipients:
+        enriched: List[Dict[str, Any]] = []
+        for batch in items:
+            batch_id = batch.get("id")
+            recipients = list_multi_sms_recipients(batch_id, statuses=None) if batch_id is not None else []
+            enriched.append({**batch, "recipients": recipients})
+        items = enriched
+
+    return jsonify({"items": items, "count": len(items)})
+
+
+@webhooks_bp.get("/api/multi-sms/batches/<int:batch_id>")
+def api_multi_sms_batch_detail(batch_id: int):
+    batch = get_multi_sms_batch(batch_id)
+    if not batch:
+        return jsonify({"error": "Nie znaleziono zadania."}), 404
+    return jsonify({"batch": batch})
+
+
+@webhooks_bp.get("/api/multi-sms/batches/<int:batch_id>/recipients")
+def api_multi_sms_batch_recipients(batch_id: int):
+    batch = get_multi_sms_batch(batch_id)
+    if not batch:
+        return jsonify({"error": "Nie znaleziono zadania."}), 404
+
+    statuses_raw = (request.args.get("status") or "").strip()
+    statuses = [part.strip() for part in statuses_raw.split(",") if part.strip()] if statuses_raw else None
+
+    items = list_multi_sms_recipients(batch_id, statuses=statuses)
+    return jsonify({"items": items, "count": len(items)})
 
 
 @webhooks_bp.get("/api/messages")

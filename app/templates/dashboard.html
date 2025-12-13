@@ -41,6 +41,11 @@
           News
         </button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-multi-sms-btn" data-bs-toggle="tab" data-bs-target="#tab-multi-sms" type="button" role="tab" aria-controls="tab-multi-sms" aria-selected="false">
+          Multi-SMS
+        </button>
+      </li>
     </ul>
 
     <div class="tab-content">
@@ -628,6 +633,60 @@
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-multi-sms" role="tabpanel" aria-labelledby="tab-multi-sms-btn" tabindex="0">
+        <div class="row g-4">
+          <div class="col-lg-5">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Wielokrotna wysyłka</p>
+                <h2 class="h5 mb-0">Wyślij SMS do wielu odbiorców</h2>
+              </div>
+              <div class="card-body">
+                <form id="multi-sms-form" novalidate>
+                  <div class="mb-3">
+                    <label for="multi-sms-recipients" class="form-label">Numery odbiorców</label>
+                    <textarea class="form-control" id="multi-sms-recipients" rows="5" placeholder="np. +48123123123\n+441234567890" required></textarea>
+                    <div class="form-text">Wpisz każdy numer w osobnej linii lub oddziel przecinkiem; duplikaty usuwamy automatycznie.</div>
+                    <div class="invalid-feedback">Dodaj co najmniej jeden poprawny numer.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="multi-sms-body" class="form-label">Treść wiadomości</label>
+                    <textarea class="form-control" id="multi-sms-body" rows="4" maxlength="1200" placeholder="Wiadomość wysyłana do wszystkich odbiorców" required></textarea>
+                    <div class="invalid-feedback">Treść wiadomości jest wymagana.</div>
+                  </div>
+                  <div class="alert alert-light border small mb-3" id="multi-sms-tip">
+                    <strong>Wysyłka w tle.</strong> Zadanie trafia do kolejki. Monitoruj postęp po prawej stronie – każdy odbiorca otrzyma swój status.
+                  </div>
+                  <button type="submit" class="btn btn-primary w-100" id="multi-sms-submit-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    Zainicjuj wysyłkę
+                  </button>
+                  <div class="small text-muted mt-2" id="multi-sms-limit-note">Limit: 250 odbiorców na zadanie.</div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-7">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Historia wysyłek</p>
+                  <h2 class="h5 mb-0">Multi-SMS (ostatnie 20)</h2>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" id="multi-sms-refresh-btn">Odśwież</button>
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis" id="multi-sms-batch-count">0</span>
+                </div>
+              </div>
+              <div class="card-body" id="multi-sms-history">
+                <div class="text-center text-muted py-4" id="multi-sms-history-empty">Brak wysyłek Multi-SMS.</div>
               </div>
             </div>
           </div>

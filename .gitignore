@@ -6,3 +6,4 @@ venv/
 data/
 X1_data/
 *.zip
+release/dist/

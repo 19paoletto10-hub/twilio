@@ -36,7 +36,8 @@
 - **News / RAG na sterydach** – scheduler newsów, scraper kategorii Business Insider, indeks FAISS, tryb podsumowania wszystkich kategorii, testowe zapytania i ręczna wysyłka.
 - **Backup FAISS klasy enterprise** – eksport ZIP z manifestem, import z walidacją rozmiaru, automatyczne odtwarzanie plików oraz pełne czyszczenie indeksu wraz z raportem `removed/missing/failed` (UI i API).
 - **Gotowość do operacji** – docker-compose (dev/prod), healthcheck, rozpisany runbook i checklisty post‑deploy, kompatybilność z Codespaces.
-- **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień i News; skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
+- **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień, News **oraz Multi‑SMS (batch)**; skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
+- **Multi‑SMS worker** – kolejkuje wysyłki do wielu numerów (free‑form input, deduplikacja, walidacja E.164), zapisuje każdy wynik w SQLite i przetwarza w tle w jednym wątku na proces.
 
 ## Opis systemu
 
@@ -56,7 +57,7 @@ System jest „lekki” (Flask + SQLite), ale architektura jest modularna i goto
 
 Najważniejsze moduły:
 
-- `app/__init__.py` – fabryka Flask (`create_app`): ładuje konfigurację z `.env`, inicjalizuje klienta Twilio, bazę SQLite i uruchamia workery (auto‑reply, przypomnienia).
+- `app/__init__.py` – fabryka Flask (`create_app`): ładuje konfigurację z `.env`, inicjalizuje klienta Twilio, bazę SQLite i uruchamia workery (auto‑reply, przypomnienia, **multi‑sms**).
 - `app/webhooks.py` – główny blueprint HTTP:
   - webhooki Twilio (`/twilio/inbound`, `/twilio/status`),
   - REST API do wiadomości, AI, auto‑reply,
@@ -68,6 +69,7 @@ Najważniejsze moduły:
 - `app/ai_service.py` + `app/chat_logic.py` – generowanie odpowiedzi AI (OpenAI) oraz fallbackowy silnik „echo / keywords”.
 - `app/auto_reply.py` – worker, który konsumuje kolejkę auto‑reply i wysyła odpowiedzi (klasyczne lub AI, zależnie od konfiguracji).
 - `app/reminder.py` – worker przypomnień SMS oparty o tabelę `scheduled_messages`.
+- `app/multi_sms.py` – worker batchowy Multi‑SMS, który rezerwuje zadania z SQLite, wysyła każdy numer przez Twilio i aktualizuje licznik sukcesów/błędów.
 - `app/faiss_service.py` – integracja z FAISS i embeddings:
   - budowa indeksu z plików scrapów,
   - wyszukiwanie semantyczne,
@@ -263,6 +265,9 @@ Panel jest responsywny (Bootstrap 5) i składa się z kilku głównych widoków:
   - przyciski „Scrape / Build index / Test FAISS”,
   - zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie),
   - sekcja „Backup FAISS” z przyciskiem pobrania zipa oraz uploaderem przywracającym indeks/dokumenty.
+- **Zakładka „Multi‑SMS”**
+  - formularz batch: wklej numery (free‑form, jeden na linię lub przecinki), treść wiadomości, przycisk „Wyślij batch”,
+  - worker w tle obsługuje kolejkę – karta historii pokazuje status partii, licznik sukcesów/błędów i rozwijaną listę odbiorców z indywidualnymi statusami.
 
 Uwaga UX: w historii wiadomości kolumna „Treść” ma stałą wysokość wierszy – dłuższe teksty są skracane (dla czytelności tabeli).
 
@@ -369,7 +374,7 @@ CLI korzysta z pełnej konfiguracji aplikacji (Flask app context), więc działa
   - Wejdź do panelu: skonfiguruj AI/Auto-reply/News, wykonaj testy: `/api/ai/test`, `/api/news/test`, `/api/news/test-faiss`.
 5. **Monitoring i logi**
   - Logi aplikacji: `docker compose logs -f web` (domyślny serwis w compose). Szukaj `Inbound webhook hit`, `Message status update`, `FAISS`.
-  - Workery uruchamiane w tym samym procesie Flask (auto-reply queue, reminders, news scheduler) – logi wspólne.
+    - Workery uruchamiane w tym samym procesie Flask (auto-reply queue, reminders, news scheduler, multi-sms batch) – logi wspólne.
 6. **Backup/restore**
   - Backup plików: `data/app.db`, `X1_data/`.
   - Restore: odtwórz katalogi, uruchom kontener, sprawdź `/api/news/test-faiss` oraz widoczność historii w panelu.
