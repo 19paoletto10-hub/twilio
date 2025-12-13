@@ -7,30 +7,73 @@
   <meta name="description" content="Profesjonalna dokumentacja produktu Twilio Chat App — opis funkcji, architektury, UX i scenariuszy biznesowych.">
   <style>
     :root{--bg:#f7f9fb;--card:#ffffff;--muted:#6c757d;--accent:#0d6efd;--accent-2:#0b5ed7}
-    html,body{height:100%}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;line-height:1.6;color:#172042;background:var(--bg)}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;line-height:1.65;color:#172042;background:var(--bg)}
     .container{max-width:1100px;margin:36px auto;padding:24px}
-    header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--card);padding:16px 18px;border-radius:12px;border:1px solid #eef2fb;box-shadow:0 10px 24px rgba(20,30,60,0.05)}
     .brand{display:flex;gap:16px;align-items:center}
     .logo{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700}
     h1{font-size:1.6rem;margin:0}
+    h2{margin:0 0 10px;font-size:1.25rem}
+    h3{margin:14px 0 8px;font-size:1.05rem}
+    h4{margin:12px 0 6px;font-size:1.0rem}
+    p{margin:10px 0}
+    ul,ol{margin:10px 0 10px 20px}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
     .meta{color:var(--muted);font-size:0.95rem}
     nav.toc{margin-top:18px;display:flex;gap:12px;flex-wrap:wrap}
     nav.toc a{background:#fff;padding:8px 12px;border-radius:999px;border:1px solid #e6eefb;color:var(--accent);text-decoration:none;font-weight:600}
+    nav.toc a:hover{border-color:#dbeafe;background:#f8fbff}
     section.card{background:var(--card);padding:20px;border-radius:10px;margin-top:18px;box-shadow:0 6px 18px rgba(20,30,60,0.04)}
+    section.card > h2{padding-bottom:10px;border-bottom:1px solid #eef2fb}
     .row{display:grid;grid-template-columns:1fr 340px;gap:20px}
     .lead{color:var(--muted);margin-bottom:12px}
+    .muted{color:var(--muted)}
     .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
     .feature{background:#f8fbff;padding:12px;border-radius:8px;border:1px solid #eaf4ff}
     aside.sidebar{position:sticky;top:24px;height:max-content}
-    .screenshot{background:#eef4ff;border-radius:8px;border:1px dashed #dbeefe;padding:12px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted)}
+    .screenshot{background:#ffffff;border-radius:12px;border:1px solid #eef2fb;padding:12px}
+    .screenshot img{width:100%;height:auto;border-radius:12px;border:1px solid #eef2fb;display:block}
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef4ff;border:1px solid #dbeafe;color:var(--accent);font-weight:700;font-size:0.85rem;vertical-align:baseline}
+    .kpi{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .kpi .tag{display:inline-block;padding:4px 10px;border-radius:999px;background:#eef4ff;border:1px solid #dbeafe;color:var(--accent);font-weight:700;font-size:0.9rem}
+    .panel-notes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    .note{background:#f8fbff;padding:12px;border-radius:8px;border:1px solid #eaf4ff}
+    .note h4{margin:0 0 6px}
+    .note ul{margin:6px 0 0 18px}
+    .hint{font-size:0.92rem;color:var(--muted)}
     figure{margin:0}
     figcaption{font-size:0.9rem;color:var(--muted);margin-top:8px}
+    figure.doc-figure{margin-top:12px}
+    figure.doc-figure .screenshot{padding:12px}
+    figure.doc-figure img{max-width:100%;height:auto}
+    figure.doc-figure figcaption{line-height:1.45}
     .cta{display:inline-block;background:var(--accent);color:#fff;padding:10px 14px;border-radius:8px;text-decoration:none;font-weight:700}
     table.spec{width:100%;border-collapse:collapse;margin-top:12px}
-    table.spec td,table.spec th{padding:8px;border-bottom:1px solid #eef2fb}
+    table.spec th{padding:10px 8px;text-align:left;background:#f8fbff;border-bottom:1px solid #eef2fb}
+    table.spec td{padding:10px 8px;border-bottom:1px solid #eef2fb}
     .code{background:#0f1724;color:#f1f5f9;padding:6px 8px;border-radius:6px;font-family:monospace}
+    pre.code{margin:10px 0;white-space:pre-wrap;word-break:break-word}
     footer{margin-top:28px;text-align:center;color:var(--muted);font-size:0.9rem}
-    @media(max-width:920px){.row{grid-template-columns:1fr}.sidebar{position:relative}} 
+    @media(max-width:920px){.row{grid-template-columns:1fr}.sidebar{position:relative}.panel-notes{grid-template-columns:1fr}} 
+    @media print{
+      @page{size:A4;margin:12mm}
+      *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+      body{background:#fff}
+      .container{margin:0;max-width:none}
+      nav.toc{display:none}
+      section.card{box-shadow:none;border:1px solid #eef2fb}
+      .row{grid-template-columns:1fr}
+      aside.sidebar{display:none}
+      a.cta{display:none}
+      a[href]:after{content:" (" attr(href) ")";font-size:0.85em;color:var(--muted)}
+      section.card, figure, .panel-notes{break-inside:avoid;page-break-inside:avoid}
+      figure.doc-figure{margin-top:8mm}
+      figure.doc-figure .screenshot{padding:6mm;border-radius:10px}
+      figure.doc-figure img{max-height:165mm;object-fit:contain}
+      figure.doc-figure figcaption{margin-top:3mm;font-size:9.5pt}
+    }
   </style>
   <script>
     document.addEventListener('click', (e)=>{
@@ -51,7 +94,7 @@
         </div>
       </div>
       <div style="text-align:right">
-        <div class="meta">ver3.0.1 • 2025-12-10</div>
+        <div class="meta">ver3.1.0 • 2025-12-13</div>
         <a class="cta" href="#download">Pobierz PDF</a>
       </div>
     </header>
@@ -61,7 +104,14 @@
       <a data-scroll href="#features">Funkcje</a>
       <a data-scroll href="#architecture">Architektura</a>
       <a data-scroll href="#ux">Panel & UX</a>
+      <a data-scroll href="#multi-sms">Multi‑SMS</a>
+      <a data-scroll href="#news">News / FAISS</a>
+      <a data-scroll href="#data">Dane (SQLite)</a>
+      <a data-scroll href="#api">API</a>
+      <a data-scroll href="#glossary">Glosariusz</a>
       <a data-scroll href="#ai">AI & Auto‑reply</a>
+      <a data-scroll href="#security">Bezpieczeństwo</a>
+      <a data-scroll href="#operations">Operacje</a>
       <a data-scroll href="#deploy">Deployment</a>
     </nav>
 
@@ -76,20 +126,56 @@
             <div class="feature"><strong>REST API</strong><div class="muted">Integracja z systemami CRM i narzędziami zewnętrznymi</div></div>
             <div class="feature"><strong>SQLite</strong><div class="muted">Łatwa persystencja i prosty backup plikowy</div></div>
           </div>
+          <div class="kpi" aria-label="Szybkie podsumowanie">
+            <span class="tag">ver3.1.0</span>
+            <span class="tag">Flask + Twilio</span>
+            <span class="tag">Workery w tle</span>
+            <span class="tag">FAISS / RAG</span>
+            <span class="tag">Multi‑SMS</span>
+          </div>
         </section>
 
         <section id="features" class="card">
           <h2>Kluczowe funkcje</h2>
           <ul>
             <li>Webhooki Twilio: przyjmowanie inbound i status callbacks</li>
-            <li>Auto‑reply (klasyczny): szablon tekstowy z deduplikacją i walidacją numerów</li>
-            <li>AI auto‑reply: integracja z OpenAI, historia rozmowy jako kontekst</li>
+            <li>Auto‑reply (klasyczny) + AI auto‑reply: tryby współdzielą jeden magazyn danych</li>
             <li>Przypomnienia: scheduler cykliczny do powiadomień</li>
+            <li>Multi‑SMS: jednorazowe kampanie batchowe z historią odbiorców</li>
+            <li>News / FAISS / RAG: scraping, indeksowanie i broadcast streszczeń</li>
           </ul>
-          <figure style="margin-top:12px">
-            <div class="screenshot">[Screenshot: Dashboard – statystyki i wysyłka]<br><small class="muted">(wstaw screen: dashboard_stats.png)</small></div>
-            <figcaption>Widok statystyk i formularz wysyłki — szybkie KPI dla zespołu</figcaption>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_wiadomosci.jpg" alt="Dashboard — wiadomości">
+            </div>
+            <figcaption>Widok wiadomości w panelu — jeden ekran do nadzoru, wysyłki i wglądu w historię</figcaption>
           </figure>
+          <div class="panel-notes" aria-label="Opis panelu — wiadomości">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Historię wiadomości (kierunek inbound/outbound, numery, skrót treści).</li>
+                <li>Statusy dostarczenia i znaczniki czasu.</li>
+                <li>Szybką nawigację do widoku czatu dla konkretnego numeru.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co możesz zrobić</h4>
+              <ul>
+                <li>Przejść do rozmowy i kontynuować chat z klientem.</li>
+                <li>Weryfikować skuteczność wysyłek po statusach.</li>
+                <li>Operacyjnie diagnozować błędy (np. numer, treść, status callback).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>Panel pobiera dane przez <span class="code">GET /api/messages</span>.</li>
+                <li>Statusy są aktualizowane callbackiem <span class="code">POST /twilio/status</span>.</li>
+                <li>Wszystko jest audytowane w SQLite w tabeli <span class="code">messages</span>.</li>
+              </ul>
+            </div>
+          </div>
         </section>
 
         <section id="architecture" class="card">
@@ -99,6 +185,7 @@
             <tr><th>Komponent</th><th>Rola</th></tr>
             <tr><td>`webhooks_bp`</td><td>HTTP webhooki Twilio i API</td></tr>
             <tr><td>`ai_service`</td><td>Generowanie odpowiedzi AI i budowa kontekstu</td></tr>
+            <tr><td>`multi_sms.py`</td><td>Worker batchowy dla kampanii Multi‑SMS i rezerwacja zadań</td></tr>
             <tr><td>`twilio_client`</td><td>Warstwa wysyłki wiadomości i zarządzania wątkami</td></tr>
             <tr><td>`database.py`</td><td>SQLite, migracje, helpery biznesowe</td></tr>
           </table>
@@ -109,10 +196,307 @@
           <p class="lead">Zaprojektowany pod kątem wydajności operatora: czytelne karty, inteligentne filtry i klikalne wiersze historii upraszczają pracę.</p>
           <h3>Historia wiadomości</h3>
           <p>Jednowierszowy podgląd treści, meta kanału i rola (od/do klienta), statusy oraz czas rozbity na godzinę i datę.</p>
-          <figure style="margin-top:12px">
-            <div class="screenshot">[Screenshot: Historia wiadomości – tabela]<br><small class="muted">(wstaw screen: messages_table.png)</small></div>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_wiadomosci.jpg" alt="Historia wiadomości — tabela">
+            </div>
             <figcaption>Przykładowy wiersz z meta kanału oraz przyciskiem szybkiej nawigacji do czatu</figcaption>
           </figure>
+          <div class="panel-notes" aria-label="Opis panelu — historia wiadomości">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Wiersze z wiadomościami i metadanymi (od/do, treść, status, data/godzina).</li>
+                <li>Rozróżnienie inbound vs outbound (ułatwia kontrolę reakcji).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Wejście do konwersacji klienta i dalsza obsługa w trybie czatu.</li>
+                <li>Kontrola statusu dostarczenia i szybkie wykrywanie błędów.</li>
+                <li>Praca „na historii” — obsługa wielu klientów bez utraty kontekstu.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co się zapisuje</h4>
+              <ul>
+                <li>Każda wiadomość jest przechowywana w SQLite wraz z SID i statusem.</li>
+                <li>System normalizuje numery, aby spinać wątki i raportowanie.</li>
+              </ul>
+            </div>
+          </div>
+          <h3>Auto‑odpowiedź</h3>
+          <p>Włączenie auto‑odpowiedzi to szybki sposób na obsłużenie powtarzalnych zapytań. Operator ustala treść i może w dowolnym momencie włączyć/wyłączyć funkcję bez restartu systemu.</p>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_autoodpowiedz.jpg" alt="Auto‑odpowiedź — panel">
+            </div>
+            <figcaption>Przełącznik ON/OFF i pole treści — gotowe do natychmiastowego użycia.</figcaption>
+          </figure>
+          <div class="panel-notes" aria-label="Opis panelu — auto-odpowiedź">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Stan aktywacji (ON/OFF) oraz aktualną treść automatycznej odpowiedzi.</li>
+                <li>Ustawienia działające natychmiast po zapisaniu.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Włączenie/wyłączenie auto‑reply dla całego systemu.</li>
+                <li>Zmiana treści odpowiedzi (np. informacja o godzinach pracy, FAQ).</li>
+              </ul>
+              <div class="hint">AI auto‑reply może przejąć sterowanie, gdy jest aktywne.</div>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>Inbound webhook uruchamia logikę enqueue (bez blokowania requestu).</li>
+                <li>System odpowiada tylko na wiadomości nowsze niż moment aktywacji (bez „retro-odpowiedzi”).</li>
+                <li>Wysyłka realizowana przez Twilio z pełnym logiem w <span class="code">messages</span>.</li>
+              </ul>
+            </div>
+          </div>
+          <h3>Przypomnienia</h3>
+          <p>Przypomnienia umożliwiają cykliczną wysyłkę do wybranych numerów (np. powiadomienia, statusy, nudges). Worker w tle egzekwuje harmonogram i zapisuje wyniki.</p>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_przypomnienie.jpg" alt="Przypomnienia — panel">
+            </div>
+            <figcaption>Planowanie i podgląd aktywnych przypomnień w panelu.</figcaption>
+          </figure>
+          <div class="panel-notes" aria-label="Opis panelu — przypomnienia">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Listę zadań cyklicznych (numer, treść, interwał, status włączenia).</li>
+                <li>Informacje potrzebne do nadzoru (czy działa, od kiedy, do kogo).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Dodanie nowego przypomnienia (treść + interwał).</li>
+                <li>Wstrzymanie/wznowienie oraz usunięcie harmonogramu.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>Scheduler sprawdza due tasks i wysyła SMS przez Twilio.</li>
+                <li>Każda wysyłka jest zapisywana w historii, a błędy są logowane.</li>
+                <li>Operacje wykonywane są przez API <span class="code">/api/reminders</span>.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="multi-sms" class="card">
+          <h2>Multi‑SMS — wysyłka jednej wiadomości do wielu odbiorców</h2>
+          <p class="lead">Multi‑SMS umożliwia operatorowi wklejenie listy numerów (dowolny format), utworzenie zadania batchowego i śledzenie postępu wysyłki realizowanej w tle.</p>
+
+          <h3>Jak to działa (w praktyce)</h3>
+          <ol>
+            <li>Operator wkleja numery (przecinki / średniki / nowe linie) i treść wiadomości.</li>
+            <li>Backend normalizuje numery i zapisuje batch + rekordy odbiorców w SQLite.</li>
+            <li>Worker w tle rezerwuje najbliższy batch <span class="badge">pending</span> i przetwarza odbiorców.</li>
+            <li>Każda próba wysyłki aktualizuje status odbiorcy oraz liczniki batcha (sukcesy/błędy).</li>
+          </ol>
+
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_multi_sms.jpg" alt="Multi‑SMS — panel i historia batchy">
+            </div>
+            <figcaption>Batch w panelu: status, liczniki sukcesów/błędów oraz rozwijana lista odbiorców.</figcaption>
+          </figure>
+          <div class="panel-notes" aria-label="Opis panelu — Multi-SMS">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Formularz utworzenia batcha (treść + lista numerów).</li>
+                <li>Historię batchy z licznikami: wysłane / błędy / łącznie oraz status batcha.</li>
+                <li>Możliwość rozwinięcia listy odbiorców i podejrzenia statusów per numer.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Wklejenie numerów w różnych formatach (przecinki/linie) — system je rozbije, oczyści i znormalizuje.</li>
+                <li>Utworzenie batcha bez czekania na wysyłkę (wysyłka idzie w tle).</li>
+                <li>Kontrola postępu: odświeżanie historii batchy i rozwijanie odbiorców dla wglądu w statusy.</li>
+                <li>Diagnostyka błędów: podejrzenie <em>error</em> per numer (np. niepoprawny format, błąd Twilio, brak routingu).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>Backend tworzy batch i odbiorców w SQLite (kolejka DB oparta o statusy).</li>
+                <li>Worker rezerwuje batch do przetworzenia, wysyła SMS per odbiorca i aktualizuje statusy w tabelach <span class="code">multi_sms_*</span>.</li>
+                <li>Każda próba wysyłki jest zapisywana w historii (<span class="code">messages</span>), co daje pełny audyt.</li>
+                <li>UI pobiera batchy przez <span class="code">GET /api/multi-sms/batches</span> (opcjonalnie wraz z listą odbiorców).</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>Kontrola ryzyka</h3>
+          <ul>
+            <li><strong>Limit odbiorców na batch</strong>: 250 (ochrona kosztów i przypadkowej wysyłki masowej).</li>
+            <li><strong>Odporność na restart</strong>: stan utrzymywany w bazie, worker po restarcie kontynuuje kolejkę.</li>
+            <li><strong>Audyt</strong>: każda wysyłka trafia do historii wiadomości oraz ma wynik per odbiorca.</li>
+          </ul>
+        </section>
+
+        <section id="news" class="card">
+          <h2>News / FAISS (RAG) — scraping, indeksowanie i dystrybucja</h2>
+          <p class="lead">Moduł News automatyzuje pobieranie treści (scraping), budowę indeksu FAISS oraz generowanie streszczeń (RAG). Panel pozwala zarządzać odbiorcami i wykonywać testy bez wysyłki.</p>
+
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_news1.jpg" alt="News — panel (konfiguracja i akcje)">
+            </div>
+            <figcaption>Widok zarządzania modułem News: konfiguracja, test i uruchomienie scrapingu.</figcaption>
+          </figure>
+          <div class="panel-notes" aria-label="Opis panelu — News (ekran 1)">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Akcje administracyjne: test połączenia, uruchomienie scrapingu, podgląd plików źródłowych.</li>
+                <li>Informacje o ostatnim buildzie i stanie modułu (czy dane są aktualne).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Test generacji bez wysyłki (bezpieczne sprawdzenie jakości streszczeń i konfiguracji promptu).</li>
+                <li>Uruchomienie scrapingu „na żądanie” (ręczny refresh danych) oraz szybka weryfikacja, czy pliki zostały zapisane.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>Scraper pobiera treści i zapisuje pliki w katalogu danych (dla każdej kategorii osobno).</li>
+                <li>Po pobraniu danych budowany/aktualizowany jest indeks FAISS, aby zapytania RAG miały świeży kontekst.</li>
+                <li>API: <span class="code">POST /api/news/scrape</span>, <span class="code">GET /api/news/files</span>, <span class="code">GET /api/news/files/&lt;filename&gt;</span>.</li>
+              </ul>
+            </div>
+          </div>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_news2.jpg" alt="News — odbiorcy i harmonogram">
+            </div>
+            <figcaption>Definicja odbiorców: numer, tryb promptu oraz godzina wysyłki.</figcaption>
+          </figure>
+          <div class="panel-notes" aria-label="Opis panelu — News (ekran 2)">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Listę odbiorców powiadomień newsowych (numer + godzina + tryb).</li>
+                <li>Flagi <span class="badge">enabled</span>, informację o ostatniej wysyłce oraz tryb generacji.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Dodanie odbiorcy (numer w E.164) i wybór trybu: wszystkie kategorie (domyślnie) vs prompt niestandardowy.</li>
+                <li>Włączenie/wyłączenie odbiorcy oraz test wiadomości bez wysyłki (preview).</li>
+                <li>Force-send (wysyłka ręczna) dla odbiorcy w celach operacyjnych i weryfikacji routingu Twilio.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>Konfiguracja odbiorców jest zapisywana w pliku <span class="code">news_config.json</span>.</li>
+                <li>Scheduler/worker wysyła o określonej godzinie wygenerowane streszczenia (jeśli odbiorca jest włączony).</li>
+                <li>Wysyłka jest realizowana przez Twilio i powinna być widoczna w historii wiadomości.</li>
+                <li>API: <span class="code">GET/POST/DELETE /api/news/recipients</span> + akcje per odbiorca: <span class="code">toggle</span>, <span class="code">test</span>, <span class="code">send</span>.</li>
+              </ul>
+            </div>
+          </div>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_news3.jpg" alt="News — FAISS/status/operacje">
+            </div>
+            <figcaption>Status indeksu i operacje: eksport/import backupu, test FAISS i budowa indeksu.</figcaption>
+          </figure>
+          <div class="panel-notes" aria-label="Opis panelu — News (ekran 3)">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Status indeksu (czy załadowany, ile wektorów, jakie modele embeddings/chat).</li>
+                <li>Gotowość backupu (wymagane pliki) oraz operacje import/export.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Eksport backupu (ZIP) i import w celu odtworzenia środowiska (np. po wdrożeniu lub awarii).</li>
+                <li>Budowa indeksu z istniejących plików oraz test zapytań FAISS (diagnostyka jakości i „świeżości” danych).</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>FAISS przechowuje wektory embeddings + mapowanie do dokumentów.</li>
+                <li>Zapytania RAG pobierają kontekst z indeksu i opcjonalnie używają LLM do sformatowania odpowiedzi.</li>
+                <li>API: <span class="code">GET /api/news/faiss/status</span>, <span class="code">GET /api/news/faiss/export</span>, <span class="code">POST /api/news/faiss/import</span>, <span class="code">POST /api/news/test-faiss</span>.</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3>API modułu News (skrót)</h3>
+          <ul>
+            <li><strong>Konfiguracja/odbiorcy</strong>: <span class="code">GET /api/news/config</span>, <span class="code">GET/POST/DELETE /api/news/recipients</span>, <span class="code">POST /api/news/recipients/&lt;id&gt;/(toggle|test|send)</span></li>
+            <li><strong>Scraping</strong>: <span class="code">POST /api/news/scrape</span>, pliki: <span class="code">GET/DELETE /api/news/files</span></li>
+            <li><strong>FAISS</strong>: <span class="code">GET /api/news/faiss/status</span>, <span class="code">GET /api/news/faiss/export</span>, <span class="code">POST /api/news/faiss/import</span>, <span class="code">POST /api/news/indices/build</span></li>
+          </ul>
+          <p class="muted">Import backupu ma limit bezpieczeństwa 250&nbsp;MB.</p>
+        </section>
+
+        <section id="data" class="card">
+          <h2>Dane (SQLite) — trwałość, backup i migracje</h2>
+          <p class="lead">Aplikacja przechowuje stan w SQLite. Ścieżka bazy jest konfigurowana przez <span class="code">DB_PATH</span> (domyślnie <span class="code">data/app.db</span>).</p>
+          <h3>Co jest zapisywane</h3>
+          <ul>
+            <li><strong>messages</strong>: historia inbound/outbound, SID Twilio, status, błędy i timestamps.</li>
+            <li><strong>multi_sms_*</strong>: batch + odbiorcy (statusy, liczniki, błędy per numer).</li>
+            <li><strong>reminders</strong>: harmonogramy cyklicznych wysyłek.</li>
+            <li><strong>news_config.json</strong>: konfiguracja odbiorców News (plik w katalogu danych).</li>
+          </ul>
+          <h3>Backup (praktycznie)</h3>
+          <ul>
+            <li>Najprostszy backup to kopia pliku DB (przy zatrzymanej aplikacji lub w oknie niskiej aktywności).</li>
+            <li>FAISS posiada dedykowany eksport/import ZIP z manifestem (API modułu News).</li>
+          </ul>
+        </section>
+
+        <section id="api" class="card">
+          <h2>API — integracja i automatyzacja</h2>
+          <p class="lead">Panel WWW korzysta z REST API. Poniżej najważniejsze punkty integracyjne (bez pełnego OpenAPI).</p>
+          <ul>
+            <li><strong>Wiadomości i konwersacje</strong>: <span class="code">GET /api/messages</span>, <span class="code">GET /api/conversations</span>, <span class="code">GET /api/conversations/&lt;participant&gt;</span></li>
+            <li><strong>Wysyłka</strong>: <span class="code">POST /api/send-message</span> (SMS/MMS + Content SID)</li>
+            <li><strong>Multi‑SMS</strong>: <span class="code">POST /api/multi-sms/batches</span>, <span class="code">GET /api/multi-sms/batches</span>, <span class="code">GET /api/multi-sms/batches/&lt;id&gt;</span>, <span class="code">GET /api/multi-sms/batches/&lt;id&gt;/recipients</span></li>
+            <li><strong>Status callback</strong>: <span class="code">POST /twilio/status</span> (aktualizacja statusów wiadomości)</li>
+          </ul>
+        </section>
+
+        <section id="glossary" class="card">
+          <h2>Glosariusz i najważniejsze pojęcia</h2>
+          <p class="lead">Ten rozdział porządkuje terminologię spotykaną w panelach i API, aby PDF był samowystarczalny dla zespołów biznesowych i technicznych.</p>
+          <ul>
+            <li><strong>Batch (Multi‑SMS)</strong> — zadanie wysyłki jednej wiadomości do wielu odbiorców; posiada status (<span class="badge">pending</span>, <span class="badge">processing</span>, <span class="badge">completed</span>, <span class="badge">failed</span>) i liczniki skuteczności.</li>
+            <li><strong>Recipient (Multi‑SMS)</strong> — pojedynczy numer przypisany do batcha; system śledzi status (<span class="badge">pending</span> / <span class="badge">sent</span> / <span class="badge">failed</span>) oraz ewentualny błąd Twilio.</li>
+            <li><strong>Messaging Service SID</strong> — identyfikator grupujący numery w Twilio; jeśli skonfigurowany, Multi‑SMS i UI używają go jako nadawcy zamiast pojedynczego numeru.</li>
+            <li><strong>Webhook</strong> — endpoint HTTP nasłuchujący żądań Twilio (np. inbound wiadomości, status dostarczenia). Każdy webhook jest podpisany nagłówkiem <span class="code">X-Twilio-Signature</span>.</li>
+            <li><strong>FAISS</strong> — biblioteka wektorowa używana do szybkiego wyszukiwania podobnych dokumentów, podstawowy komponent modułu News/RAG.</li>
+            <li><strong>Scraper</strong> — proces pobierający artykuły i zapisujący je w katalogu danych; jego wynik zasila FAISS i moduł News.</li>
+            <li><strong>Reminder</strong> — harmonogram cyklicznej wysyłki SMS. Każde przypomnienie opisuje numer docelowy, treść i interwał.</li>
+            <li><strong>Auto‑reply</strong> — mechanizm automatycznych odpowiedzi (klasyczny lub AI). W trybie AI każde zapytanie jest przekazywane do modelu OpenAI z kontekstem rozmowy.</li>
+            <li><strong>Normalized number</strong> — numer telefonu po oczyszczeniu (E.164). Pozwala scalać rekordy w historii i zapobiegać duplikatom.</li>
+            <li><strong>News recipient</strong> — wpis w <span class="code">news_config.json</span>; określa numer, godzinę wysyłki i tryb promptu (wszystkie kategorie vs. prompt niestandardowy).</li>
+          </ul>
         </section>
 
         <section id="ai" class="card">
@@ -123,10 +507,78 @@
             <li>Odpowiedzi są wysyłane tak, aby zachować wątek konwersacji (preferowana metoda `send_reply_to_inbound`).</li>
             <li>Operator może przetestować model w zakładce AI bez wysyłania SMS (endpoint `POST /api/ai/test`).</li>
           </ol>
-          <figure style="margin-top:12px">
-            <div class="screenshot">[Screenshot: AI config & conversation preview]<br><small class="muted">(wstaw screen: ai_panel.png)</small></div>
+          <figure class="doc-figure">
+            <div class="screenshot">
+              <img src="../../app/screenshot/panel_ai.jpg" alt="AI — panel konfiguracji i testów">
+            </div>
             <figcaption>Interfejs konfiguracji AI oraz podgląd rozmowy w formie bąbelków</figcaption>
           </figure>
+          <div class="panel-notes" aria-label="Opis panelu — AI">
+            <div class="note">
+              <h4>Co widzisz</h4>
+              <ul>
+                <li>Konfigurację AI (włączenie, parametry, prompt/system) oraz stan aktywacji.</li>
+                <li>Podgląd rozmowy w formie bąbelków, dzięki czemu operator widzi kontekst, na którym bazuje model.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Możliwe interakcje</h4>
+              <ul>
+                <li>Włączenie AI auto‑reply i ustawienie promptu systemowego pod styl firmy i politykę odpowiedzi.</li>
+                <li>Test generacji odpowiedzi bez wysyłki (bezpieczny preview) oraz dopasowanie parametrów.</li>
+              </ul>
+            </div>
+            <div class="note">
+              <h4>Co dzieje się w tle</h4>
+              <ul>
+                <li>AI buduje kontekst z historii wiadomości i wywołuje OpenAI wg ustawień (model/temperatura/limit historii).</li>
+                <li>Jeśli tryb auto‑reply jest aktywny, inbound webhook enqueue’uje zadanie odpowiedzi (bez blokowania requestu).</li>
+                <li>Wysyłka odpowiedzi przez Twilio jest rejestrowana w <span class="code">messages</span>; statusy mogą się aktualizować callbackiem.</li>
+                <li>System unika odpowiedzi na starsze wiadomości sprzed aktywacji trybu (brak retro‑odpowiedzi).</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="security" class="card">
+          <h2>Bezpieczeństwo — kluczowe zasady</h2>
+          <p class="lead">System jest zbudowany tak, aby minimalizować ryzyko nieautoryzowanych wywołań webhooków, wycieków kluczy oraz niekontrolowanej wysyłki.</p>
+          <h3>Webhooki Twilio: walidacja podpisu</h3>
+          <ul>
+            <li>Callbacki Twilio są weryfikowane nagłówkiem <span class="code">X-Twilio-Signature</span> (RequestValidator).</li>
+            <li>Walidację można wyłączyć tylko dla testów lokalnych przez <span class="code">TWILIO_VALIDATE_SIGNATURE=false</span> (produkcyjnie: zostawić włączoną).</li>
+          </ul>
+          <h3>Klucze i konfiguracja</h3>
+          <ul>
+            <li>Dane dostępowe Twilio są pobierane ze zmiennych środowiskowych i nie powinny trafiać do repozytorium.</li>
+            <li>DB jest plikiem (SQLite) — w produkcji zadbaj o uprawnienia do katalogu <span class="code">data/</span> oraz backup.</li>
+          </ul>
+          <h3>Kontrola kosztów</h3>
+          <ul>
+            <li>Multi‑SMS ma limit odbiorców per batch.</li>
+            <li>News wysyła wiadomości tylko do włączonych odbiorców; testy mogą działać bez wysyłki.</li>
+          </ul>
+        </section>
+
+        <section id="operations" class="card">
+          <h2>Operacje — uruchomienie i utrzymanie</h2>
+          <p class="lead">Aplikacja uruchamia workery w tle (m.in. Multi‑SMS, przypomnienia, News). Najważniejsze operacyjnie jest przewidywalne środowisko, logi i backup danych.</p>
+          <h3>Środowisko</h3>
+          <ul>
+            <li><strong>DB</strong>: <span class="code">DB_PATH</span> (domyślnie <span class="code">data/app.db</span>)</li>
+            <li><strong>Twilio</strong>: <span class="code">TWILIO_ACCOUNT_SID</span>, <span class="code">TWILIO_AUTH_TOKEN</span>, oraz <span class="code">TWILIO_DEFAULT_FROM</span> lub <span class="code">TWILIO_MESSAGING_SERVICE_SID</span></li>
+            <li><strong>AI/FAISS</strong>: konfiguracja OpenAI (jeśli używana) + pliki indeksu w katalogu danych</li>
+          </ul>
+          <h3>Diagnostyka</h3>
+          <ul>
+            <li>Jeśli Multi‑SMS nie wysyła: sprawdź logi workera oraz czy tabele <span class="code">multi_sms_batches</span> i <span class="code">multi_sms_recipients</span> istnieją w DB.</li>
+            <li>Jeśli News/FAISS nie działa: sprawdź status <span class="code">GET /api/news/faiss/status</span> i czy scraping zbudował indeks.</li>
+          </ul>
+          <h3>Backup</h3>
+          <ul>
+            <li>SQLite: kopia pliku DB + rotacja (np. dzienna).</li>
+            <li>FAISS: eksport ZIP przez endpoint i/lub zrzut katalogu indeksu.</li>
+          </ul>
         </section>
 
         <section id="deploy" class="card">
@@ -156,13 +608,13 @@
 
         <section class="card" style="margin-top:12px">
           <h4>Wstaw screenshoty</h4>
-          <p class="muted">Zastąp ramki screenshotami: <code>dashboard_stats.png</code>, <code>messages_table.png</code>, <code>ai_panel.png</code> w katalogu projektu przed generacją PDF.</p>
+          <p class="muted">Ten dokument ma już osadzone screenshoty z <code>app/screenshot/</code>. Jeśli zmienisz pliki graficzne, wygeneruj PDF ponownie.</p>
         </section>
       </aside>
     </div>
 
     <footer>
-      <div>Dokument wygenerowany automatycznie — Twilio Chat App • ver3.0.1</div>
+      <div>Twilio Chat App • ver3.1.0 • 2025-12-13</div>
     </footer>
   </div>
 </body>
