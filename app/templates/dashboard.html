@@ -395,10 +395,14 @@
                   <p class="text-uppercase text-muted fs-6 mb-1">FAISS + OpenAI</p>
                   <h2 class="h5 mb-0">Status bazy wiedzy</h2>
                 </div>
-                <div class="btn-group btn-group-sm" role="group">
-                  <button class="btn btn-outline-secondary" id="news-faiss-status-refresh-btn">Odśwież status</button>
-                  <button class="btn btn-outline-primary" id="news-faiss-quick-test-btn">Szybki test</button>
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-outline-secondary btn-sm" id="news-faiss-status-refresh-btn">Odśwież status</button>
+                  <button class="btn btn-outline-primary btn-sm" id="news-faiss-quick-test-btn">Szybki test</button>
+                  <button class="btn btn-outline-secondary btn-sm" id="news-faiss-backup-btn">Pobierz backup</button>
+                  <button class="btn btn-outline-secondary btn-sm" id="news-faiss-restore-btn">Wczytaj backup</button>
+                  <input type="file" class="d-none" id="news-faiss-restore-input" accept=".zip">
                 </div>
+                <small class="text-muted d-block mt-2" id="news-faiss-backup-status">Backup: oczekiwanie...</small>
               </div>
               <div class="card-body">
                 <div class="row g-3 align-items-center">

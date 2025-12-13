@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import io
 import json
 import os
+import shutil
+import tempfile
 import time
+import zipfile
 from datetime import datetime, timezone
 from typing import Optional, Any, Dict, List
 from urllib.parse import unquote
 
-from flask import Blueprint, current_app, request, Response, jsonify
+from flask import Blueprint, current_app, request, Response, jsonify, send_file
 from twilio.request_validator import RequestValidator
 
 from .chat_logic import build_chat_engine
@@ -37,10 +41,26 @@ from .database import (
     list_conversations,
 )
 from .scraper_service import ScraperService, SCRAPED_DIR, DATA_DIR
-from .faiss_service import FAISS_INDEX_PATH
+from .faiss_service import (
+    FAISS_INDEX_PATH,
+    DOCS_JSONL_PATH,
+    DOCS_JSON_PATH,
+    ARTICLES_JSONL_PATH,
+)
 from .reminder import E164_RE
 
 NEWS_CONFIG_PATH = os.path.join(DATA_DIR, "news_config.json")
+MAX_FAISS_BACKUP_BYTES = 250 * 1024 * 1024  # 250 MB safety limit
+
+
+FAISS_BACKUP_FILES = [
+    {"name": "index.faiss", "path": os.path.join(FAISS_INDEX_PATH, "index.faiss"), "required": True, "purge": True},
+    {"name": "index.pkl", "path": os.path.join(FAISS_INDEX_PATH, "index.pkl"), "required": True, "purge": True},
+    {"name": "documents.jsonl", "path": DOCS_JSONL_PATH, "required": False, "purge": True},
+    {"name": "documents.json", "path": DOCS_JSON_PATH, "required": False, "purge": True},
+    {"name": "articles.jsonl", "path": ARTICLES_JSONL_PATH, "required": False, "purge": True},
+    {"name": "news_config.json", "path": NEWS_CONFIG_PATH, "required": False, "purge": False},
+]
 
 
 webhooks_bp = Blueprint("webhooks", __name__)
@@ -468,18 +488,63 @@ def _faiss_index_files(name: str) -> Dict[str, str]:
     }
 
 
+def _faiss_backup_manifest() -> List[Dict[str, Any]]:
+    manifest: List[Dict[str, Any]] = []
+    for item in FAISS_BACKUP_FILES:
+        manifest.append({**item, "exists": os.path.exists(item["path"])})
+    return manifest
+
+
 def _delete_faiss_index(name: str) -> Dict[str, Any]:
     paths = _faiss_index_files(name)
     removed: List[str] = []
+    missing: List[str] = []
+    failed: List[Dict[str, str]] = []
+
+    artifact_paths = set()
     for key in ("index", "docs", "npz"):
-        p = paths[key]
+        artifact_paths.add(paths[key])
+
+    for item in FAISS_BACKUP_FILES:
+        if not item.get("purge", True):
+            continue
+        artifact_paths.add(item["path"])
+
+    for target in sorted(artifact_paths):
+        if not target:
+            continue
         try:
-            if os.path.exists(p):
-                os.remove(p)
-                removed.append(os.path.basename(p))
+            if os.path.isdir(target):
+                # Directory cleanup is handled separately once files are removed.
+                continue
+            if os.path.exists(target):
+                os.remove(target)
+                removed.append(os.path.basename(target) or target)
+            else:
+                missing.append(os.path.basename(target) or target)
         except OSError as exc:  # noqa: BLE001
-            current_app.logger.warning("Cannot delete %s: %s", p, exc)
-    return {"removed": removed, "name": paths["name"]}
+            current_app.logger.warning("Cannot delete %s: %s", target, exc)
+            failed.append({"path": target, "error": str(exc)})
+
+    base_dir = paths["base"]
+    base_removed = False
+    if os.path.isdir(base_dir):
+        try:
+            if not os.listdir(base_dir):
+                os.rmdir(base_dir)
+                base_removed = True
+                removed.append(os.path.basename(base_dir) or base_dir)
+        except OSError as exc:  # noqa: BLE001
+            current_app.logger.warning("Cannot remove directory %s: %s", base_dir, exc)
+            failed.append({"path": base_dir, "error": str(exc)})
+
+    return {
+        "name": paths["name"],
+        "removed": removed,
+        "missing": missing,
+        "failed": failed,
+        "base_removed": base_removed,
+    }
 
 
 def _send_ai_reply_message(*, inbound_from: str, inbound_to: str, reply_text: str):
@@ -1450,6 +1515,104 @@ def api_news_file_delete(filename: str):
         return jsonify({"error": f"Nie udało się usunąć pliku: {exc}"}), 500
 
 
+@webhooks_bp.get("/api/news/faiss/export")
+def api_news_faiss_export():
+    manifest = _faiss_backup_manifest()
+    available = [item for item in manifest if item["exists"]]
+
+    if not available:
+        return jsonify({"error": "Brak plików FAISS do zapisania."}), 404
+
+    generated_at = datetime.utcnow().isoformat() + "Z"
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
+        files_meta: List[Dict[str, Any]] = []
+        for item in available:
+            try:
+                zf.write(item["path"], arcname=item["name"])
+                size_bytes = os.path.getsize(item["path"])
+            except Exception as exc:  # noqa: BLE001
+                current_app.logger.warning("Cannot add %s to FAISS export: %s", item["path"], exc)
+                continue
+            files_meta.append(
+                {
+                    "name": item["name"],
+                    "required": item["required"],
+                    "size_bytes": size_bytes,
+                }
+            )
+
+        zf.writestr(
+            "manifest.json",
+            json.dumps({"generated_at": generated_at, "files": files_meta}, ensure_ascii=False, indent=2),
+        )
+
+    buffer.seek(0)
+    filename = f"faiss_backup_{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip"
+    return send_file(
+        buffer,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+@webhooks_bp.post("/api/news/faiss/import")
+def api_news_faiss_import():
+    uploaded = request.files.get("archive")
+    if not uploaded or not uploaded.filename:
+        return jsonify({"error": "Wybierz plik ZIP z backupem FAISS."}), 400
+
+    if not uploaded.filename.lower().endswith(".zip"):
+        return jsonify({"error": "Obsługiwane są tylko archiwa .zip."}), 400
+
+    content_length = request.content_length or uploaded.content_length
+    if content_length and content_length > MAX_FAISS_BACKUP_BYTES:
+        return jsonify({"error": "Plik backupu jest zbyt duży (limit 250 MB)."}), 413
+
+    restored: List[str] = []
+
+    try:
+        with tempfile.TemporaryDirectory(prefix="faiss_import_") as tmpdir:
+            archive_path = os.path.join(tmpdir, "upload.zip")
+            uploaded.save(archive_path)
+
+            with zipfile.ZipFile(archive_path, "r") as zf:
+                members = {
+                    os.path.basename(name): name
+                    for name in zf.namelist()
+                    if name and not name.endswith("/")
+                }
+
+                manifest = FAISS_BACKUP_FILES
+                missing = [item["name"] for item in manifest if item["required"] and item["name"] not in members]
+                if missing:
+                    return jsonify({"error": f"Brakuje wymaganych plików: {', '.join(missing)}"}), 400
+
+                for item in manifest:
+                    member_name = members.get(item["name"])
+                    if not member_name:
+                        continue
+
+                    destination = item["path"]
+                    os.makedirs(os.path.dirname(destination), exist_ok=True)
+                    tmp_target = os.path.join(tmpdir, f"{item['name']}.tmp")
+
+                    with zf.open(member_name) as src, open(tmp_target, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+
+                    shutil.move(tmp_target, destination)
+                    restored.append(item["name"])
+
+    except zipfile.BadZipFile:
+        return jsonify({"error": "Nieprawidłowe archiwum ZIP."}), 400
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("FAISS import failed: %s", exc)
+        return jsonify({"error": f"Nie udało się wczytać backupu: {exc}"}), 500
+
+    return jsonify({"success": True, "restored": restored})
+
+
 @webhooks_bp.get("/api/news/faiss/status")
 def api_news_faiss_status():
     """Zwraca status indeksu FAISS oraz konfiguracji modeli."""
@@ -1472,12 +1635,15 @@ def api_news_faiss_status():
         except Exception as exc:  # noqa: BLE001
             current_app.logger.warning("FAISS status load failed: %s", exc)
 
+        backup_info = _faiss_backup_manifest()
         payload = {
             **status,
             "loaded": loaded,
             "vector_count": vector_count,
             "embedding_model": faiss_service.embeddings.model,
             "chat_model": faiss_service.chat_model,
+            "backup_files": backup_info,
+            "backup_ready": all(item["exists"] for item in backup_info if item["required"]),
         }
         return jsonify({"success": True, "status": payload})
 

@@ -120,11 +120,18 @@
   const newsFaissQuickTestBtn = document.getElementById('news-faiss-quick-test-btn');
   const newsFaissSnippets = document.getElementById('news-faiss-snippets');
   const newsFaissSnippetsList = document.getElementById('news-faiss-snippets-list');
+  const newsFaissBackupBtn = document.getElementById('news-faiss-backup-btn');
+  const newsFaissRestoreBtn = document.getElementById('news-faiss-restore-btn');
+  const newsFaissRestoreInput = document.getElementById('news-faiss-restore-input');
+  const newsFaissBackupStatus = document.getElementById('news-faiss-backup-status');
 
   const DEFAULT_FAISS_PROMPT = 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
+  const FAISS_BACKUP_MAX_BYTES = 250 * 1024 * 1024; // 250 MB limit zgodny z backendem
 
   let currentFilter = 'all';
   let refreshTimer = null;
+  let lastFaissStatus = null;
+  let isFaissBackupBusy = false;
 
   const fetchJSON = async (url, options = {}) => {
     const response = await fetch(url, {
@@ -188,6 +195,55 @@
     const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
     const value = bytes / 1024 ** index;
     return `${value.toFixed(value >= 10 ? 0 : 1)} ${units[index]}`;
+  };
+
+  const parseContentDispositionFilename = (headerValue) => {
+    if (!headerValue) return null;
+
+    const encodedMatch = headerValue.match(/filename\*=UTF-8''([^;]+)/i);
+    if (encodedMatch && encodedMatch[1]) {
+      try {
+        return decodeURIComponent(encodedMatch[1]);
+      } catch (error) {
+        console.debug('Nie można zdekodować nazwy pliku z nagłówka', error);
+        return encodedMatch[1];
+      }
+    }
+
+    const simpleMatch = headerValue.match(/filename="?([^";]+)"?/i);
+    if (simpleMatch && simpleMatch[1]) {
+      return simpleMatch[1];
+    }
+    return null;
+  };
+
+  const readErrorMessage = async (response, fallbackMessage = 'Wystąpił błąd.') => {
+    let message = fallbackMessage;
+    if (!response) {
+      return message;
+    }
+
+    try {
+      const raw = await response.text();
+      if (!raw) {
+        return message;
+      }
+
+      try {
+        const payload = JSON.parse(raw);
+        if (payload && (payload.error || payload.message)) {
+          message = payload.error || payload.message;
+        } else {
+          message = raw;
+        }
+      } catch (parseError) {
+        message = raw;
+      }
+    } catch (error) {
+      console.debug('Nie można odczytać treści błędu', error);
+    }
+
+    return message;
   };
 
   // Reminders helpers
@@ -561,7 +617,80 @@
     newsFaissSnippets.classList.remove('d-none');
   };
 
+  const setFaissBackupStatus = (message, variant = 'muted') => {
+    if (!newsFaissBackupStatus) return;
+    const variants = {
+      muted: 'text-muted',
+      success: 'text-success',
+      warning: 'text-warning',
+      danger: 'text-danger'
+    };
+    Object.values(variants).forEach((cls) => newsFaissBackupStatus.classList.remove(cls));
+    newsFaissBackupStatus.classList.add(variants[variant] || variants.muted);
+    newsFaissBackupStatus.textContent = message;
+  };
+
+  const syncFaissBackupButtons = () => {
+    const ready = Boolean(lastFaissStatus?.backup_ready);
+    if (newsFaissBackupBtn) {
+      newsFaissBackupBtn.disabled = isFaissBackupBusy || !ready;
+      newsFaissBackupBtn.title = ready
+        ? 'Pobierz aktualny backup plików FAISS'
+        : 'Brakuje wymaganych plików. Odśwież status przed eksportem.';
+    }
+    if (newsFaissRestoreBtn) {
+      newsFaissRestoreBtn.disabled = isFaissBackupBusy;
+    }
+    if (newsFaissRestoreInput) {
+      newsFaissRestoreInput.disabled = isFaissBackupBusy;
+    }
+  };
+
+  const renderFaissBackupInfo = (status = lastFaissStatus) => {
+    if (!newsFaissBackupStatus) return;
+    if (isFaissBackupBusy) return;
+
+    const files = status?.backup_files;
+    if (!Array.isArray(files) || !files.length) {
+      setFaissBackupStatus('Backup: brak danych o plikach.', 'warning');
+      return;
+    }
+
+    const total = files.length;
+    const available = files.filter((file) => file.exists).length;
+    const missingRequired = files.filter((file) => file.required && !file.exists);
+    const missingOptional = files.filter((file) => !file.required && !file.exists);
+
+    if (missingRequired.length) {
+      const missingList = missingRequired.map((file) => file.name).join(', ');
+      setFaissBackupStatus(`Backup niekompletny – brak: ${missingList}`, 'danger');
+      return;
+    }
+
+    if (missingOptional.length) {
+      const optionalList = missingOptional.map((file) => file.name).join(', ');
+      setFaissBackupStatus(
+        `Backup gotowy (${available}/${total}). Brak opcjonalnych: ${optionalList}`,
+        'warning'
+      );
+      return;
+    }
+
+    setFaissBackupStatus(`Backup gotowy (${available}/${total}). Wszystkie pliki obecne.`, 'success');
+  };
+
+  const setFaissBackupBusy = (busy) => {
+    isFaissBackupBusy = Boolean(busy);
+    syncFaissBackupButtons();
+    if (!isFaissBackupBusy) {
+      renderFaissBackupInfo(lastFaissStatus);
+    }
+  };
+
+  syncFaissBackupButtons();
+
   const renderFaissStatus = (status) => {
+    lastFaissStatus = status || null;
     if (!newsFaissStatusPill) return;
 
     if (!status) {
@@ -574,6 +703,8 @@
       newsFaissVectors && (newsFaissVectors.textContent = '0');
       newsFaissIndexPath && (newsFaissIndexPath.textContent = '—');
       newsFaissSnapshot && (newsFaissSnapshot.textContent = '—');
+      renderFaissBackupInfo(null);
+      syncFaissBackupButtons();
       return;
     }
 
@@ -620,10 +751,15 @@
     }
 
     newsFaissStatusError?.classList.add('d-none');
+    renderFaissBackupInfo(status);
+    syncFaissBackupButtons();
   };
 
   const loadFaissStatus = async () => {
     if (!newsFaissStatusPill) return;
+    if (!isFaissBackupBusy) {
+      setFaissBackupStatus('Backup: sprawdzanie statusu...', 'muted');
+    }
     try {
       const data = await fetchJSON('/api/news/faiss/status');
       if (data.success) {
@@ -633,9 +769,15 @@
       }
     } catch (error) {
       console.error(error);
+      lastFaissStatus = null;
+      renderFaissBackupInfo(null);
+      syncFaissBackupButtons();
       if (newsFaissStatusError) {
         newsFaissStatusError.textContent = error.message || 'Nie udało się pobrać statusu FAISS.';
         newsFaissStatusError.classList.remove('d-none');
+      }
+      if (!isFaissBackupBusy) {
+        setFaissBackupStatus('Backup: status niedostępny. Spróbuj ponownie.', 'danger');
       }
     }
   };
@@ -694,6 +836,120 @@
     } finally {
       if (newsFaissTestSpinner) newsFaissTestSpinner.classList.add('d-none');
       if (newsFaissTestBtn) newsFaissTestBtn.removeAttribute('disabled');
+    }
+  };
+
+  const downloadFaissBackup = async (event) => {
+    event?.preventDefault();
+    if (!newsFaissBackupBtn || newsFaissBackupBtn.disabled) return;
+
+    setFaissBackupBusy(true);
+    setFaissBackupStatus('Backup: przygotowywanie archiwum...', 'warning');
+
+    try {
+      const response = await fetch('/api/news/faiss/export');
+      if (!response.ok) {
+        const message = await readErrorMessage(response, 'Nie udało się pobrać backupu.');
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition');
+      const fallbackName = `faiss_backup_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+      const filename = parseContentDispositionFilename(disposition) || fallbackName;
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      setFaissBackupStatus(`Backup: zapisano ${filename}`, 'success');
+      showToast({ title: 'Backup FAISS', message: 'Archiwum zostało pobrane.', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      setFaissBackupStatus(`Backup: ${error.message || 'nie udało się pobrać archiwum.'}`, 'danger');
+      showToast({ title: 'Backup FAISS', message: error.message || 'Nie udało się pobrać backupu.', type: 'error' });
+    } finally {
+      setFaissBackupBusy(false);
+    }
+  };
+
+  const triggerFaissRestoreDialog = (event) => {
+    event?.preventDefault();
+    if (isFaissBackupBusy) return;
+    newsFaissRestoreInput?.click();
+  };
+
+  const handleFaissRestoreInputChange = (event) => {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    uploadFaissBackup(file);
+  };
+
+  const uploadFaissBackup = async (file) => {
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.zip')) {
+      setFaissBackupStatus('Backup: wybierz archiwum .zip.', 'danger');
+      showToast({ title: 'Backup FAISS', message: 'Obsługiwane są tylko pliki ZIP.', type: 'error' });
+      if (newsFaissRestoreInput) newsFaissRestoreInput.value = '';
+      return;
+    }
+
+    if (file.size > FAISS_BACKUP_MAX_BYTES) {
+      const limit = formatBytes(FAISS_BACKUP_MAX_BYTES);
+      setFaissBackupStatus(`Backup: plik jest zbyt duży (limit ${limit}).`, 'danger');
+      showToast({ title: 'Backup FAISS', message: `Plik przekracza limit ${limit}.`, type: 'error' });
+      if (newsFaissRestoreInput) newsFaissRestoreInput.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('archive', file);
+
+    let shouldRefreshStatus = false;
+
+    setFaissBackupBusy(true);
+    setFaissBackupStatus(`Backup: wgrywanie ${file.name}...`, 'warning');
+
+    try {
+      const response = await fetch('/api/news/faiss/import', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const message = await readErrorMessage(response, 'Nie udało się wczytać backupu.');
+        throw new Error(message);
+      }
+
+      const payload = await response.json();
+      const restored = Array.isArray(payload.restored) ? payload.restored : [];
+      const restoredLabel = restored.length ? restored.join(', ') : 'brak szczegółów';
+
+      setFaissBackupStatus(`Backup: przywrócono ${restored.length} plików.`, 'success');
+      showToast({
+        title: 'Backup FAISS',
+        message: restored.length ? `Przywrócono: ${restoredLabel}` : 'Archiwum zostało wczytane.',
+        type: 'success'
+      });
+      shouldRefreshStatus = true;
+    } catch (error) {
+      console.error(error);
+      setFaissBackupStatus(`Backup: ${error.message || 'nie udało się przywrócić plików.'}`, 'danger');
+      showToast({ title: 'Backup FAISS', message: error.message || 'Nie udało się wczytać archiwum.', type: 'error' });
+    } finally {
+      if (newsFaissRestoreInput) {
+        newsFaissRestoreInput.value = '';
+      }
+      setFaissBackupBusy(false);
+      if (shouldRefreshStatus) {
+        await loadFaissStatus();
+      }
     }
   };
 
@@ -966,13 +1222,35 @@
 
   const deleteNewsIndex = async (name) => {
     if (!name) return;
-    const ok = confirm(`Usunąć indeks ${name}? Pliki indeksu zostaną skasowane.`);
+    const ok = confirm(
+      `Usunąć bazę ${name}? Ta operacja skasuje wszystkie pliki FAISS (indeks, snapshoty, articles.jsonl).`
+    );
     if (!ok) return;
     try {
       const res = await fetchJSON(`/api/news/indices/${encodeURIComponent(name)}`, { method: 'DELETE' });
       if (res.success) {
-        showToast({ title: 'Usunięto', message: `Indeks ${name} został skasowany.`, type: 'success' });
+        const removedCount = Array.isArray(res.removed) ? res.removed.length : 0;
+        const missingCount = Array.isArray(res.missing) ? res.missing.length : 0;
+        const failedCount = Array.isArray(res.failed) ? res.failed.length : 0;
+        const fragments = [];
+        if (removedCount) fragments.push(`usunięto ${removedCount} plików`);
+        if (missingCount) fragments.push(`${missingCount} już nie było`);
+        if (failedCount) fragments.push(`${failedCount} błędów`);
+        const details = fragments.length ? ` (${fragments.join(', ')})` : '';
+        showToast({ title: 'Usunięto', message: `Indeks ${name} został skasowany${details}.`, type: 'success' });
+        if (failedCount && res.failed?.length) {
+          const failedList = res.failed
+            .slice(0, 3)
+            .map((item) => item.path?.split(/[\\/]/).pop() || 'plik')
+            .join(', ');
+          showToast({
+            title: 'Uwaga',
+            message: `Nie udało się skasować: ${failedList}${res.failed.length > 3 ? '…' : ''}`,
+            type: 'error'
+          });
+        }
         await loadNewsIndices();
+        await loadFaissStatus();
       } else {
         showToast({ title: 'Błąd', message: res.error || 'Nie udało się usunąć indeksu.', type: 'error' });
       }
@@ -1871,6 +2149,9 @@
       newsFaissTestBtn?.addEventListener('click', () => testNewsFAISS());
       newsFaissStatusRefreshBtn?.addEventListener('click', loadFaissStatus);
       newsFaissQuickTestBtn?.addEventListener('click', () => testNewsFAISS(DEFAULT_FAISS_PROMPT));
+      newsFaissBackupBtn?.addEventListener('click', downloadFaissBackup);
+      newsFaissRestoreBtn?.addEventListener('click', triggerFaissRestoreDialog);
+      newsFaissRestoreInput?.addEventListener('change', handleFaissRestoreInputChange);
       loadNewsRecipients();
       loadFaissStatus();
     }
