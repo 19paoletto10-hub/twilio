@@ -159,6 +159,14 @@ Tipy operacyjne:
 - Surowe scrapes: `X1_data/business_insider_scrapes/*.txt|json`.
 - Zalecany backup prod: cały `X1_data/` + `data/app.db`. Przywrócenie: odtworzyć katalogi, uruchomić aplikację, sprawdzić `/api/news/test-faiss`.
 
+### Backup FAISS (zip + manifest)
+
+- `GET /api/news/faiss/export` generuje zip zawierający komplet wymaganych plików (indeks FAISS, snapshot dokumentów, `news_config.json`) wraz z `manifest.json`. Upload odbywa się z poziomu panelu (zakładka News) lub przez cURL.
+- `POST /api/news/faiss/import` przyjmuje archiwum `.zip` (limit 250 MB), waliduje manifest i atomowo odtwarza pliki (najpierw do katalogu tymczasowego, potem `shutil.move`).
+- `GET /api/news/faiss/status` zwraca kondycję indeksu (liczba wektorów, model embeddings/chat) oraz kompletność backupu (`backup_ready`).
+- `DELETE /api/news/indices/faiss_openai_index` usuwa wszystkie artefakty FAISS i dokumenty (również `documents.json(l)` oraz surowe snapshoty), a w odpowiedzi zwraca podsumowanie `removed/missing/failed` – UI pokazuje je w toastach.
+- Panel w zakładce News posiada dwa przyciski: „Eksportuj backup” (pobiera zip) oraz „Wgraj backup” (uploaduje poprzez `FormData archive`).
+
 ---
 
 ## Uruchomienie w Dockerze
@@ -244,7 +252,8 @@ Panel jest responsywny (Bootstrap 5) i składa się z kilku głównych widoków:
 - **Zakładka „News / FAISS”**
   - lista plików scrapów (podgląd, usuwanie),
   - przyciski „Scrape / Build index / Test FAISS”,
-  - zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie).
+  - zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie),
+  - sekcja „Backup FAISS” z przyciskiem pobrania zipa oraz uploaderem przywracającym indeks/dokumenty.
 
 ---
 
@@ -263,6 +272,9 @@ Aplikacja potrafi:
 2. **Zbudować indeks** – automatycznie po scrapowaniu lub ręcznie przez `/api/news/indices/build`.
 3. **Testować zapytania** – endpoint `/api/news/test-faiss`, w UI: pole zapytania + wynik (liczba trafień, odpowiedź modelu).
 4. **Zarządzać plikami** – usuwać pojedyncze pliki scrapów lub cały indeks z poziomu panelu.
+5. **Eksportować / importować backupy** – `GET /api/news/faiss/export` buduje zip z manifestem, a `POST /api/news/faiss/import` przywraca pliki (limit 250 MB, walidacja obecności wymaganych pozycji). `GET /api/news/faiss/status` raportuje gotowość backupu, a `DELETE /api/news/indices/faiss_openai_index` czyści całą bazę FAISS wraz z dokumentami.
+
+`ScraperService` pilnuje, aby kategorie były rozłączne – link musi zaczynać się prefiksem ścieżki kategorii (np. `/technologie/`), dzięki czemu pliki `.json/.txt` nie dublują się między sekcjami.
 
 ### Tryb podsumowania kategorii
 

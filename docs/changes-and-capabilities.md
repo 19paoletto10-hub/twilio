@@ -16,7 +16,8 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
   - wyszukiwanie semantyczne + odpowiedzi LLM (NewsOpenAIService) lub fallback tekstowy;
   - tryb `answer_query_all_categories`/`search_all_categories`, który wymusza pokrycie każdej kategorii, używany m.in. przez scheduler newsów;
   - użycie modeli OpenAI z klucza SECOND_OPENAI / fallback hash embeddings.
-- Scraper Business Insider w [app/scraper_service.py](app/scraper_service.py): sesja z retry + robots cache, czyści treść, zapisuje `.txt` i `.json`, a także kanoniczny store `X1_data/articles.jsonl` (dedup hash/URL) wykorzystywany przez FAISS; opcjonalnie triggeruje budowę indeksu.
+- Lifecycle backup FAISS w [app/webhooks.py](app/webhooks.py): `GET /api/news/faiss/export` (zip + manifest), `POST /api/news/faiss/import` (walidacja i atomowy restore, limit 250 MB), `GET /api/news/faiss/status` (kondycja indeksu + kompletność backupu) oraz `DELETE /api/news/indices/faiss_openai_index`, który usuwa wszystkie artefakty FAISS i zwraca listy `removed/missing/failed`.
+- Scraper Business Insider w [app/scraper_service.py](app/scraper_service.py): sesja z retry + robots cache, czyści treść, zapisuje `.txt` i `.json`, a także kanoniczny store `X1_data/articles.jsonl` (dedup hash/URL) wykorzystywany przez FAISS; opcjonalnie triggeruje budowę indeksu, a link zostaje zaakceptowany tylko gdy pasuje prefiksowi kategorii (eliminuje duplikaty między sekcjami).
 - Harmonogram newsów w [app/news_scheduler.py](app/news_scheduler.py): pętla w tle (co minutę) wysyła dzienne powiadomienia SMS do aktywnych odbiorców z konfigiem godziny, pilnuje `last_sent_at`, waliduje numery i korzysta z trybu podsumowania wszystkich kategorii.
 - Inicjalizacja serwisów i workerów w [app/__init__.py](app/__init__.py): start auto-reply worker, scheduler przypomnień, scheduler news, healthcheck `/api/health`.
 
@@ -26,6 +27,7 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
   - auto-odświeżanie listy wiadomości i statystyk, szybka wysyłka SMS;
   - pełne formularze dla auto-reply, AI (konfiguracja + test OpenAI), przypomnień, newsów (odbiorcy, test FAISS, scraping, budowa indeksu, podgląd plików, ustawienie aktywnej bazy);
   - skeletony ładowania, toasty, badge statusów.
+- Sekcja backupu FAISS w zakładce News: przycisk eksportu zip, uploader importu (z walidacją postępu), wskaźnik kompletności backupu oraz toasty z raportem `removed/missing/failed` po czyszczeniu indeksu.
 - Ulepszona estetyka w [app/static/css/app.css](app/static/css/app.css): gradientowa nawigacja, karty, kafelki plików news, overlay podglądu pliku, dopasowanie do nowych sekcji.
 
 ## Aktualne możliwości biznesowe
@@ -38,7 +40,8 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
 - News / FAISS / RAG:
   - scraping kategorii Business Insider PL (txt+json),
   - budowa indeksu wektorowego, test zapytań FAISS, generowanie podsumowań newsów (LLM lub fallback),
-  - lista odbiorców z godziną i promptem, ręczne wysyłki, automatyczna dystrybucja 1x/dziennie przez scheduler.
+  - lista odbiorców z godziną i promptem, ręczne wysyłki, automatyczna dystrybucja 1x/dziennie przez scheduler,
+  - backup zip (eksport/import + status kompletności) oraz pełne czyszczenie indeksu z raportem `removed/missing/failed`.
 - Operacje danych: podgląd/usuń pliki scrapów, ustaw aktywny indeks, przebudowa indeksu z plików lub snapshotu.
 
 ## Konfiguracja i zależności
@@ -55,7 +58,7 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
   2) Auto-reply: włącz i zapisz szablon → `/api/auto-reply/config` (wyłącza AI jeśli aktywna).
   3) AI: uzupełnij klucz, numer, prompt, model → zapisz (`/api/ai/config`), test (`/api/ai/test`), podgląd historii (`/api/ai/conversation`).
   4) Przypomnienia: dodaj w formularzu → `/api/reminders`, akcje toggle/delete.
-  5) News: dodaj odbiorcę → `/api/news/recipients`, test FAISS (`/api/news/test-faiss`), scraping+build (`/api/news/scrape`), ręczna budowa (`/api/news/indices/build`), podgląd/usuń pliki i indeksy.
+  5) News: dodaj odbiorcę → `/api/news/recipients`, test FAISS (`/api/news/test-faiss`), scraping+build (`/api/news/scrape`), ręczna budowa (`/api/news/indices/build`), podgląd/usuń pliki i indeksy oraz eksport/import backupu (`/api/news/faiss/export|import`).
 - API / integracja zewnętrzna
   - Webhooki Twilio: `/twilio/inbound`, `/twilio/status` (walidacja sygnatury zależna od `TWILIO_VALIDATE_SIGNATURE`).
   - Zdrowie: `/api/health` zwraca status, env, flagę OpenAI.

@@ -323,6 +323,9 @@ class ScraperService:
             path = (parsed.path or "").rstrip("/")
             if not path or path == category_path:
                 continue
+            if category_path and not path.startswith(f"{category_path}/"):
+                # Pomijaj linki prowadzące do innych sekcji, żeby zachować spójność kategorii
+                continue
             if any(marker in path for marker in excluded_markers):
                 continue
 
