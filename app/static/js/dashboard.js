@@ -1115,7 +1115,12 @@
       const nameRaw = item.name || '—';
       const name = escapeHtml(nameRaw);
       const nameAttr = escapeHtml(nameRaw);
-      const createdAt = escapeHtml(item.created_at || '—');
+
+      const { dateLabel, timeLabel, fullLabel } = buildDateTimeParts(item.created_at);
+      const datePart = escapeHtml(dateLabel || fullLabel || '—');
+      const timePart = timeLabel ? `<div class="small text-muted">${escapeHtml(timeLabel)}</div>` : '';
+      const createdAt = `${datePart}${timePart ? `<br>${timePart}` : ''}`;
+
       const size = typeof item.size === 'number' ? `${item.size} vekt.` : escapeHtml(item.size || '—');
       const status = escapeHtml(item.status || (item.active ? 'aktywny' : 'gotowy'));
       const badge = item.active

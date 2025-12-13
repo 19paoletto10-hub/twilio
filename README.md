@@ -29,6 +29,15 @@
 - Wymagania: konto Twilio (numery / Messaging Service), klucz OpenAI (dla AI i embeddings), Python 3.10+, sieć z dostępem do platform Twilio i OpenAI.
 - Kluczowe procesy: webhook inbound/status Twilio, worker auto-reply, worker przypomnień, scheduler newsów (RAG + SMS), panel do operacji ręcznych i diagnostyki.
 
+## Najważniejsze wyróżniki produktu
+
+- **Jedno źródło prawdy dla komunikacji** – webhooki Twilio, panel www i CLI korzystają z tej samej bazy SQLite; pełna historia jest dostępna w dashboardzie i w `manage.py`.
+- **Tryby odpowiedzi 1:1** – klasyczny auto‑reply, AI auto‑reply (OpenAI) oraz fallbackowy bot; przepinanie trybów odbywa się jednym przyciskiem i natychmiastowo aktualizuje worker.
+- **News / RAG na sterydach** – scheduler newsów, scraper kategorii Business Insider, indeks FAISS, tryb podsumowania wszystkich kategorii, testowe zapytania i ręczna wysyłka.
+- **Backup FAISS klasy enterprise** – eksport ZIP z manifestem, import z walidacją rozmiaru, automatyczne odtwarzanie plików oraz pełne czyszczenie indeksu wraz z raportem `removed/missing/failed` (UI i API).
+- **Gotowość do operacji** – docker-compose (dev/prod), healthcheck, rozpisany runbook i checklisty post‑deploy, kompatybilność z Codespaces.
+- **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień i News; skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
+
 ## Opis systemu
 
 Aplikacja realizuje kompletny „hub SMS” dla jednego konta Twilio:
@@ -275,6 +284,11 @@ Aplikacja potrafi:
 5. **Eksportować / importować backupy** – `GET /api/news/faiss/export` buduje zip z manifestem, a `POST /api/news/faiss/import` przywraca pliki (limit 250 MB, walidacja obecności wymaganych pozycji). `GET /api/news/faiss/status` raportuje gotowość backupu, a `DELETE /api/news/indices/faiss_openai_index` czyści całą bazę FAISS wraz z dokumentami.
 
 `ScraperService` pilnuje, aby kategorie były rozłączne – link musi zaczynać się prefiksem ścieżki kategorii (np. `/technologie/`), dzięki czemu pliki `.json/.txt` nie dublują się między sekcjami.
+
+#### Nowości w wersji 3.0.6
+
+- Panel News prezentuje czas utworzenia indeksów w lokalnej strefie (te same helpery co w historii wiadomości), dzięki czemu dane w tabeli „Bazy FAISS” są spójne z resztą UI.
+- Release utrwala też nową sekcję backupową w README oraz szczegółowe opisy API w dokumentacji klienta.
 
 ### Tryb podsumowania kategorii
 

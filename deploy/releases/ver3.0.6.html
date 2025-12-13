@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <title>Twilio Chat App – ver3.0.6</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 2rem auto; max-width: 920px; line-height: 1.65; color: #1c1c1c; }
+    h1, h2, h3 { color: #111; }
+    code { background: #f5f5f5; padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.95em; }
+    ul { margin-left: 1.2rem; }
+    .meta { font-size: 0.95rem; color: #555; margin-bottom: 1.5rem; }
+    .tag { font-family: "JetBrains Mono", SFMono-Regular, Menlo, monospace; background: #eef; padding: 0.1rem 0.45rem; border-radius: 4px; }
+    section { margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Twilio Chat App – <span class="tag">ver3.0.6</span></h1>
+    <p class="meta">
+      Release tag: <code>ver3.0.6</code><br />
+      Data wydania: 2025-12-13<br />
+      Środowisko referencyjne: Docker (Python 3.12, gunicorn)
+    </p>
+  </header>
+
+  <section>
+    <h2>Podsumowanie</h2>
+    <p>
+      Release koncentruje się na operacyjnej gotowości modułu News/RAG. README, runbook i panel WWW
+      opisują kompletny proces backupu FAISS (eksport ZIP z manifestem, import z walidacją,
+      checklisty DR), scraper Business Insider filtruje linki ściśle według kategorii, a UI
+      prezentuje czasy w lokalnej strefie (również w tabeli „Bazy FAISS”). Indeks zawiera tylko
+      właściwe artykuły i daje się przewidywalnie przywrócić.
+    </p>
+  </section>
+
+  <section>
+    <h2>Technologie i środowisko</h2>
+    <ul>
+      <li>Python 3.12 (<code>python:3.12-slim</code>), Flask 3.0.3, serwer <code>gunicorn</code>.</li>
+      <li>Baza: SQLite (<code>data/app.db</code>); artefakty RAG w <code>X1_data/</code>.</li>
+      <li>Integracje: Twilio (<code>twilio==9.3.1</code>), OpenAI (<code>openai==1.59.3</code>), LangChain 0.3.</li>
+      <li>Deploy: Docker / docker-compose, healthcheck na <code>/api/health</code>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Najważniejsze zmiany</h2>
+
+    <h3>1. Pełna dokumentacja backupu FAISS</h3>
+    <ul>
+      <li>README i "Changes &amp; Capabilities" szczegółowo opisują eksport (<code>GET /api/news/faiss/export</code>), import (<code>POST /api/news/faiss/import</code>) oraz status (<code>GET /api/news/faiss/status</code>).</li>
+      <li>Manifest w ZIP-ie zawiera komplet wymaganych plików (<code>index.faiss</code>, <code>index.pkl</code>, <code>documents.json(l)</code>, <code>news_config.json</code>), co upraszcza audyty.</li>
+      <li>Panel News poprowadzi operatora przyciskami „Eksportuj” i „Wgraj”, raportując wynik w toastach oraz polu <em>backup_ready</em>.</li>
+      <li>Runbook podaje sekwencję backupu katalogów <code>X1_data/</code> + <code>data/app.db</code>, test FAISS po restore i strategię reakcji na brak indeksu.</li>
+    </ul>
+
+    <h3>2. Scraper Business Insider – szczelne filtrowanie kategorii</h3>
+    <ul>
+      <li><code>ScraperService.extract_article_links()</code> akceptuje wyłącznie URL-e zgodne z prefiksem danej kategorii (np. <code>/biznes</code>), eliminując artykuły z innych sekcji.</li>
+      <li>Logi wskazują odrzucone linki, co pozwala szybko wykryć zmiany po stronie BI.</li>
+      <li>Kanoniczny store <code>X1_data/articles.jsonl</code> i per-kategoria <code>*.json</code>/<code>*.txt</code> pozostają czyste, więc FAISS build nie wymaga dodatkowego filtrowania.</li>
+    </ul>
+
+    <h3>3. Runbook i panel operacyjny</h3>
+    <ul>
+      <li>Sekcja „Dane i backup” w README opisuje narzędzia (`sqlite3 .backup`, panelowy ZIP) i walidację po przywróceniu (test FAISS, lista plików, rebuild).</li>
+      <li><code>docs/changes-and-capabilities.md</code> rozszerza scenariusze publikacji backupu i komunikaty UI – to jedno źródło prawdy dla biznesu.</li>
+      <li>UI News prezentuje liczbę dokumentów, aktywny indeks i spójność backupu oraz zachęca do eksportu przed każdą zmianą w danych.</li>
+    </ul>
+
+    <h3>4. UX i spójne strefy czasowe</h3>
+    <ul>
+      <li>Tabela „Bazy FAISS” korzysta z tych samych helperów czasu co lista wiadomości – data i godzina są renderowane w lokalnej strefie użytkownika.</li>
+      <li>Toast/alerty odnoszą się do lokalnych czasów, co ułatwia korelację z logami Twilio oraz schedulerami (brak przesunięcia +/-1h).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Kompatybilność i upgrade</h2>
+    <ol>
+      <li>Wykonaj snapshot katalogów <code>X1_data/</code> + <code>data/app.db</code> lub użyj nowego eksportu ZIP.</li>
+      <li>Zdeployuj tag <code>ver3.0.6</code> (commit <code>9a9512a</code>) – Docker build / <code>pip install -r requirements.txt</code>.</li>
+      <li>W panelu News pobierz nowy backup i sprawdź "Odśwież status" – pole <code>backup_ready</code> powinno być <strong>true</strong>.</li>
+      <li>Wykonaj test FAISS; wynik powinien zawierać fragmenty źródłowe.</li>
+      <li>(Opcjonalnie) Uruchom świeży scraping kategorii, aby potwierdzić poprawne filtrowanie linków.</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Publikacja release na GitHubie</h2>
+    <ol>
+      <li>Na GitHubie wybierz <strong>Draft a new release</strong>.</li>
+      <li>Ustaw tag i tytuł na <code>ver3.0.6</code> / <code>ver3.0.6 – FAISS backup playbook</code>.</li>
+      <li>Skopiuj treść z pliku Markdown lub dołącz ten dokument HTML.</li>
+      <li>Opcjonalnie dodaj świeży ZIP backupu jako artefakt.</li>
+      <li>Kliknij <strong>Publish release</strong>.</li>
+    </ol>
+  </section>
+</body>
+</html>
