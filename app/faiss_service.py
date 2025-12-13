@@ -504,6 +504,34 @@ def _build_context(docs, max_chars: int) -> str:
     return "\n\n".join(blocks).strip()
 
 
+def _build_category_contexts(docs: List[Document], max_chars_total: int) -> Dict[str, str]:
+    """
+    Build per-category contexts so the LLM can reason about each category separately.
+
+    The available character budget is split across categories to keep the final prompt bounded.
+    """
+    by_cat: Dict[str, List[Document]] = {}
+    for doc in docs:
+        md = doc.metadata or {}
+        cat = (md.get("category") or "Fragment").strip() or "Fragment"
+        by_cat.setdefault(cat, []).append(doc)
+
+    if not by_cat:
+        return {}
+
+    cat_count = max(1, len(by_cat))
+    max_per_cat = max_chars_total // cat_count if max_chars_total else 0
+    # Provide a sensible floor to avoid starving categories with very small budgets
+    max_per_cat = max(max_per_cat, 600)
+    contexts: Dict[str, str] = {}
+
+    for cat in sorted(by_cat):
+        cat_docs = by_cat[cat]
+        contexts[cat] = _build_context(cat_docs, max_chars=min(max_chars_total, max_per_cat))
+
+    return contexts
+
+
 # =============================================================================
 # Service
 # =============================================================================
@@ -928,8 +956,14 @@ class FAISSService:
 
         docs = self.search_all_categories(query, per_category_k=per_category_k)
         results = _format_results(docs)
-
-        context = _build_context(docs, max_chars=_get_context_max_chars())
+        context_budget = _get_context_max_chars()
+        contexts_by_cat = _build_category_contexts(docs, max_chars_total=context_budget)
+        context = "\n\n".join(
+            [
+                f"=== {cat} ===\n{ctx}" if ctx else f"=== {cat} ===\n(brak danych)"
+                for cat, ctx in contexts_by_cat.items()
+            ]
+        ).strip()
         payload = {
             "success": True,
             "query": query,
@@ -953,17 +987,26 @@ class FAISSService:
 
         sys_msg = system_prompt or (
             "Robisz przegląd newsów po kategoriach. Odpowiadasz po polsku. "
-            "Twórz sekcje dla każdej kategorii, krótko i konkretnie. "
+            "Każdą kategorię analizujesz osobno, nie mieszając faktów między kategoriami. "
+            "Tworzysz sekcje dla każdej kategorii, krótko i konkretnie. "
             "Korzystasz WYŁĄCZNIE z kontekstu."
         )
+        if contexts_by_cat:
+            context_sections = "\n\n".join(
+                [
+                    f"[{cat}]\n{ctx if ctx else 'brak danych'}"
+                    for cat, ctx in contexts_by_cat.items()
+                ]
+            )
+        else:
+            context_sections = "brak danych"
 
         user_msg = (
             f"Pytanie:\n{query}\n\n"
-            f"Kontekst (fragmenty z bazy):\n{context}\n\n"
-            "Zrób podsumowanie w formacie:\n"
-            "- Nagłówek kategorii\n"
-            "  • 2-4 punkty (konkretne fakty)\n"
-            "Jeśli w kontekście brakuje danych dla kategorii, napisz 'brak danych'."
+            "Konteksty per kategoria (używaj tylko fragmentów z danej sekcji, nie mieszaj kategorii):\n"
+            f"{context_sections}\n\n"
+            "Dla każdej kategorii wypisz nagłówek 'Kategoria: <nazwa>' oraz 2-3 krótkie zdania (bez wypunktowań) "
+            "opisujące najważniejsze wiadomości z tej kategorii. Jeśli brak danych, napisz 'brak danych'."
         )
 
         try:
