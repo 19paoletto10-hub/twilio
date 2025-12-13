@@ -1,6 +1,57 @@
+"""
+Application configuration management.
+
+This module handles loading and validation of application settings from
+environment variables. It provides typed configuration objects for different
+components (Twilio, OpenAI, general app settings).
+"""
+
+from __future__ import annotations
+
 from dataclasses import dataclass
 import os
 from pathlib import Path
+from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+@dataclass
+class TwilioSettings:
+    """
+    Twilio API credentials and configuration.
+    
+    Attributes:
+        account_sid: Twilio Account SID (from TWILIO_ACCOUNT_SID)
+        auth_token: Twilio Auth Token (from TWILIO_AUTH_TOKEN)
+        default_from: Default sender phone number (from TWILIO_DEFAULT_FROM)
+        messaging_service_sid: Optional Messaging Service SID for sender pool
+    """
+
+    account_sid: str
+    auth_token: str
+    default_from: str
+    messaging_service_sid: Optional[str] = None
+    
+    def validate(self) -> None:
+        """
+        Validate Twilio settings.
+        
+        Raises:
+            ValueError: If critical settings are missing or invalid
+        """
+        if not self.account_sid or not self.account_sid.startswith("AC"):
+            raise ValueError("Invalid TWILIO_ACCOUNT_SID format")
+        
+        if not self.auth_token:
+            raise ValueError("TWILIO_AUTH_TOKEN is required")
+        
+        # default_from is optional if messaging_service_sid is set
+        if not self.default_from and not self.messaging_service_sid:
+            raise ValueError(
+                "Either TWILIO_DEFAULT_FROM or TWILIO_MESSAGING_SERVICE_SID must be set"
+            )
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,11 +67,30 @@ class TwilioSettings:
 
 @dataclass
 class AppSettings:
+    """
+    General application configuration.
+    
+    Attributes:
+        env: Environment name ('dev', 'staging', 'production')
+        debug: Enable debug mode (verbose logging, auto-reload)
+        host: Server bind address
+        port: Server bind port
+        db_path: SQLite database file path
+    """
+
     env: str
     debug: bool
     host: str
     port: int
     db_path: str
+    
+    def is_production(self) -> bool:
+        """Check if running in production environment."""
+        return self.env.lower() in ("production", "prod")
+    
+    def is_development(self) -> bool:
+        """Check if running in development environment."""
+        return self.env.lower() in ("dev", "development")
 
 
 @dataclass
@@ -40,14 +110,24 @@ class OpenAISettings:
     enabled: bool
 
     @classmethod
-    def from_env(cls) -> "OpenAISettings":
+    def from_env(cls) -> OpenAISettings:
         """
         Load OpenAI settings from environment variables with sensible defaults.
+        
+        Environment variables:
+            SECOND_OPENAI: Primary API key for OpenAI
+            OPENAI_API_KEY: Fallback API key
+            SECOND_MODEL: Chat completion model (default: gpt-4o-mini)
+            EMBEDDING_MODEL: Text embedding model (default: text-embedding-3-large)
         
         Returns:
             OpenAISettings instance with validated configuration
         """
+        # Try primary key first, then fallback
         api_key = os.getenv("SECOND_OPENAI", "").strip() or None
+        if not api_key:
+            api_key = os.getenv("OPENAI_API_KEY", "").strip() or None
+        
         chat_model = os.getenv("SECOND_MODEL", "gpt-4o-mini").strip()
         embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-large").strip()
         
@@ -62,7 +142,17 @@ class OpenAISettings:
         )
 
     def get_masked_key(self) -> str:
-        """Return masked API key for logging/display (shows last 4 chars)."""
+        """
+        Return masked API key for logging/display (shows last 4 chars).
+        
+        Returns:
+            Masked API key string safe for logging
+            
+        Examples:
+            >>> settings = OpenAISettings(api_key="sk-1234567890", ...)
+            >>> settings.get_masked_key()
+            '••••••7890'
+        """
         if not self.api_key:
             return "❌ Brak klucza"
         if len(self.api_key) <= 8:
@@ -71,6 +161,18 @@ class OpenAISettings:
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
+    """
+    Parse boolean from environment variable.
+    
+    Accepts: '1', 'true', 't', 'yes', 'y' (case-insensitive) as True
+    
+    Args:
+        name: Environment variable name
+        default: Default value if variable is not set
+        
+    Returns:
+        Parsed boolean value
+    """
     value = os.getenv(name)
     if value is None:
         return default
