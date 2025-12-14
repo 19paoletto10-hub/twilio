@@ -16,7 +16,7 @@ from .database import (
     update_multi_sms_batch_status,
     update_multi_sms_recipient,
 )
-from .reminder import E164_RE
+from .validators import E164_PATTERN as E164_RE
 from .twilio_client import TwilioService
 
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"

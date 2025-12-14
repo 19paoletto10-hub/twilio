@@ -10,13 +10,14 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
 
 from .config import TwilioSettings
 from .exceptions import TwilioAPIError, ConfigurationError
+from .message_utils import MAX_SMS_CHARS, split_sms_chunks
 
 
 logger = logging.getLogger(__name__)
@@ -169,6 +170,71 @@ class TwilioService:
             return {
                 "success": False,
                 "error": str(exc),
+            }
+
+    def send_chunked_sms(
+        self,
+        *,
+        to: str,
+        body: str,
+        from_: Optional[str] = None,
+        max_length: int = MAX_SMS_CHARS,
+    ) -> Dict[str, Any]:
+        """Send long text as multiple SMS parts, staying within Twilio size limits.
+
+        Returns a dict mirroring ``send_sms`` with extra metadata about the
+        number of parts and SIDs that Twilio generated. If any chunk fails the
+        method aborts and surfaces the captured error message along with the
+        count of already-sent parts.
+        """
+
+        logger = logging.getLogger(__name__)
+        text = (body or "").strip()
+        if not text:
+            return {
+                "success": False,
+                "error": "Brak treści wiadomości do wysłania.",
+            }
+
+        chunks = split_sms_chunks(text, max_length)
+        sent_messages: List[Any] = []
+        extra_params_template = {"from_": from_} if from_ else {}
+
+        try:
+            for idx, chunk in enumerate(chunks, start=1):
+                extra_params = dict(extra_params_template)
+                message = self.send_message(
+                    to=to,
+                    body=chunk,
+                    extra_params=extra_params,
+                )
+                sent_messages.append(message)
+                logger.info(
+                    "Sent chunk %s/%s to %s (len=%s, sid=%s)",
+                    idx,
+                    len(chunks),
+                    to,
+                    len(chunk),
+                    getattr(message, "sid", None),
+                )
+
+            final = sent_messages[-1]
+            return {
+                "success": True,
+                "sid": getattr(final, "sid", None),
+                "status": getattr(final, "status", None),
+                "parts": len(sent_messages),
+                "sids": [getattr(msg, "sid", None) for msg in sent_messages],
+                "characters": len(text),
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
+                "Chunked SMS failed after %s parts to %s", len(sent_messages), to
+            )
+            return {
+                "success": False,
+                "error": str(exc),
+                "parts_sent": len(sent_messages),
             }
 
     def send_reply_to_inbound(self, *, inbound_from: str, inbound_to: str, body: str):

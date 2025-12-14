@@ -9,7 +9,7 @@ from typing import Optional, Dict
 from flask import Flask
 
 from .database import normalize_contact
-from .reminder import E164_RE
+from .validators import E164_PATTERN as E164_RE
 from .twilio_client import TwilioService
 
 logger = logging.getLogger(__name__)
@@ -148,10 +148,10 @@ def start_news_scheduler(app: Flask, *, check_interval_seconds: int = 60) -> Non
                                     logger.error("No Twilio default_from configured")
                                     continue
                                 
-                                result = twilio_client.send_sms(
+                                result = twilio_client.send_chunked_sms(
                                     from_=origin,
                                     to=phone,
-                                    body=message[:1600]
+                                    body=message,
                                 )
                                 
                                 if result.get("success"):

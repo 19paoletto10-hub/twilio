@@ -34,35 +34,27 @@ class TwilioSettings:
     default_from: str
     messaging_service_sid: Optional[str] = None
     
-    def validate(self) -> None:
+    def validate(self, *, strict: bool = True) -> None:
+        """Validate Twilio settings and raise when critical data is missing.
+
+        Args:
+            strict: When False, relaxes SID format check (useful in dev when
+                using test credentials or placeholders). Defaults to True.
         """
-        Validate Twilio settings.
-        
-        Raises:
-            ValueError: If critical settings are missing or invalid
-        """
-        if not self.account_sid or not self.account_sid.startswith("AC"):
+        if not self.account_sid:
+            raise ValueError("TWILIO_ACCOUNT_SID is required")
+
+        if strict and not self.account_sid.startswith("AC"):
             raise ValueError("Invalid TWILIO_ACCOUNT_SID format")
-        
+
         if not self.auth_token:
             raise ValueError("TWILIO_AUTH_TOKEN is required")
-        
+
         # default_from is optional if messaging_service_sid is set
         if not self.default_from and not self.messaging_service_sid:
             raise ValueError(
                 "Either TWILIO_DEFAULT_FROM or TWILIO_MESSAGING_SERVICE_SID must be set"
             )
-from dotenv import load_dotenv
-
-load_dotenv()
-
-
-@dataclass
-class TwilioSettings:
-    account_sid: str
-    auth_token: str
-    default_from: str
-    messaging_service_sid: str | None = None
 
 
 @dataclass
@@ -221,6 +213,7 @@ def get_settings() -> tuple[AppSettings, TwilioSettings, OpenAISettings]:
         default_from=os.getenv("TWILIO_DEFAULT_FROM", "").strip(),
         messaging_service_sid=os.getenv("TWILIO_MESSAGING_SERVICE_SID"),
     )
+    twilio_settings.validate(strict=not app_settings.debug)
     
     openai_settings = OpenAISettings.from_env()
     

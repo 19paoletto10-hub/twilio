@@ -17,6 +17,7 @@ from openai import OpenAIError
 from .database import list_messages, normalize_contact
 from .twilio_client import TwilioService
 from .exceptions import AIServiceError, ConfigurationError
+from .message_utils import MAX_SMS_CHARS, split_sms_chunks
 
 
 @dataclass
@@ -276,19 +277,36 @@ def send_ai_generated_sms(
     origin_number = (origin_number or "").strip()
     destination_for_twilio = destination_raw or normalized_to
 
-    # Send via Twilio
+    # Split long replies to stay under Twilio body limits
+    parts = split_sms_chunks(reply_text, MAX_SMS_CHARS)
+
     try:
-        if origin_number:
-            message = twilio_client.send_reply_to_inbound(
-                inbound_from=destination_for_twilio,
-                inbound_to=origin_number,
-                body=reply_text,
-            )
-        else:
-            message = twilio_client.send_message(
-                to=destination_for_twilio,
-                body=reply_text,
-            )
+        sent_messages = []
+        total_parts = len(parts)
+
+        for idx, part in enumerate(parts, start=1):
+            if origin_number:
+                msg = twilio_client.send_reply_to_inbound(
+                    inbound_from=destination_for_twilio,
+                    inbound_to=origin_number,
+                    body=part,
+                )
+            else:
+                msg = twilio_client.send_message(
+                    to=destination_for_twilio,
+                    body=part,
+                )
+
+            sent_messages.append(msg)
+
+            if log:
+                log.info(
+                    "Sent AI reply part %s/%s (len=%s) sid=%s",
+                    idx,
+                    total_parts,
+                    len(part),
+                    getattr(msg, "sid", None),
+                )
     except Exception as exc:
         if log:
             log.exception("Twilio send failed for %s", participant_number)
@@ -298,10 +316,13 @@ def send_ai_generated_sms(
             status_code=502,
         ) from exc
 
+    # Return metadata of the last part for backward compatibility
+    final_message = sent_messages[-1] if sent_messages else None
+
     return AIMessageDispatchResult(
         reply_text=reply_text,
         to_number=participant_number,
         normalized_to=normalized_to,
-        twilio_message=message,
+        twilio_message=final_message,
         origin_number=origin_number or None,
     )

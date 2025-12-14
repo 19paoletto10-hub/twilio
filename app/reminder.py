@@ -19,7 +19,10 @@ from .database import (
     mark_scheduled_sent,
 )
 from .twilio_client import TwilioService
-from .validators import validate_e164_phone, ValidationError
+from .validators import validate_e164_phone, ValidationError, E164_PATTERN
+
+# Backward compatibility for modules importing E164_RE
+E164_RE = E164_PATTERN
 
 
 def start_reminder_worker(app: Flask, *, interval_seconds: int = 5) -> None:
