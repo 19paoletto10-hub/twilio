@@ -1,5 +1,32 @@
 # Changelog
 
+## ver3.1.3 (Chunked SMS + docs refresh)
+
+### Podsumowanie
+
+Release 3.1.3 uszczelnia wysyłkę dłuższych treści generowanych przez AI (w tym News/RAG),
+tak aby nie kończyły się błędem Twilio przy przekroczeniu limitu długości SMS.
+Aplikacja dzieli wiadomości na bezpieczne części (domyślnie 1500 znaków) i wysyła je jako
+kilka SMS-ów. Wydanie porządkuje też dokumentację (README + docs + release notes).
+
+### Najważniejsze zmiany
+
+- **Dzielenie długich wiadomości SMS** – [app/message_utils.py](app/message_utils.py)
+  wprowadza wspólną logikę dzielenia tekstu (z próbą cięcia po granicach zdań/akapitów).
+- **Wysyłka wieloczęściowa przez Twilio** – [app/twilio_client.py](app/twilio_client.py)
+  dodaje metodę `send_chunked_sms()` używaną przez moduły wysyłkowe, aby unikać błędu
+  „The concatenated message body exceeds the 1600 character limit”.
+- **News i AI bez ucinania treści** – ręczne i zaplanowane wysyłki newsów oraz odpowiedzi AI
+  wysyłają treść w częściach zamiast obcinać ją do 1600 znaków.
+- **Odświeżona dokumentacja** – README i dokumenty w `docs/`/`deploy/releases/` zawierają
+  spójne instrukcje uruchomienia, konfiguracji i przewodnik po kodzie.
+
+### Kompatybilność i upgrade
+
+- Brak zmian łamiących w endpointach HTTP.
+- Jeśli integrujesz się bezpośrednio z Twilio: pamiętaj, że jedna „odpowiedź” aplikacji może
+  zostać wysłana jako kilka SMS-ów (kilka SID-ów).
+
 ## ver3.1.2 (Multi-SMS batches & release hygiene)
 
 ### Podsumowanie

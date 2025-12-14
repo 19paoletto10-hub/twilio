@@ -7,6 +7,7 @@
 
 ## Spis treści
 - [TL;DR / kontekst biznesowy](#tldr--kontekst-biznesowy)
+- [Dokumentacja (MD/HTML)](#dokumentacja-mdhtml)
 - [Opis systemu](#opis-systemu)
 - [Architektura i komponenty](#architektura-i-komponenty)
 - [Szybki start (lokalnie)](#szybki-start-lokalnie)
@@ -30,6 +31,18 @@
 - Wymagania: konto Twilio (numery / Messaging Service), klucz OpenAI (dla AI i embeddings), Python 3.10+, sieć z dostępem do platform Twilio i OpenAI.
 - Kluczowe procesy: webhook inbound/status Twilio, worker auto-reply, worker przypomnień, scheduler newsów (RAG + SMS), panel do operacji ręcznych i diagnostyki.
 
+## Dokumentacja (MD/HTML)
+
+Repo zawiera kilka poziomów dokumentacji – zależnie od tego, czy jesteś operatorem, devem czy robisz wdrożenie:
+
+- Start i uruchomienie: ten plik (README).
+- Przegląd architektury i modułów: `docs/architecture-notes.md`.
+- Zmiany i capability map + skrócony runbook: `docs/changes-and-capabilities.md`.
+- Przegląd rozwiązania w HTML (lekki, gotowy do PDF): `docs/app-overview.html`.
+- Pełna dokumentacja (HTML, responsywna, przygotowana pod druk/PDF): `deploy/releases/full_documentation.html`.
+- Release notes (MD/HTML): katalog `deploy/releases/`.
+- Release bundle i manifesty paczek: katalog `release/`.
+
 ## Najważniejsze wyróżniki produktu
 
 - **Jedno źródło prawdy dla komunikacji** – webhooki Twilio, panel www i CLI korzystają z tej samej bazy SQLite; pełna historia jest dostępna w dashboardzie i w `manage.py`.
@@ -39,6 +52,7 @@
 - **Gotowość do operacji** – docker-compose (dev/prod), healthcheck, rozpisany runbook i checklisty post‑deploy, kompatybilność z Codespaces.
 - **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień, News **oraz Multi‑SMS (batch)**; skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
 - **Multi‑SMS worker** – kolejkuje wysyłki do wielu numerów (free‑form input, deduplikacja, walidacja E.164), zapisuje każdy wynik w SQLite i przetwarza w tle w jednym wątku na proces.
+- **Bezpieczna wysyłka długich treści** – wiadomości generowane przez AI/News są automatycznie dzielone na części (domyślnie 1500 znaków), aby uniknąć limitu Twilio dla pojedynczego SMS.
 
 ## Opis systemu
 
@@ -290,6 +304,18 @@ Aplikacja potrafi:
 3. **Testować zapytania** – endpoint `/api/news/test-faiss`, w UI: pole zapytania + wynik (liczba trafień, odpowiedź modelu).
 4. **Zarządzać plikami** – usuwać pojedyncze pliki scrapów lub cały indeks z poziomu panelu.
 5. **Eksportować / importować backupy** – `GET /api/news/faiss/export` buduje zip z manifestem, a `POST /api/news/faiss/import` przywraca pliki (limit 250 MB, walidacja obecności wymaganych pozycji). `GET /api/news/faiss/status` raportuje gotowość backupu, a `DELETE /api/news/indices/faiss_openai_index` czyści całą bazę FAISS wraz z dokumentami.
+
+### Limity długości SMS (Twilio) i dzielenie wiadomości
+
+Twilio ma twardy limit rozmiaru pojedynczego SMS (w praktyce błąd pojawia się przy ok. 1600 znakach sklejonej treści).
+Żeby uniknąć awarii dla dłuższych podsumowań News/RAG oraz odpowiedzi AI, aplikacja stosuje
+wewnętrzny limit bezpieczeństwa 1500 znaków na część i wysyła tekst jako kilka SMS-ów.
+
+Implementacja:
+
+- dzielenie tekstu: `app/message_utils.py` (`MAX_SMS_CHARS = 1500`, `split_sms_chunks()`),
+- wysyłka wieloczęściowa: `app/twilio_client.py` (`TwilioService.send_chunked_sms()`),
+- użycie: News (ręczny send + scheduler) oraz AI auto‑reply/AI send.
 
 `ScraperService` pilnuje, aby kategorie były rozłączne – link musi zaczynać się prefiksem ścieżki kategorii (np. `/technologie/`), dzięki czemu pliki `.json/.txt` nie dublują się między sekcjami.
 

@@ -53,9 +53,17 @@
 - Klasa `TwilioService` opakowuje `twilio.rest.Client`.
 - Główne metody:
   - `send_message(to, body, use_messaging_service, messaging_service_sid, extra_params)` – uniwersalna wysyłka z obsługą Messaging Service lub klasycznego `from_`.
+  - `send_chunked_sms(to, body, from_, max_length)` – wysyła dłuższy tekst jako kilka SMS-ów (limit bezpieczeństwa: 1500 znaków na część), aby uniknąć błędów Twilio dla zbyt długiej treści.
   - `send_reply_to_inbound(inbound_from, inbound_to, body)` – wysyła SMS jako odpowiedź na inbound (zachowuje wątek po stronie Twilio, preferuje Messaging Service; inaczej używa numeru `inbound_to` lub `default_from`).
   - `send_with_default_origin(to, body)` – prosta wysyłka z `TWILIO_DEFAULT_FROM`.
   - `list_messages`, `fetch_message`, `redact_message`, `delete_message`.
+
+### Limity SMS i dzielenie treści
+
+- Twilio odrzuca pojedyncze SMS-y przekraczające limit rozmiaru (w praktyce błąd pojawia się przy sklejonej treści około 1600 znaków).
+- Aplikacja stosuje limit bezpieczeństwa 1500 znaków na część (`MAX_SMS_CHARS`) w [app/message_utils.py](app/message_utils.py).
+- Dzielenie próbuje ciąć po granicach akapitów i zdań (`\n\n`, `\n`, `. `, `! `, `? `), a gdy to niemożliwe — wykonuje twarde cięcie.
+- Funkcjonalność jest używana przez wysyłkę News/RAG i odpowiedzi AI, dzięki czemu backend nie musi ucinać treści.
 
 ## AI i generowanie odpowiedzi (`app/ai_service.py`)
 

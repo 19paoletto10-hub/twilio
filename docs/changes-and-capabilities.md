@@ -5,6 +5,7 @@ Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji T
 ## Kluczowe zmiany (backend)
 - Spójna konfiguracja przez dataclasses i walidację env w [app/config.py](app/config.py) (m.in. SECOND_OPENAI, SECOND_MODEL, EMBEDDING_MODEL; maskowanie kluczy w logach dev).
 - Rozbudowana warstwa Twilio w [app/twilio_client.py](app/twilio_client.py): wsparcie Messaging Service, bezpieczny fallback do `TWILIO_DEFAULT_FROM`, helper `send_sms()` z bezpiecznym rezultatem.
+- Dzielenie długich wiadomości na części (limit bezpieczeństwa 1500 znaków) w [app/message_utils.py](app/message_utils.py) i wysyłka wieloczęściowa przez `send_chunked_sms()` w [app/twilio_client.py](app/twilio_client.py) — używane przez AI oraz News/RAG.
 - Nowe i rozszerzone API w [app/webhooks.py](app/webhooks.py):
   - SMS: wysyłka (`/api/send-message`), lista/filtry/statystyki (`/api/messages*`), rozmowy (`/api/conversations*`), redakcja/usuwanie, webhook statusów `/twilio/status`.
   - Auto-odpowiedzi: odczyt/zapis `/api/auto-reply/config` z koordynacją trybu AI vs klasyczny.
