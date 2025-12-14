@@ -35,13 +35,25 @@
 
 Repo zawiera kilka poziomów dokumentacji – zależnie od tego, czy jesteś operatorem, devem czy robisz wdrożenie:
 
-- Start i uruchomienie: ten plik (README).
-- Przegląd architektury i modułów: `docs/architecture-notes.md`.
-- Zmiany i capability map + skrócony runbook: `docs/changes-and-capabilities.md`.
-- Przegląd rozwiązania w HTML (lekki, gotowy do PDF): `docs/app-overview.html`.
-- Pełna dokumentacja (HTML, responsywna, przygotowana pod druk/PDF): `deploy/releases/full_documentation.html`.
-- Release notes (MD/HTML): katalog `deploy/releases/`.
-- Release bundle i manifesty paczek: katalog `release/`.
+| Dokument | Opis |
+|----------|------|
+| [README.md](README.md) | Start i uruchomienie (ten plik) |
+| [docs/docker-guide.md](docs/docker-guide.md) | **Kompletny przewodnik Docker** – od instalacji po produkcję z SSL |
+| [docs/developer-guide.md](docs/developer-guide.md) | Przewodnik dla deweloperów – architektura, baza danych, API |
+| [docs/architecture-notes.md](docs/architecture-notes.md) | Przegląd architektury i modułów |
+| [docs/changes-and-capabilities.md](docs/changes-and-capabilities.md) | Zmiany i capability map + skrócony runbook |
+| [docs/app-overview.html](docs/app-overview.html) | Przegląd rozwiązania w HTML (lekki, gotowy do PDF) |
+| [deploy/releases/full_documentation.html](deploy/releases/full_documentation.html) | Pełna dokumentacja (HTML, responsywna, przygotowana pod druk/PDF) |
+| [deploy/releases/](deploy/releases/) | Release notes (MD/HTML) dla każdej wersji |
+| [release/](release/) | Release bundle i manifesty paczek |
+
+### Skrypty pomocnicze
+
+| Skrypt | Opis |
+|--------|------|
+| `scripts/backup_db.sh` | Backup bazy SQLite (Docker + lokalnie) |
+| `scripts/prepare_release_bundle.sh` | Budowanie paczki release |
+| `scripts/demo_send.sh` | Wysyłka testowego SMS |
 
 ## Najważniejsze wyróżniki produktu
 
@@ -197,6 +209,24 @@ Tipy operacyjne:
 
 ## Uruchomienie w Dockerze
 
+> 📚 **Pełna dokumentacja Docker:** [docs/docker-guide.md](docs/docker-guide.md) – kompletny przewodnik od instalacji po produkcję z SSL.
+
+### Quick Start
+
+```bash
+# 1. Skopiuj i uzupełnij konfigurację
+cp .env.example .env   # lub utwórz .env z wymaganymi zmiennymi
+
+# 2. Utwórz katalogi na dane
+mkdir -p data X1_data
+
+# 3. Uruchom (development)
+make compose-up        # lub: docker compose up --build
+
+# 4. Otwórz przeglądarkę
+# → http://localhost:3000
+```
+
 ### Obraz lokalny
 
 ```bash
@@ -210,26 +240,61 @@ docker run --rm -it \
   twilio-chat:latest
 ```
 
-### docker-compose (dev / prod)
+### docker-compose (dev / prod / SSL)
 
-Dev:
-
-```bash
-make compose-up        # alias na: docker compose up --build
-```
-
-Prod (np. na serwerze):
+| Komenda | Środowisko | Opis |
+|---------|------------|------|
+| `make compose-up` | Development | Port 3000, logi na konsoli |
+| `make compose-prod` | Production | NGINX na porcie 80 |
+| `make compose-ssl` | Production + SSL | NGINX + Let's Encrypt (porty 80+443) |
 
 ```bash
-make compose-prod      # docker compose -f docker-compose.production.yml up --build -d
+# Development
+make compose-up
+
+# Production (NGINX reverse proxy)
+make compose-prod
+
+# Production z SSL/TLS
+make compose-ssl
 ```
+
+### Przydatne komendy Docker
+
+```bash
+make help              # Wszystkie dostępne komendy
+make logs              # Logi kontenerów (na żywo)
+make stop              # Zatrzymaj kontenery
+make health            # Sprawdź /api/health
+make backup            # Backup bazy SQLite
+make restore F=...     # Przywróć backup
+make clean             # Usuń kontenery i obrazy
+```
+
+### Wolumeny (persystencja danych)
 
 Przy pracy z Dockerem **koniecznie** montuj:
 
-- `./data -> /app/data` (baza SQLite),
-- `./X1_data -> /app/X1_data` (indeks FAISS i dokumenty RAG).
+| Wolumen | Zawartość |
+|---------|-----------|
+| `./data:/app/data` | Baza SQLite (`app.db`) |
+| `./X1_data:/app/X1_data` | Indeks FAISS, dokumenty RAG |
 
 Dzięki temu restart kontenerów nie kasuje historii wiadomości ani indeksu.
+
+### CI/CD (GitHub Actions)
+
+Repozytorium zawiera workflow [.github/workflows/docker-build.yml](.github/workflows/docker-build.yml), który:
+
+- Automatycznie buduje obraz przy push do `main` lub tagu `ver*`
+- Publikuje do GitHub Container Registry (GHCR)
+- Testuje obraz (health check)
+- Opcjonalnie deployuje na serwer (wymaga konfiguracji sekretów)
+
+```bash
+# Użycie opublikowanego obrazu:
+docker pull ghcr.io/19paoletto10-hub/twilio:latest
+```
 
 ---
 

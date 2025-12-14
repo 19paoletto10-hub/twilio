@@ -1,0 +1,177 @@
+# =============================================================================
+# Docker Compose - Produkcja z SSL/TLS (Let's Encrypt)
+# =============================================================================
+#
+# Ten plik konfiguruje pełny stack produkcyjny z HTTPS:
+#   - web: Aplikacja Flask + Gunicorn
+#   - proxy: NGINX z SSL termination
+#   - certbot: Automatyczne odnawianie certyfikatów
+#
+# PRZED URUCHOMIENIEM:
+# 1. Zmień 'twoja-domena.pl' w deploy/nginx/default-ssl.conf
+# 2. Uzyskaj pierwszy certyfikat (patrz INSTRUKCJA poniżej)
+# 3. Uzupełnij plik .env
+#
+# INSTRUKCJA UZYSKANIA CERTYFIKATU:
+# ---------------------------------
+# Krok 1: Uruchom najpierw BEZ SSL (tylko HTTP) do weryfikacji domeny
+#   docker compose -f docker-compose.production.yml up -d
+#
+# Krok 2: Uzyskaj certyfikat
+#   docker run --rm \
+#     -v $(pwd)/deploy/certbot/www:/var/www/certbot \
+#     -v $(pwd)/deploy/certbot/conf:/etc/letsencrypt \
+#     certbot/certbot certonly \
+#     --webroot \
+#     --webroot-path=/var/www/certbot \
+#     -d twoja-domena.pl \
+#     -d www.twoja-domena.pl \
+#     --email twoj@email.com \
+#     --agree-tos \
+#     --no-eff-email
+#
+# Krok 3: Zatrzymaj i uruchom z SSL
+#   docker compose -f docker-compose.production.yml down
+#   docker compose -f docker-compose.ssl.yml up -d
+#
+# UWAGI:
+# - Port 80 musi być otwarty (dla challenge Let's Encrypt)
+# - Port 443 musi być otwarty (dla HTTPS)
+# - DNS musi wskazywać na serwer
+#
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # Aplikacja Flask + Gunicorn
+  # ===========================================================================
+  web:
+    build: .
+    image: twilio-chat:latest
+    
+    # Zmienne środowiskowe z pliku .env
+    env_file:
+      - .env
+    
+    # Nadpisanie zmiennych dla produkcji
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - TWILIO_VALIDATE_SIGNATURE=true
+    
+    # Wolumeny - persystencja danych
+    volumes:
+      - ./data:/app/data              # Baza SQLite
+      - ./X1_data:/app/X1_data        # Indeks FAISS (opcjonalnie)
+    
+    # Port TYLKO wewnętrzny (nie wystawiaj na zewnątrz!)
+    expose:
+      - "3000"
+    
+    # Zawsze restartuj
+    restart: always
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    
+    # Limity zasobów (opcjonalne)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 256M
+    
+    # Sieć
+    networks:
+      - twilio_network
+
+  # ===========================================================================
+  # NGINX Reverse Proxy z SSL
+  # ===========================================================================
+  proxy:
+    image: nginx:stable-alpine
+    
+    # Porty zewnętrzne
+    ports:
+      - "80:80"     # HTTP (przekierowanie do HTTPS + Let's Encrypt challenge)
+      - "443:443"   # HTTPS
+    
+    # Wolumeny
+    volumes:
+      # Konfiguracja NGINX z SSL
+      - ./deploy/nginx/default-ssl.conf:/etc/nginx/conf.d/default.conf:ro
+      
+      # Let's Encrypt - pliki challenge
+      - ./deploy/certbot/www:/var/www/certbot:ro
+      
+      # Let's Encrypt - certyfikaty
+      - ./deploy/certbot/conf:/etc/letsencrypt:ro
+    
+    # Zależności
+    depends_on:
+      web:
+        condition: service_healthy
+    
+    # Zawsze restartuj
+    restart: always
+    
+    # Health check dla NGINX
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    
+    # Sieć
+    networks:
+      - twilio_network
+
+  # ===========================================================================
+  # Certbot - automatyczne odnawianie certyfikatów
+  # ===========================================================================
+  certbot:
+    image: certbot/certbot:latest
+    
+    # Wolumeny (te same co NGINX)
+    volumes:
+      - ./deploy/certbot/www:/var/www/certbot
+      - ./deploy/certbot/conf:/etc/letsencrypt
+    
+    # Entrypoint - pętla odnawiania co 12h
+    # Certbot sprawdza czy certyfikat wymaga odnowienia
+    # (odnawia tylko jeśli wygasa w ciągu 30 dni)
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done;'"
+    
+    # Nie restartuj przy exit 0
+    restart: unless-stopped
+    
+    # Sieć
+    networks:
+      - twilio_network
+
+# =============================================================================
+# Sieci
+# =============================================================================
+networks:
+  twilio_network:
+    driver: bridge
+
+# =============================================================================
+# Wolumeny (named volumes - alternatywa do bind mounts)
+# =============================================================================
+# Odkomentuj jeśli wolisz named volumes zamiast bind mounts
+# volumes:
+#   twilio_data:
+#   twilio_faiss:
+#   certbot_www:
+#   certbot_conf:

@@ -1,0 +1,4 @@
+# Ten katalog jest przeznaczony na pliki challenge Let's Encrypt
+# Certbot umieszcza tutaj pliki weryfikacyjne podczas uzyskiwania certyfikatu
+# 
+# NIE commituj rzeczywistych plików challenge do repozytorium

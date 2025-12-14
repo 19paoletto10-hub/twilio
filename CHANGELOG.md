@@ -1,5 +1,103 @@
 # Changelog
 
+## ver3.2.0 (Docker Documentation + CI/CD + DevOps Toolkit)
+
+### Podsumowanie
+
+Release 3.2.0 to kompleksowa aktualizacja dokumentacji i narzędzi DevOps. Wprowadza pełny
+przewodnik Docker od podstaw (z wyjaśnieniami wszystkich pojęć), automatyzację CI/CD przez
+GitHub Actions, skrypt do backupu bazy danych oraz gotową konfigurację SSL/TLS z Let's Encrypt.
+Rozbudowano również dokumentację bazy danych w developer-guide.md o pełny schemat tabel,
+historię migracji i przykłady dodawania nowych struktur.
+
+### Najważniejsze zmiany
+
+#### 📚 Nowa dokumentacja Docker
+- **[docs/docker-guide.md](docs/docker-guide.md)** – kompletny przewodnik Docker od zera:
+  - Słownik 25+ pojęć Docker z wyjaśnieniami i analogiami dla początkujących
+  - Instalacja Docker na Ubuntu/macOS/Windows
+  - Diagramy architektury kontenerów (development vs production)
+  - Quick Start w 5 minut
+  - Krok po kroku: Development (6 kroków z komentarzami)
+  - Krok po kroku: Production (5 kroków + konfiguracja webhooków Twilio)
+  - Sekcja Troubleshooting z typowymi problemami
+  - FAQ
+
+#### 🔐 SSL/TLS z Let's Encrypt
+- **[deploy/nginx/default-ssl.conf](deploy/nginx/default-ssl.conf)** – konfiguracja NGINX z HTTPS
+- **[docker-compose.ssl.yml](docker-compose.ssl.yml)** – stack produkcyjny z certbot
+- Automatyczne odnawianie certyfikatów (kontener certbot)
+- Nagłówki bezpieczeństwa (X-Frame-Options, X-Content-Type-Options, HSTS)
+
+#### 🔄 CI/CD z GitHub Actions
+- **[.github/workflows/docker-build.yml](.github/workflows/docker-build.yml)** – workflow automatyzacji:
+  - Build obrazu przy push do `main` lub tagu `ver*`
+  - Publikacja do GitHub Container Registry (GHCR)
+  - Testowanie obrazu (health check)
+  - Opcjonalny auto-deploy przez SSH
+  - Szczegółowe komentarze wyjaśniające każdy krok
+
+#### 💾 Backup bazy danych
+- **[scripts/backup_db.sh](scripts/backup_db.sh)** – profesjonalny skrypt backup:
+  - Automatyczne wykrywanie źródła (Docker lub lokalnie)
+  - Weryfikacja integralności SQLite
+  - Rotacja starych backupów (domyślnie 7 dni)
+  - Tryby `--dry-run`, `--list`, `--restore`
+  - Kolorowy output i szczegółowe logi
+
+#### 📖 Rozszerzona dokumentacja bazy danych
+- **[docs/developer-guide.md](docs/developer-guide.md)** – rozbudowana sekcja DB:
+  - Pełna struktura 6 tabel z opisami kolumn
+  - Historia migracji (wersja 1→7)
+  - Diagram przepływu `_ensure_schema()`
+  - Przykład krok po kroku: dodawanie nowej tabeli
+  - Opis normalizacji numerów telefonów
+  - Tabela helper functions i best practices
+
+#### 🛠️ Rozszerzony Makefile
+- Nowe komendy: `make compose-ssl`, `make backup`, `make restore`, `make health`
+- Czytelny help z ramkami ASCII
+
+### Nowe pliki
+
+```
+.github/workflows/docker-build.yml    # CI/CD workflow
+deploy/nginx/default-ssl.conf         # NGINX z SSL
+deploy/certbot/www/.gitkeep           # Katalog Let's Encrypt challenge
+deploy/certbot/conf/.gitkeep          # Katalog certyfikatów
+docker-compose.ssl.yml                # Compose z SSL
+docs/docker-guide.md                  # Przewodnik Docker
+scripts/backup_db.sh                  # Skrypt backup
+```
+
+### Zaktualizowane pliki
+
+```
+README.md                             # Rozszerzona sekcja Docker + tabele dokumentacji
+docs/README.md                        # Nowy spis treści z linkami
+docs/developer-guide.md               # Rozbudowana sekcja bazy danych
+Makefile                              # Nowe komendy
+```
+
+### Kompatybilność i upgrade
+
+- **Brak zmian łamiących** – wszystkie istniejące funkcjonalności działają bez modyfikacji
+- **Brak migracji DB** – schemat pozostaje na wersji 7
+- Nowe pliki nie wpływają na działanie aplikacji w istniejących deploymentach
+- Zalecane: przejrzenie nowego przewodnika Docker przed kolejnym wdrożeniem
+
+### Użycie opublikowanego obrazu (po merge)
+
+```bash
+# Pull z GitHub Container Registry
+docker pull ghcr.io/19paoletto10-hub/twilio:latest
+
+# Lub z tagiem wersji
+docker pull ghcr.io/19paoletto10-hub/twilio:3.2.0
+```
+
+---
+
 ## ver3.1.3 (Chunked SMS + docs refresh)
 
 ### Podsumowanie

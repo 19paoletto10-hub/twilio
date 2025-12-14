@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Release Notes: ver3.2.0 – Twilio Chat App</title>
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --success: #198754;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #fff;
+        }
+        
+        h1 {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        h2 {
+            color: var(--dark);
+            margin-top: 2rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        h3 {
+            color: #495057;
+            margin-top: 1.5rem;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        
+        .date {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border-left: 4px solid var(--primary);
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .summary-box h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .feature-card {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem;
+            transition: box-shadow 0.2s;
+        }
+        
+        .feature-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .feature-card p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        .emoji {
+            font-size: 1.3rem;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+        
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+        
+        th {
+            background: var(--light);
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+        
+        code {
+            background: #f1f3f4;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        
+        .file-tree {
+            background: #2d2d2d;
+            color: #cccccc;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .file-tree .folder {
+            color: #569cd6;
+        }
+        
+        .file-tree .file {
+            color: #9cdcfe;
+        }
+        
+        .file-tree .comment {
+            color: #6a9955;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .compatibility-table td:first-child {
+            width: 200px;
+        }
+        
+        .upgrade-steps {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .upgrade-steps h4 {
+            margin-top: 0;
+            color: var(--success);
+        }
+        
+        .upgrade-steps ol {
+            margin-bottom: 0;
+        }
+        
+        .toc {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+        }
+        
+        .toc h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--dark);
+        }
+        
+        .toc ul {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+        
+        .toc a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        
+        footer {
+            margin-top: 3rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            color: #6c757d;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        @media print {
+            body {
+                max-width: 100%;
+                padding: 1rem;
+            }
+            
+            .feature-card:hover {
+                box-shadow: none;
+            }
+            
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🚀 Release Notes: ver3.2.0</h1>
+        <p class="subtitle">Docker Documentation + CI/CD + DevOps Toolkit</p>
+        <p class="date">📅 Data wydania: 2024-12-14</p>
+    </header>
+
+    <nav class="toc">
+        <h4>📑 Spis treści</h4>
+        <ul>
+            <li><a href="#summary">Podsumowanie</a></li>
+            <li><a href="#features">Najważniejsze zmiany</a></li>
+            <li><a href="#new-files">Nowe pliki</a></li>
+            <li><a href="#upgrade">Instrukcja upgrade</a></li>
+            <li><a href="#compatibility">Kompatybilność</a></li>
+        </ul>
+    </nav>
+
+    <section id="summary">
+        <h2>📋 Podsumowanie</h2>
+        
+        <div class="summary-box">
+            <h3>Dla kogo jest ta wersja?</h3>
+            <ul>
+                <li><strong>DevOps / Administratorzy</strong> – gotowe narzędzia do wdrożenia produkcyjnego</li>
+                <li><strong>Początkujący z Docker</strong> – szczegółowe wyjaśnienia każdego pojęcia</li>
+                <li><strong>Zespoły deweloperskie</strong> – CI/CD out-of-the-box</li>
+                <li><strong>Operatorzy</strong> – automatyczny backup bazy danych</li>
+            </ul>
+        </div>
+        
+        <p>
+            Release 3.2.0 to kompleksowa aktualizacja dokumentacji i narzędzi DevOps dla Twilio Chat App.
+            Wprowadza pełny przewodnik Docker od podstaw (z wyjaśnieniami wszystkich pojęć), automatyzację
+            CI/CD przez GitHub Actions, skrypt do backupu bazy danych oraz gotową konfigurację SSL/TLS
+            z Let's Encrypt.
+        </p>
+    </section>
+
+    <section id="features">
+        <h2>✨ Najważniejsze zmiany</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4><span class="emoji">📚</span> Dokumentacja Docker</h4>
+                <p>Kompletny przewodnik z 25+ pojęciami, diagramami i krokami od instalacji po SSL</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4><span class="emoji">🔐</span> SSL/TLS</h4>
+                <p>Let's Encrypt, certbot, automatyczne odnawianie, nagłówki bezpieczeństwa</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4><span class="emoji">🔄</span> CI/CD</h4>
+                <p>GitHub Actions: build, test, publikacja do GHCR, opcjonalny auto-deploy</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4><span class="emoji">💾</span> Backup DB</h4>
+                <p>Skrypt z wykrywaniem źródła, weryfikacją integralności i rotacją</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4><span class="emoji">📖</span> Developer Guide</h4>
+                <p>Rozbudowana sekcja DB: schemat tabel, migracje, przykłady</p>
+            </div>
+            
+            <div class="feature-card">
+                <h4><span class="emoji">🛠️</span> Makefile</h4>
+                <p>Nowe komendy: compose-ssl, backup, restore, health</p>
+            </div>
+        </div>
+
+        <h3>📚 Nowa dokumentacja Docker</h3>
+        <p>Utworzono kompletny przewodnik <code>docs/docker-guide.md</code> zawierający:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Sekcja</th>
+                    <th>Zawartość</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Słownik pojęć</td>
+                    <td>25+ terminów Docker z analogiami dla początkujących</td>
+                </tr>
+                <tr>
+                    <td>Wymagania</td>
+                    <td>Instalacja Docker na Ubuntu/macOS/Windows</td>
+                </tr>
+                <tr>
+                    <td>Architektura</td>
+                    <td>Diagramy ASCII dla dev i prod</td>
+                </tr>
+                <tr>
+                    <td>Quick Start</td>
+                    <td>Uruchomienie w 5 minut</td>
+                </tr>
+                <tr>
+                    <td>SSL/TLS</td>
+                    <td>Let's Encrypt + certbot</td>
+                </tr>
+                <tr>
+                    <td>Troubleshooting</td>
+                    <td>Typowe problemy i rozwiązania</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>🔄 CI/CD z GitHub Actions</h3>
+        <p>Workflow automatyzacji:</p>
+        
+        <pre><code># Wyzwalacze:
+- Push do main → buduje i publikuje jako 'latest'
+- Tag ver* → buduje z tagiem wersji (np. 3.2.0)
+- Pull Request → tylko weryfikacja (nie publikuje)
+
+# Po merge możesz użyć:
+docker pull ghcr.io/19paoletto10-hub/twilio:latest
+docker pull ghcr.io/19paoletto10-hub/twilio:3.2.0</code></pre>
+
+        <h3>💾 Backup bazy danych</h3>
+        <pre><code># Podstawowe użycie
+./scripts/backup_db.sh
+
+# Pomoc
+./scripts/backup_db.sh --help
+
+# Lista backupów
+./scripts/backup_db.sh --list
+
+# Przywracanie
+./scripts/backup_db.sh --restore backup/app_20241214_120000.db</code></pre>
+
+        <h3>🛠️ Nowe komendy Makefile</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Komenda</th>
+                    <th>Opis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>make compose-ssl</code></td>
+                    <td>Produkcja z SSL/TLS</td>
+                </tr>
+                <tr>
+                    <td><code>make backup</code></td>
+                    <td>Backup bazy SQLite</td>
+                </tr>
+                <tr>
+                    <td><code>make restore F=...</code></td>
+                    <td>Przywróć backup</td>
+                </tr>
+                <tr>
+                    <td><code>make health</code></td>
+                    <td>Sprawdź /api/health</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="new-files">
+        <h2>📁 Nowe pliki</h2>
+        
+        <div class="file-tree">
+            <span class="folder">.github/</span><br>
+            └── <span class="folder">workflows/</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">docker-build.yml</span> <span class="comment"># CI/CD workflow</span><br>
+            <br>
+            <span class="folder">deploy/</span><br>
+            ├── <span class="folder">certbot/</span><br>
+            │&nbsp;&nbsp;&nbsp;├── <span class="folder">conf/</span><span class="file">.gitkeep</span> <span class="comment"># Katalog certyfikatów</span><br>
+            │&nbsp;&nbsp;&nbsp;└── <span class="folder">www/</span><span class="file">.gitkeep</span> <span class="comment"># Katalog challenge</span><br>
+            └── <span class="folder">nginx/</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;└── <span class="file">default-ssl.conf</span> <span class="comment"># NGINX z SSL</span><br>
+            <br>
+            <span class="folder">docs/</span><br>
+            └── <span class="file">docker-guide.md</span> <span class="comment"># Przewodnik Docker</span><br>
+            <br>
+            <span class="folder">scripts/</span><br>
+            └── <span class="file">backup_db.sh</span> <span class="comment"># Skrypt backup</span><br>
+            <br>
+            <span class="file">docker-compose.ssl.yml</span> <span class="comment"># Compose z SSL</span>
+        </div>
+    </section>
+
+    <section id="upgrade">
+        <h2>⬆️ Instrukcja upgrade</h2>
+        
+        <div class="upgrade-steps">
+            <h4>Z wersji 3.1.x</h4>
+            <ol>
+                <li>Backup bazy: <code>./scripts/backup_db.sh</code></li>
+                <li>Pull zmian: <code>git pull origin main</code></li>
+                <li>Restart: <code>docker compose down && docker compose up --build -d</code></li>
+                <li>Weryfikacja: <code>curl localhost:3000/api/health</code></li>
+            </ol>
+        </div>
+        
+        <div class="upgrade-steps">
+            <h4>Świeża instalacja</h4>
+            <ol>
+                <li>Clone: <code>git clone https://github.com/19paoletto10-hub/twilio.git</code></li>
+                <li>Konfiguracja: <code>cp .env.example .env</code> (edytuj)</li>
+                <li>Start: <code>docker compose up --build -d</code></li>
+            </ol>
+        </div>
+    </section>
+
+    <section id="compatibility">
+        <h2>✅ Kompatybilność</h2>
+        
+        <table class="compatibility-table">
+            <thead>
+                <tr>
+                    <th>Aspekt</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Breaking changes</td>
+                    <td><span class="badge badge-success">❌ Brak</span></td>
+                </tr>
+                <tr>
+                    <td>Migracja DB</td>
+                    <td><span class="badge badge-success">❌ Nie wymagana</span></td>
+                </tr>
+                <tr>
+                    <td>API endpoints</td>
+                    <td><span class="badge badge-success">✅ Bez zmian</span></td>
+                </tr>
+                <tr>
+                    <td>Docker images</td>
+                    <td><span class="badge badge-success">✅ Kompatybilne</span></td>
+                </tr>
+                <tr>
+                    <td>Schema version</td>
+                    <td><span class="badge badge-info">v7 (bez zmian)</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>📌 Znane ograniczenia</h2>
+        <ul>
+            <li>CI/CD auto-deploy wymaga skonfigurowania sekretów GitHub</li>
+            <li>SSL/TLS wymaga publicznej domeny z prawidłowym DNS</li>
+            <li>Backup weryfikacja integralności wymaga sqlite3 na hoście</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>🔗 Linki</h2>
+        <ul>
+            <li><a href="../../docs/docker-guide.md">Dokumentacja Docker</a></li>
+            <li><a href="../../docs/developer-guide.md">Developer Guide</a></li>
+            <li><a href="../../README.md">Główne README</a></li>
+            <li><a href="../../CHANGELOG.md">CHANGELOG</a></li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>
+            <strong>Twilio Chat App</strong> – ver3.2.0<br>
+            © 2024 Twilio Chat Team
+        </p>
+    </footer>
+</body>
+</html>

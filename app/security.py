@@ -6,12 +6,11 @@ Provides request validation, security headers, and webhook signature verificatio
 
 from __future__ import annotations
 
-import hashlib
 import hmac
+import os
 from typing import Callable, Optional
-from urllib.parse import urljoin
 
-from flask import Request, current_app, request
+from flask import Request, abort, current_app, request
 from twilio.request_validator import RequestValidator
 
 
@@ -29,7 +28,13 @@ class TwilioWebhookValidator:
 
         Args:
             auth_token: Twilio account auth token for signature validation
+
+        Raises:
+            ValueError: If the auth token is missing
         """
+        if not auth_token:
+            raise ValueError("Twilio auth_token is required for webhook validation.")
+
         self.validator = RequestValidator(auth_token)
 
     def validate_request(
@@ -48,16 +53,11 @@ class TwilioWebhookValidator:
         Returns:
             True if signature is valid, False otherwise
         """
-        # Get the Twilio signature from headers
         signature = req.headers.get("X-Twilio-Signature", "")
-
-        # Construct the full URL (handle proxies)
         url = url_override or req.url
+        params = req.form.to_dict(flat=True)
 
-        # Get form parameters (Twilio sends POST data as form-encoded)
-        params = req.form.to_dict()
-
-        return self.validator.validate(url, params, signature)
+        return bool(self.validator.validate(url, params, signature))
 
 
 def add_security_headers(response):
@@ -98,13 +98,11 @@ def add_security_headers(response):
     response.headers["X-Frame-Options"] = "DENY"
 
     # Control referrer information
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Referrer-Policy"] = "no-referrer"
 
-    # HSTS (only in production with HTTPS)
-    if not current_app.config["APP_SETTINGS"].debug:
-        response.headers["Strict-Transport-Security"] = (
-            "max-age=31536000; includeSubDomains"
-        )
+    # HSTS only when request is served over HTTPS
+    if request.is_secure:
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
     return response
 
@@ -129,22 +127,23 @@ def require_webhook_signature(f: Callable) -> Callable:
 
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Skip validation in development mode if explicitly disabled
-        skip_validation = (
-            current_app.config["APP_SETTINGS"].debug
-            and current_app.config.get("SKIP_WEBHOOK_VALIDATION", False)
-        )
+        # Allow explicit opt-out via env or debug flag (for local dev only)
+        skip_env = os.getenv("TWILIO_VALIDATE_SIGNATURE", "true").lower() in {"0", "false", "f", "no", "n"}
+        skip_debug = current_app.config.get("APP_SETTINGS") and current_app.config["APP_SETTINGS"].debug and current_app.config.get("SKIP_WEBHOOK_VALIDATION", False)
 
-        if not skip_validation:
-            twilio_settings = current_app.config["TWILIO_SETTINGS"]
-            validator = TwilioWebhookValidator(twilio_settings.auth_token)
+        if not (skip_env or skip_debug):
+            settings = current_app.config.get("TWILIO_SETTINGS")
+            if not settings or not getattr(settings, "auth_token", None):
+                current_app.logger.error("Missing Twilio auth_token for webhook validation.")
+                abort(503, description="Webhook validation unavailable")
 
+            validator = TwilioWebhookValidator(settings.auth_token)
             if not validator.validate_request(request):
                 current_app.logger.warning(
                     "Invalid Twilio webhook signature from IP: %s",
                     request.remote_addr,
                 )
-                return {"error": "Invalid signature"}, 403
+                return {"error": "invalid signature"}, 403
 
         return f(*args, **kwargs)
 
@@ -214,6 +213,12 @@ def sanitize_error_message(error: Exception) -> str:
 
     # Remove IP addresses
     message = re.sub(r"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", "[IP]", message)
+
+    # Explicitly mask known secrets from environment
+    for env_key in ("TWILIO_AUTH_TOKEN", "OPENAI_API_KEY"):
+        secret = os.getenv(env_key)
+        if secret and secret in message:
+            message = message.replace(secret, "[REDACTED]")
 
     return message
 

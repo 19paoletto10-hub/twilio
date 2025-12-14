@@ -34,6 +34,14 @@
       porządkuje też dokumentację (README, docs/ oraz pełną dokumentację HTML) oraz
       ujednolica instrukcje publikacji release.
     </p>
+    <div class="callout">
+      <strong>Korzyści operacyjne</strong>
+      <ul>
+        <li>Brak błędów „exceeds 1600 chars” przy długich odpowiedziach AI/News.</li>
+        <li>Spójna mapa dokumentacji: README + docs/ + pełny HTML + release notes.</li>
+        <li>Przygotowane instrukcje bundlowania paczki bez danych wrażliwych.</li>
+      </ul>
+    </div>
   </section>
 
   <section>
@@ -69,6 +77,16 @@
       <li>Brak zmian w publicznych endpointach API.</li>
       <li>Jedna odpowiedź może być wysłana jako kilka SMS-ów (kilka SID-ów) — uwzględnij to, jeśli monitorujesz SID per wiadomość w zewnętrznych integracjach.</li>
     </ul>
+    <div class="callout" style="margin-top:10px">
+      <strong>Checklist upgrade (prod)</strong>
+      <ol>
+        <li>Backup: <code>data/app.db</code> + <code>X1_data/</code>.</li>
+        <li>Twilio: <code>TWILIO_DEFAULT_FROM</code> lub <code>TWILIO_MESSAGING_SERVICE_SID</code> ustawione.</li>
+        <li>AI: <code>OPENAI_API_KEY</code>/<code>AI_*</code> (czat) oraz <code>SECOND_OPENAI</code>/<code>SECOND_MODEL</code> (News/RAG).</li>
+        <li>Deploy Docker: rollout i healthcheck <code>/api/health</code>.</li>
+        <li>Testy dymne: długi AI/News (brak 21617), webhook inbound + auto-reply/AI, News Test/Send, mały batch Multi-SMS.</li>
+      </ol>
+    </div>
   </section>
 
   <section>
@@ -89,6 +107,39 @@ cd release/dist/ver3.1.3
 tar -czf ../ver3.1.3-clean.tar.gz .
     </code></pre>
     <p>Paczka jest gotowa do udostępnienia klientom bez ryzyka wycieku danych newsowych czy sekretów.</p>
+  </section>
+
+  <section>
+    <h2>Zaawansowana konfiguracja (skrót)</h2>
+    <pre><code># Twilio – wymagane
+TWILIO_ACCOUNT_SID=AC...
+TWILIO_AUTH_TOKEN=...
+TWILIO_DEFAULT_FROM=+48123456789   # lub TWILIO_MESSAGING_SERVICE_SID=MG...
+
+# AI / RAG
+OPENAI_API_KEY=sk-...              # czat AI
+AI_MODEL=gpt-4o-mini
+SECOND_OPENAI=sk-...               # embeddings/News
+SECOND_MODEL=gpt-4o-mini
+EMBEDDING_MODEL=text-embedding-3-large
+
+# Aplikacja
+APP_PORT=3000
+PUBLIC_BASE_URL=https://twoja-domena.pl
+TWILIO_VALIDATE_SIGNATURE=true     # w dev możesz ustawić false
+LOG_LEVEL=info
+
+# SMS chunking (domyślnie 1500)
+MAX_SMS_CHARS=1500
+    </code></pre>
+
+    <h3>Walidacja po wdrożeniu (API/CLI)</h3>
+    <ul>
+      <li>Health: <code>curl http://&lt;host&gt;:3000/api/health</code></li>
+      <li>Długi SMS AI (bez wysyłki): <code>curl -X POST http://&lt;host&gt;:3000/api/ai/test -d '{"prompt":"..."}'</code></li>
+      <li>Ręczny News send: <code>curl -X POST http://&lt;host&gt;:3000/api/news/recipients/&lt;id&gt;/send</code></li>
+      <li>Multi-SMS statusy: <code>curl http://&lt;host&gt;:3000/api/multi-sms/batches?include_recipients=1</code></li>
+    </ul>
   </section>
 </body>
 </html>

@@ -1,0 +1,5 @@
+# Ten katalog jest przeznaczony na certyfikaty Let's Encrypt
+# Certbot przechowuje tutaj certyfikaty SSL/TLS
+#
+# UWAGA: NIE commituj certyfikatów do repozytorium!
+# Certyfikaty zawierają klucze prywatne i są wrażliwymi danymi.

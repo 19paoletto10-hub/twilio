@@ -7,3 +7,6 @@ data/
 X1_data/
 *.zip
 release/dist/
+backup/
+release/dist/
+*.tar.gz

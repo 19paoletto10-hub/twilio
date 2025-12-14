@@ -1,0 +1,338 @@
+# =============================================================================
+# GitHub Actions Workflow: Docker Build & Push
+# =============================================================================
+#
+# TEN WORKFLOW:
+#   1. Buduje obraz Docker przy każdym pushu do main lub tagu ver*
+#   2. Publikuje obraz do GitHub Container Registry (GHCR)
+#   3. Testuje zbudowany obraz (health check)
+#   4. Opcjonalnie: deployuje na serwer produkcyjny
+#
+# WYZWALACZE:
+#   - Push do branch 'main' → buduje i publikuje jako 'latest'
+#   - Push tagu 'ver*' → buduje i publikuje z tagiem wersji (np. 3.1.3)
+#   - Pull Request do 'main' → tylko buduje (weryfikacja), nie publikuje
+#
+# WYMAGANE UPRAWNIENIA:
+#   - packages: write (automatycznie przez GITHUB_TOKEN)
+#
+# OPCJONALNE SEKRETY (dla auto-deploy):
+#   - SERVER_HOST: IP/hostname serwera
+#   - SERVER_USER: Użytkownik SSH
+#   - SERVER_SSH_KEY: Klucz prywatny SSH
+#
+# UŻYCIE OPUBLIKOWANEGO OBRAZU:
+#   docker pull ghcr.io/19paoletto10-hub/twilio:latest
+#
+# =============================================================================
+
+name: 🐳 Docker Build & Push
+
+# =============================================================================
+# WYZWALACZE
+# =============================================================================
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'ver*'
+  pull_request:
+    branches:
+      - main
+  
+  # Pozwól na ręczne uruchomienie z GitHub UI
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to production after build?'
+        required: false
+        default: 'false'
+        type: boolean
+
+# =============================================================================
+# ZMIENNE ŚRODOWISKOWE
+# =============================================================================
+env:
+  # GitHub Container Registry
+  REGISTRY: ghcr.io
+  
+  # Nazwa obrazu (owner/repo)
+  IMAGE_NAME: ${{ github.repository }}
+  
+  # Wersja Buildx
+  BUILDX_VERSION: 'latest'
+
+# =============================================================================
+# JOBY
+# =============================================================================
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 1: Build & Push
+  # ═══════════════════════════════════════════════════════════════════════════
+  build:
+    name: 🔨 Build & Push Image
+    runs-on: ubuntu-latest
+    
+    # Uprawnienia wymagane do publikacji w GHCR
+    permissions:
+      contents: read
+      packages: write
+    
+    # Outputy dla kolejnych jobów
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      image_digest: ${{ steps.build.outputs.digest }}
+    
+    steps:
+      # ─────────────────────────────────────────────────────────────────────
+      # Krok 1: Checkout kodu źródłowego
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Pobierz pełną historię (potrzebne dla tagów)
+          fetch-depth: 0
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Krok 2: Setup Docker Buildx
+      # Buildx to zaawansowany builder z obsługą cache i multi-platform
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🔧 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: ${{ env.BUILDX_VERSION }}
+          # Włącz eksport cache do GitHub Actions Cache
+          driver-opts: |
+            image=moby/buildkit:latest
+            network=host
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Krok 3: Login do GitHub Container Registry
+      # Używa automatycznego GITHUB_TOKEN (nie wymaga konfiguracji)
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🔑 Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Krok 4: Ekstrakcja metadanych (tagi i etykiety OCI)
+      # Automatycznie generuje tagi na podstawie eventów Git
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🏷️ Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            # Tag 'latest' dla głównej gałęzi
+            type=raw,value=latest,enable={{is_default_branch}}
+            # Tag ze skrótem SHA commita (7 znaków)
+            type=sha,prefix=sha-,format=short
+            # Tag z nazwy brancha
+            type=ref,event=branch
+            # Tag z wersji (ver3.1.3 → 3.1.3)
+            type=match,pattern=ver(.*),group=1
+            # Tag z pełną nazwą tagu
+            type=ref,event=tag
+          labels: |
+            org.opencontainers.image.title=Twilio Chat App
+            org.opencontainers.image.description=SMS/Chat application with AI integration
+            org.opencontainers.image.vendor=Twilio Chat Team
+            org.opencontainers.image.licenses=MIT
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Krok 5: Build i Push obrazu Docker
+      # Używa GitHub Actions Cache dla warstw Docker
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 🐳 Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          
+          # Push tylko dla push events (nie dla PR)
+          push: ${{ github.event_name != 'pull_request' }}
+          
+          # Tagi i etykiety z poprzedniego kroku
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          
+          # Cache warstw między buildami (przyspiesza buildy ~70%)
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          
+          # Opcjonalnie: multi-platform (odkomentuj jeśli potrzebne)
+          # platforms: linux/amd64,linux/arm64
+          
+          # Prowenance dla supply chain security
+          provenance: true
+          sbom: true
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Krok 6: Podsumowanie (widoczne w GitHub Actions UI)
+      # ─────────────────────────────────────────────────────────────────────
+      - name: 📝 Generate build summary
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "## 🐳 Docker Image Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Image Details" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Registry** | \`${{ env.REGISTRY }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Repository** | \`${{ env.IMAGE_NAME }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Digest** | \`${{ steps.build.outputs.digest }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🏷️ Tags" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🚀 Usage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Pull the latest image" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Run the container" >> $GITHUB_STEP_SUMMARY
+          echo "docker run -d -p 3000:3000 --env-file .env ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 2: Test Image
+  # Uruchamia zbudowany obraz i sprawdza health endpoint
+  # ═══════════════════════════════════════════════════════════════════════════
+  test:
+    name: 🧪 Test Image
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔑 Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🧪 Run health check test
+        run: |
+          echo "🚀 Starting container for testing..."
+          
+          # Uruchom kontener z minimalnymi zmiennymi testowymi
+          docker run -d \
+            --name test-container \
+            -p 3000:3000 \
+            -e TWILIO_ACCOUNT_SID=ACtest00000000000000000000000000 \
+            -e TWILIO_AUTH_TOKEN=test_token_for_ci_testing \
+            -e TWILIO_DEFAULT_FROM=+15551234567 \
+            -e APP_DEBUG=true \
+            -e APP_ENV=test \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          
+          echo "⏳ Waiting for container to start..."
+          sleep 15
+          
+          echo "🔍 Checking container status..."
+          docker ps -a
+          
+          echo "📋 Container logs:"
+          docker logs test-container || true
+          
+          echo "🏥 Testing health endpoint..."
+          curl --retry 5 \
+               --retry-delay 3 \
+               --retry-connrefused \
+               -f \
+               http://localhost:3000/api/health
+          
+          echo ""
+          echo "✅ Health check passed!"
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          docker stop test-container || true
+          docker rm test-container || true
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Job 3: Deploy (opcjonalny)
+  # Wymaga skonfigurowania sekretów: SERVER_HOST, SERVER_USER, SERVER_SSH_KEY
+  # ═══════════════════════════════════════════════════════════════════════════
+  deploy:
+    name: 🚀 Deploy to Production
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    
+    # Uruchom tylko dla:
+    # - Push do main
+    # - LUB ręczne uruchomienie z deploy=true
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true')
+    
+    # Wymaga zatwierdzenia (opcjonalnie - skonfiguruj w Settings > Environments)
+    # environment:
+    #   name: production
+    #   url: https://twoja-domena.pl
+    
+    steps:
+      - name: 🔍 Check deployment secrets
+        run: |
+          if [ -z "${{ secrets.SERVER_HOST }}" ]; then
+            echo "⚠️ SERVER_HOST secret not configured"
+            echo "Skipping deployment - configure secrets to enable auto-deploy"
+            exit 0
+          fi
+
+      - name: 🚀 Deploy via SSH
+        if: ${{ secrets.SERVER_HOST != '' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
+            
+            echo "📦 Deploying Twilio Chat App..."
+            
+            # Przejdź do katalogu aplikacji
+            cd /opt/twilio || cd ~/twilio
+            
+            # Pull najnowszego obrazu
+            echo "⬇️ Pulling latest image..."
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            
+            # Restart kontenerów
+            echo "🔄 Restarting containers..."
+            docker compose -f docker-compose.production.yml up -d
+            
+            # Wyczyść stare obrazy
+            echo "🧹 Cleaning old images..."
+            docker image prune -f
+            
+            # Sprawdź status
+            echo "✅ Deployment complete!"
+            docker compose -f docker-compose.production.yml ps
+
+      - name: 📝 Deployment summary
+        if: ${{ secrets.SERVER_HOST != '' }}
+        run: |
+          echo "## 🚀 Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed to: \`${{ secrets.SERVER_HOST }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Image: \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`" >> $GITHUB_STEP_SUMMARY
