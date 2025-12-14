@@ -5,14 +5,15 @@
       "id": 1,
       "phone": "+48880209541",
       "phone_normalized": "+48880209541",
-      "prompt": "z kazdej kategori wypisz podsumowanie, sformatowana odpowiedz",
-      "time": "11:00",
+      "prompt": "Przygotuj profesjonalne, polskie streszczenie wszystkich kategorii newsów. Każdą kategorię analizuj oddzielnie. Dla KAŻDEJ kategorii wypisz nagłówek oraz 2-3 zdania z najważniejszymi faktami (bez wypunktowań). Uwzględniaj konkrety (liczby, decyzje, konsekwencje). Jeśli brak danych, napisz 'brak danych'.",
+      "time": "08:00",
       "enabled": true,
-      "created_at": "2025-12-13T09:44:42.666544Z",
-      "last_sent_at": "2025-12-13T09:44:53.257353Z"
+      "created_at": "2025-12-13T23:38:11.465974Z",
+      "last_sent_at": "2025-12-14T00:15:43.153569Z",
+      "use_all_categories": true
     }
   ],
-  "updated_at": "2025-12-13T10:21:43.303742Z",
-  "last_build_at": "2025-12-13T10:21:43.303724Z",
+  "updated_at": "2025-12-14T00:15:43.153594Z",
+  "last_build_at": "2025-12-13T17:38:36.129541Z",
   "active_index": "faiss_openai_index"
 }

@@ -1,4 +1,14 @@
+"""
+Twilio Chat Application - Main application factory.
+
+This module provides the Flask application factory and initializes
+all components including database, background workers, and routes.
+"""
+
+from __future__ import annotations
+
 from flask import Flask
+
 from .config import get_settings
 from .twilio_client import TwilioService
 from .webhooks import webhooks_bp
@@ -9,44 +19,78 @@ from .auto_reply import start_auto_reply_worker
 from .reminder import start_reminder_worker
 from .news_scheduler import start_news_scheduler
 from .multi_sms import start_multi_sms_worker
+from .security import add_security_headers
 
 
 def create_app() -> Flask:
+    """
+    Create and configure Flask application instance.
+    
+    This factory function:
+    1. Initializes Flask app
+    2. Configures logging
+    3. Loads settings from environment
+    4. Sets up Twilio client
+    5. Initializes database
+    6. Registers blueprints (routes)
+    7. Starts background workers
+    8. Adds security headers
+    
+    Returns:
+        Configured Flask application ready to run
+        
+    Raises:
+        RuntimeError: If required environment variables are missing
+    """
     app = Flask(__name__)
 
+    # Configure logging first for early error visibility
     configure_logging(app)
 
+    # Load configuration from environment
     app_settings, twilio_settings, openai_settings = get_settings()
     app.config["APP_SETTINGS"] = app_settings
     app.config["TWILIO_SETTINGS"] = twilio_settings
     app.config["OPENAI_SETTINGS"] = openai_settings
 
-    # Inicjalizacja serwisu Twilio
+    # Initialize Twilio service
     twilio_client = TwilioService(twilio_settings)
     app.config["TWILIO_CLIENT"] = twilio_client
 
-    # Baza danych + blueprinty
+    # Initialize database and apply environment defaults
     init_database(app)
     apply_ai_env_defaults(app)
+    
+    # Register route blueprints
     app.register_blueprint(webhooks_bp)
     app.register_blueprint(ui_bp)
 
-    # Background worker: auto-reply on inbound messages (SMS-only)
-    start_auto_reply_worker(app)
-    # Background worker: scheduled reminders
-    start_reminder_worker(app)
-    # Background scheduler: News notifications
-    start_news_scheduler(app)
-    # Background worker: Multi-recipient SMS batches
-    start_multi_sms_worker(app)
+    # Start background workers for automated tasks
+    start_auto_reply_worker(app)  # Auto-reply on inbound SMS
+    start_reminder_worker(app)     # Scheduled reminders
+    start_news_scheduler(app)      # News notifications
+    start_multi_sms_worker(app)    # Batch SMS sending
+
+    # Add security headers to all responses
+    @app.after_request
+    def apply_security_headers(response):
+        """Add security headers to every response."""
+        return add_security_headers(response)
 
     @app.get("/api/health")
     def api_health():
+        """
+        Health check endpoint for monitoring and load balancers.
+        
+        Returns:
+            JSON with application status and configuration summary
+        """
         return {
             "status": "ok",
             "message": "Twilio Chat App running",
             "env": app_settings.env,
             "openai_enabled": openai_settings.enabled,
+            "debug": app_settings.debug,
         }
 
     return app

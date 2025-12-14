@@ -56,7 +56,7 @@ from .faiss_service import (
     DOCS_JSON_PATH,
     ARTICLES_JSONL_PATH,
 )
-from .reminder import E164_RE
+from .validators import E164_PATTERN as E164_RE
 
 NEWS_CONFIG_PATH = os.path.join(DATA_DIR, "news_config.json")
 MAX_FAISS_BACKUP_BYTES = 250 * 1024 * 1024  # 250 MB safety limit
@@ -1470,10 +1470,10 @@ def api_send_news_recipient(recipient_id: int):
                 "error": "Brak skonfigurowanego nadawcy Twilio",
             }), 500
 
-        result = twilio_client.send_sms(
+        result = twilio_client.send_chunked_sms(
             from_=origin,
             to=phone,
-            body=message[:1600],
+            body=message,
         )
 
         if result.get("success"):
@@ -1491,6 +1491,7 @@ def api_send_news_recipient(recipient_id: int):
                 "recipient_id": recipient_id,
                 "phone": phone,
                 "message_sid": result.get("sid"),
+                "parts": result.get("parts", 1),
                 "mode": "all_categories" if use_all_categories else "standard",
             })
         else:

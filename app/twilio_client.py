@@ -1,21 +1,51 @@
+"""
+Twilio API client wrapper.
+
+Provides a clean interface for sending SMS/MMS messages via Twilio,
+with proper error handling and configuration management.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 import json
 import logging
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 
 from .config import TwilioSettings
+from .exceptions import TwilioAPIError, ConfigurationError
+from .message_utils import MAX_SMS_CHARS, split_sms_chunks
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class TwilioService:
+    """
+    Twilio API service wrapper for sending messages.
+    
+    Handles message sending with automatic fallback between messaging
+    service and direct number, proper error handling, and logging.
+    
+    Attributes:
+        settings: Twilio configuration (credentials, default sender)
+        client: Initialized Twilio REST API client
+    """
+
     settings: TwilioSettings
 
     def __post_init__(self) -> None:
-        self.client = Client(self.settings.account_sid, self.settings.auth_token)
+        """Initialize Twilio REST client after dataclass creation."""
+        try:
+            self.client = Client(self.settings.account_sid, self.settings.auth_token)
+        except Exception as exc:
+            raise ConfigurationError(
+                f"Failed to initialize Twilio client: {exc}"
+            ) from exc
 
     def send_message(
         self,
@@ -25,6 +55,33 @@ class TwilioService:
         messaging_service_sid: Optional[str] = None,
         extra_params: Optional[Dict[str, Any]] = None,
     ):
+        """
+        Send SMS/MMS message via Twilio.
+        
+        Automatically chooses between Messaging Service and direct number
+        based on configuration and parameters.
+        
+        Args:
+            to: Recipient phone number (E.164 format recommended)
+            body: Message content (max 1600 chars for SMS)
+            use_messaging_service: Force use of messaging service (optional)
+            messaging_service_sid: Override messaging service SID (optional)
+            extra_params: Additional Twilio API parameters (e.g., media_url)
+            
+        Returns:
+            Twilio message instance
+            
+        Raises:
+            ConfigurationError: If sender identity is not configured
+            TwilioAPIError: If Twilio API call fails
+            
+        Examples:
+            >>> service = TwilioService(settings)
+            >>> message = service.send_message(
+            ...     to="+48123456789",
+            ...     body="Hello from Twilio!"
+            ... )
+        """
         extra_params = dict(extra_params or {})
 
         params: Dict[str, Any] = {
@@ -32,6 +89,7 @@ class TwilioService:
             "body": body,
         }
 
+        # Determine sender identity: messaging service or direct number
         should_use_ms = (
             use_messaging_service
             if use_messaging_service is not None
@@ -50,7 +108,7 @@ class TwilioService:
             # default_from is not set but inbound To number is available.
             origin = extra_params.pop("from_", None) or self.settings.default_from
             if not origin:
-                raise RuntimeError(
+                raise ConfigurationError(
                     "Brak TWILIO_DEFAULT_FROM. Ustaw numer nadawcy w .env "
                     "lub użyj TWILIO_MESSAGING_SERVICE_SID z use_messaging_service=True."
                 )
@@ -58,8 +116,25 @@ class TwilioService:
 
         params.update(extra_params)
 
-        message = self.client.messages.create(**params)
-        return message
+        try:
+            message = self.client.messages.create(**params)
+            logger.info(
+                "Sent message to %s with SID=%s (status=%s)",
+                to,
+                message.sid,
+                message.status,
+            )
+            return message
+        except TwilioRestException as exc:
+            logger.exception("Twilio API error: %s", exc)
+            raise TwilioAPIError(
+                f"Failed to send message: {exc}",
+                twilio_code=exc.code,
+                twilio_status=exc.status,
+            ) from exc
+        except Exception as exc:
+            logger.exception("Unexpected error sending message: %s", exc)
+            raise TwilioAPIError(f"Unexpected error: {exc}") from exc
 
     def send_sms(
         self,
@@ -95,6 +170,71 @@ class TwilioService:
             return {
                 "success": False,
                 "error": str(exc),
+            }
+
+    def send_chunked_sms(
+        self,
+        *,
+        to: str,
+        body: str,
+        from_: Optional[str] = None,
+        max_length: int = MAX_SMS_CHARS,
+    ) -> Dict[str, Any]:
+        """Send long text as multiple SMS parts, staying within Twilio size limits.
+
+        Returns a dict mirroring ``send_sms`` with extra metadata about the
+        number of parts and SIDs that Twilio generated. If any chunk fails the
+        method aborts and surfaces the captured error message along with the
+        count of already-sent parts.
+        """
+
+        logger = logging.getLogger(__name__)
+        text = (body or "").strip()
+        if not text:
+            return {
+                "success": False,
+                "error": "Brak treści wiadomości do wysłania.",
+            }
+
+        chunks = split_sms_chunks(text, max_length)
+        sent_messages: List[Any] = []
+        extra_params_template = {"from_": from_} if from_ else {}
+
+        try:
+            for idx, chunk in enumerate(chunks, start=1):
+                extra_params = dict(extra_params_template)
+                message = self.send_message(
+                    to=to,
+                    body=chunk,
+                    extra_params=extra_params,
+                )
+                sent_messages.append(message)
+                logger.info(
+                    "Sent chunk %s/%s to %s (len=%s, sid=%s)",
+                    idx,
+                    len(chunks),
+                    to,
+                    len(chunk),
+                    getattr(message, "sid", None),
+                )
+
+            final = sent_messages[-1]
+            return {
+                "success": True,
+                "sid": getattr(final, "sid", None),
+                "status": getattr(final, "status", None),
+                "parts": len(sent_messages),
+                "sids": [getattr(msg, "sid", None) for msg in sent_messages],
+                "characters": len(text),
+            }
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
+                "Chunked SMS failed after %s parts to %s", len(sent_messages), to
+            )
+            return {
+                "success": False,
+                "error": str(exc),
+                "parts_sent": len(sent_messages),
             }
 
     def send_reply_to_inbound(self, *, inbound_from: str, inbound_to: str, body: str):
