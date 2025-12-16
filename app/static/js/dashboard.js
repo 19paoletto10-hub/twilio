@@ -138,6 +138,11 @@
   const multiSmsRefreshBtn = document.getElementById('multi-sms-refresh-btn');
   const multiSmsBatchCount = document.getElementById('multi-sms-batch-count');
 
+  const dashboardTabs = document.getElementById('dashboard-tabs');
+  const sidebarNavLinks = document.querySelectorAll('[data-dashboard-nav]');
+  const quickScrollLinks = document.querySelectorAll('[data-dashboard-scroll]');
+  const quickRefreshLinks = document.querySelectorAll('[data-dashboard-refresh]');
+
   const DEFAULT_NEWS_PROMPT = window.NEWS_DEFAULT_PROMPT || 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
   const ALL_CATEGORIES_PROMPT = window.NEWS_ALL_CATEGORIES_PROMPT || (
     'Przygotuj profesjonalne streszczenie wszystkich kategorii newsów. ' +
@@ -198,6 +203,93 @@
     const toastInstance = bootstrap.Toast.getOrCreateInstance(toast, { delay: 5000 });
     toastInstance.show();
     toast.addEventListener('hidden.bs.toast', () => toast.remove());
+  };
+
+  const activateSidebarLink = (targetId) => {
+    if (!targetId) {
+      return;
+    }
+    sidebarNavLinks.forEach((link) => {
+      link.classList.toggle('is-active', link.dataset.dashboardNav === targetId);
+    });
+  };
+
+  const initSidebarNavigation = () => {
+    if (!sidebarNavLinks.length) {
+      return;
+    }
+
+    const normalizeTarget = (value) => (value ? value.replace(/^#/, '') : '');
+
+    const defaultTarget = (() => {
+      const activeToggle = document.querySelector('#dashboard-tabs .nav-link.active');
+      const datasetTarget = activeToggle?.getAttribute('data-bs-target');
+      return normalizeTarget(datasetTarget) || 'tab-messages';
+    })();
+
+    activateSidebarLink(defaultTarget);
+
+    sidebarNavLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const targetId = normalizeTarget(link.dataset.dashboardNav);
+        if (!targetId) {
+          return;
+        }
+        event.preventDefault();
+        const trigger = document.querySelector(`#dashboard-tabs [data-bs-target="#${targetId}"]`);
+        if (trigger) {
+          const tabInstance = bootstrap.Tab.getOrCreateInstance(trigger);
+          tabInstance.show();
+        } else {
+          const section = document.getElementById(targetId);
+          section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    if (dashboardTabs) {
+      dashboardTabs.addEventListener('shown.bs.tab', (event) => {
+        const target = normalizeTarget(event?.target?.getAttribute('data-bs-target'));
+        if (target) {
+          activateSidebarLink(target);
+        }
+      });
+    }
+
+    quickScrollLinks.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const href = link.getAttribute('href') || '';
+        if (!href.startsWith('#')) {
+          return;
+        }
+        const target = document.querySelector(href);
+        if (!target) {
+          return;
+        }
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    quickRefreshLinks.forEach((link) => {
+      link.addEventListener('click', async (event) => {
+        event.preventDefault();
+        try {
+          const jobs = [];
+          if (typeof refreshMessages === 'function') {
+            jobs.push(refreshMessages());
+          }
+          if (typeof refreshStats === 'function') {
+            jobs.push(refreshStats());
+          }
+          await Promise.all(jobs);
+          showToast({ title: 'Odświeżono', message: 'Dane zostały zaktualizowane.' });
+        } catch (error) {
+          console.error(error);
+          showToast({ title: 'Błąd', message: 'Nie udało się odświeżyć danych.', type: 'error' });
+        }
+      });
+    });
   };
 
   const escapeHtml = (value = '') =>
@@ -2556,4 +2648,5 @@
   });
 
   document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', initSidebarNavigation);
 })();

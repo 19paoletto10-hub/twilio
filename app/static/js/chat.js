@@ -355,6 +355,27 @@
     startAutoRefresh();
   };
 
+  const initSidebarShortcuts = () => {
+    const links = document.querySelectorAll('[data-chat-scroll]');
+    if (!links.length) {
+      return;
+    }
+    links.forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const href = link.getAttribute('href') || '';
+        if (!href.startsWith('#')) {
+          return;
+        }
+        const target = document.querySelector(href);
+        if (!target) {
+          return;
+        }
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  };
+
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
       if (autoRefreshTimer) {
@@ -367,4 +388,5 @@
   });
 
   document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', initSidebarShortcuts);
 })();

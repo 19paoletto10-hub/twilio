@@ -1,6 +1,41 @@
 {% extends "base.html" %}
 {% block title %}Rozmowa z {{ display_number or 'kontaktem' }} | Twilio{% endblock %}
 
+{% block sidebar %}
+  <aside class="app-sidebar" data-app-sidebar>
+    <div>
+      <div class="app-sidebar__section-title mb-3">Nawigacja</div>
+      <nav class="app-sidebar__nav" aria-label="Widoki">
+        <a class="app-sidebar__link" href="/">
+          <i class="bi bi-speedometer2"></i>
+          <span>Panel główny</span>
+        </a>
+        <a class="app-sidebar__link is-active" href="#chat-root" data-chat-scroll>
+          <i class="bi bi-chat-dots"></i>
+          <span>Bieżąca rozmowa</span>
+        </a>
+      </nav>
+    </div>
+    <div>
+      <div class="app-sidebar__section-title mb-3">Akcje</div>
+      <nav class="app-sidebar__nav" aria-label="Akcje rozmowy">
+        <a class="app-sidebar__link" href="#chat-thread" data-chat-scroll>
+          <i class="bi bi-journal-text"></i>
+          <span>Historia wiadomości</span>
+        </a>
+        <a class="app-sidebar__link" href="#chat-send-form" data-chat-scroll>
+          <i class="bi bi-pencil-square"></i>
+          <span>Napisz odpowiedź</span>
+        </a>
+        <a class="app-sidebar__link" href="https://console.twilio.com/" target="_blank" rel="noreferrer">
+          <i class="bi bi-box-arrow-up-right"></i>
+          <span>Twilio Console</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+{% endblock %}
+
 {% block content %}
   <div
     class="container chat-page"

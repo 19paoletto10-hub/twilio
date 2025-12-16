@@ -1,6 +1,61 @@
 {% extends "base.html" %}
 {% block title %}Panel czatu | Twilio{% endblock %}
 
+{% block sidebar %}
+  <aside class="app-sidebar" data-app-sidebar>
+    <div>
+      <div class="app-sidebar__section-title mb-3">Panel sterowania</div>
+      <nav class="app-sidebar__nav" aria-label="Nawigacja główna">
+        <a
+          class="app-sidebar__link is-active"
+          href="#tab-messages"
+          data-dashboard-nav="tab-messages"
+        >
+          <i class="bi bi-chat-dots"></i>
+          <span>Wiadomości</span>
+        </a>
+        <a class="app-sidebar__link" href="#tab-auto-reply" data-dashboard-nav="tab-auto-reply">
+          <i class="bi bi-arrow-repeat"></i>
+          <span>Auto-odpowiedź</span>
+        </a>
+        <a class="app-sidebar__link" href="#tab-reminders" data-dashboard-nav="tab-reminders">
+          <i class="bi bi-stopwatch"></i>
+          <span>Przypomnienia</span>
+        </a>
+        <a class="app-sidebar__link" href="#tab-ai" data-dashboard-nav="tab-ai">
+          <i class="bi bi-stars"></i>
+          <span>AI</span>
+        </a>
+        <a class="app-sidebar__link" href="#tab-news" data-dashboard-nav="tab-news">
+          <i class="bi bi-newspaper"></i>
+          <span>News</span>
+        </a>
+        <a class="app-sidebar__link" href="#tab-multi-sms" data-dashboard-nav="tab-multi-sms">
+          <i class="bi bi-people"></i>
+          <span>Multi-SMS</span>
+        </a>
+      </nav>
+    </div>
+    <div>
+      <div class="app-sidebar__section-title mb-3">Szybkie akcje</div>
+      <nav class="app-sidebar__nav" aria-label="Szybkie akcje">
+        <a class="app-sidebar__link" href="#send-message-card" data-dashboard-scroll>
+          <i class="bi bi-send"></i>
+          <span>Wyślij nową wiadomość</span>
+        </a>
+        <a class="app-sidebar__link" href="#messages-table" data-dashboard-scroll>
+          <i class="bi bi-chat-text"></i>
+          <span>Historia konwersacji</span>
+        </a>
+        <a class="app-sidebar__link" href="#" data-dashboard-refresh>
+          <i class="bi bi-arrow-clockwise"></i>
+          <span>Odśwież dane</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+{% endblock %}
+
 {% block content %}
   <div class="container" id="dashboard-root" data-app-env="{{ app_env }}" data-app-debug="{{ 'true' if app_debug else 'false' }}">
     <div class="row align-items-center mb-4">
@@ -90,7 +145,7 @@
 
         <div class="row g-4">
           <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100" id="send-message-card">
               <div class="card-header bg-white border-0 pb-0">
                 <h2 class="h5 mb-0">Wyślij nową wiadomość</h2>
               </div>
