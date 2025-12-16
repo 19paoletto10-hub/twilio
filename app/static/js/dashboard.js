@@ -142,6 +142,8 @@
   const sidebarNavLinks = document.querySelectorAll('[data-dashboard-nav]');
   const quickScrollLinks = document.querySelectorAll('[data-dashboard-scroll]');
   const quickRefreshLinks = document.querySelectorAll('[data-dashboard-refresh]');
+  const modalTriggers = document.querySelectorAll('[data-dashboard-modal-target]');
+  const sendMessageModal = document.getElementById('sendMessageModal');
 
   const DEFAULT_NEWS_PROMPT = window.NEWS_DEFAULT_PROMPT || 'Stwórz krótkie podsumowanie najważniejszych newsów biznesowych z ostatnich godzin.';
   const ALL_CATEGORIES_PROMPT = window.NEWS_ALL_CATEGORIES_PROMPT || (
@@ -215,37 +217,69 @@
   };
 
   const initSidebarNavigation = () => {
-    if (!sidebarNavLinks.length) {
-      return;
+    modalTriggers.forEach((trigger) => {
+      trigger.addEventListener('click', (event) => {
+        const targetSelector = trigger.dataset.dashboardModalTarget;
+        if (!targetSelector) {
+          return;
+        }
+        const modalElement = document.querySelector(targetSelector);
+        if (!modalElement) {
+          return;
+        }
+        if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+          console.warn('Modal bootstrap dependency is unavailable.');
+          return;
+        }
+        event.preventDefault();
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modalInstance.show();
+      });
+    });
+
+    if (sendMessageModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+      sendMessageModal.addEventListener('shown.bs.modal', () => {
+        const recipientField = document.getElementById('recipient-input');
+        recipientField?.focus({ preventScroll: true });
+      });
+
+      sendMessageModal.addEventListener('hidden.bs.modal', () => {
+        if (form) {
+          form.classList.remove('was-validated');
+        }
+        setLoadingState(false);
+      });
     }
 
     const normalizeTarget = (value) => (value ? value.replace(/^#/, '') : '');
 
-    const defaultTarget = (() => {
-      const activeToggle = document.querySelector('#dashboard-tabs .nav-link.active');
-      const datasetTarget = activeToggle?.getAttribute('data-bs-target');
-      return normalizeTarget(datasetTarget) || 'tab-messages';
-    })();
+    if (sidebarNavLinks.length) {
+      const defaultTarget = (() => {
+        const activeToggle = document.querySelector('#dashboard-tabs .nav-link.active');
+        const datasetTarget = activeToggle?.getAttribute('data-bs-target');
+        return normalizeTarget(datasetTarget) || 'tab-messages';
+      })();
 
-    activateSidebarLink(defaultTarget);
+      activateSidebarLink(defaultTarget);
 
-    sidebarNavLinks.forEach((link) => {
-      link.addEventListener('click', (event) => {
-        const targetId = normalizeTarget(link.dataset.dashboardNav);
-        if (!targetId) {
-          return;
-        }
-        event.preventDefault();
-        const trigger = document.querySelector(`#dashboard-tabs [data-bs-target="#${targetId}"]`);
-        if (trigger) {
-          const tabInstance = bootstrap.Tab.getOrCreateInstance(trigger);
-          tabInstance.show();
-        } else {
-          const section = document.getElementById(targetId);
-          section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+      sidebarNavLinks.forEach((link) => {
+        link.addEventListener('click', (event) => {
+          const targetId = normalizeTarget(link.dataset.dashboardNav);
+          if (!targetId) {
+            return;
+          }
+          event.preventDefault();
+          const trigger = document.querySelector(`#dashboard-tabs [data-bs-target="#${targetId}"]`);
+          if (trigger) {
+            const tabInstance = bootstrap.Tab.getOrCreateInstance(trigger);
+            tabInstance.show();
+          } else {
+            const section = document.getElementById(targetId);
+            section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
       });
-    });
+    }
 
     if (dashboardTabs) {
       dashboardTabs.addEventListener('shown.bs.tab', (event) => {
@@ -286,7 +320,8 @@
           showToast({ title: 'Odświeżono', message: 'Dane zostały zaktualizowane.' });
         } catch (error) {
           console.error(error);
-          showToast({ title: 'Błąd', message: 'Nie udało się odświeżyć danych.', type: 'error' });
+          const message = error?.message ? `Nie udało się odświeżyć danych: ${error.message}` : 'Nie udało się odświeżyć danych.';
+          showToast({ title: 'Błąd', message, type: 'error' });
         }
       });
     });
@@ -2494,13 +2529,22 @@
       });
 
       resetForm();
+      if (typeof bootstrap !== 'undefined') {
+        const modalElement = document.getElementById('sendMessageModal');
+        if (modalElement) {
+          const modalInstance = bootstrap.Modal.getInstance(modalElement);
+          modalInstance?.hide();
+        }
+      }
       await refreshMessages();
       await refreshStats();
     } catch (error) {
       console.error(error);
       showToast({
         title: 'Błąd',
-        message: 'Nie udało się wysłać wiadomości. Sprawdź konfigurację Twilio.',
+        message: error?.message
+          ? `Nie udało się wysłać wiadomości: ${error.message}`
+          : 'Nie udało się wysłać wiadomości. Sprawdź konfigurację Twilio.',
         type: 'error'
       });
     } finally {

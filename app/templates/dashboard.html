@@ -12,44 +12,44 @@
           data-dashboard-nav="tab-messages"
         >
           <i class="bi bi-chat-dots"></i>
-          <span>Wiadomości</span>
+          <span class="app-sidebar__label">Wiadomości</span>
         </a>
         <a class="app-sidebar__link" href="#tab-auto-reply" data-dashboard-nav="tab-auto-reply">
           <i class="bi bi-arrow-repeat"></i>
-          <span>Auto-odpowiedź</span>
+          <span class="app-sidebar__label">Auto-odpowiedź</span>
         </a>
         <a class="app-sidebar__link" href="#tab-reminders" data-dashboard-nav="tab-reminders">
           <i class="bi bi-stopwatch"></i>
-          <span>Przypomnienia</span>
+          <span class="app-sidebar__label">Przypomnienia</span>
         </a>
         <a class="app-sidebar__link" href="#tab-ai" data-dashboard-nav="tab-ai">
           <i class="bi bi-stars"></i>
-          <span>AI</span>
+          <span class="app-sidebar__label">AI</span>
         </a>
         <a class="app-sidebar__link" href="#tab-news" data-dashboard-nav="tab-news">
           <i class="bi bi-newspaper"></i>
-          <span>News</span>
+          <span class="app-sidebar__label">News</span>
         </a>
         <a class="app-sidebar__link" href="#tab-multi-sms" data-dashboard-nav="tab-multi-sms">
           <i class="bi bi-people"></i>
-          <span>Multi-SMS</span>
+          <span class="app-sidebar__label">Multi-SMS</span>
         </a>
       </nav>
     </div>
     <div>
       <div class="app-sidebar__section-title mb-3">Szybkie akcje</div>
       <nav class="app-sidebar__nav" aria-label="Szybkie akcje">
-        <a class="app-sidebar__link" href="#send-message-card" data-dashboard-scroll>
+        <a class="app-sidebar__link" href="#sendMessageModal" role="button" data-dashboard-modal-target="#sendMessageModal">
           <i class="bi bi-send"></i>
-          <span>Wyślij nową wiadomość</span>
+          <span class="app-sidebar__label">Wyślij nową wiadomość</span>
         </a>
         <a class="app-sidebar__link" href="#messages-table" data-dashboard-scroll>
           <i class="bi bi-chat-text"></i>
-          <span>Historia konwersacji</span>
+          <span class="app-sidebar__label">Historia konwersacji</span>
         </a>
         <a class="app-sidebar__link" href="#" data-dashboard-refresh>
           <i class="bi bi-arrow-clockwise"></i>
-          <span>Odśwież dane</span>
+          <span class="app-sidebar__label">Odśwież dane</span>
         </a>
       </nav>
     </div>
@@ -149,23 +149,13 @@
               <div class="card-header bg-white border-0 pb-0">
                 <h2 class="h5 mb-0">Wyślij nową wiadomość</h2>
               </div>
-              <div class="card-body">
-                <form id="send-message-form" novalidate>
-                  <div class="mb-3">
-                    <label for="recipient-input" class="form-label">Numer odbiorcy</label>
-                    <input type="tel" class="form-control" id="recipient-input" placeholder="np. +48123456789" required>
-                    <div class="invalid-feedback">Podaj poprawny numer odbiorcy.</div>
-                  </div>
-                  <div class="mb-3">
-                    <label for="message-body" class="form-label">Treść wiadomości</label>
-                    <textarea class="form-control" id="message-body" rows="3" maxlength="1000" placeholder="Wpisz wiadomość..." required></textarea>
-                    <div class="invalid-feedback">Wiadomość nie może być pusta.</div>
-                  </div>
-                  <button type="submit" class="btn btn-primary w-100" id="send-message-btn">
-                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
-                    Wyślij wiadomość
-                  </button>
-                </form>
+              <div class="card-body d-flex flex-column gap-3">
+                <p class="text-muted mb-0">
+                  Otwórz dynamiczny kreator, aby przygotować i wysłać pojedynczą wiadomość SMS bez opuszczania bieżącego widoku.
+                </p>
+                <button type="button" class="btn btn-primary align-self-start" data-dashboard-modal-target="#sendMessageModal">
+                  <i class="bi bi-pencil-square me-2"></i>Utwórz wiadomość
+                </button>
               </div>
             </div>
           </div>
@@ -204,6 +194,41 @@
                     </tbody>
                   </table>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="sendMessageModal" tabindex="-1" aria-labelledby="sendMessageModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg border-0">
+              <div class="modal-header border-0 pb-0">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Nowa wiadomość</p>
+                  <h1 class="modal-title fs-4 fw-semibold" id="sendMessageModalLabel">Wyślij nową wiadomość</h1>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+              </div>
+              <div class="modal-body">
+                <form id="send-message-form" novalidate>
+                  <div class="mb-3">
+                    <label for="recipient-input" class="form-label">Numer odbiorcy</label>
+                    <input type="tel" class="form-control" id="recipient-input" placeholder="np. +48123456789" required>
+                    <div class="invalid-feedback">Podaj poprawny numer odbiorcy.</div>
+                  </div>
+                  <div class="mb-3">
+                    <label for="message-body" class="form-label">Treść wiadomości</label>
+                    <textarea class="form-control" id="message-body" rows="4" maxlength="1000" placeholder="Wpisz wiadomość..." required></textarea>
+                    <div class="invalid-feedback">Wiadomość nie może być pusta.</div>
+                  </div>
+                  <div class="d-flex justify-content-end gap-2 pt-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="submit" class="btn btn-primary" id="send-message-btn">
+                      <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                      Wyślij wiadomość
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
