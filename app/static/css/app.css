@@ -200,6 +200,13 @@ body {
   background: var(--app-bg);
 }
 
+.app-main .container,
+.app-main .container-fluid {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 @media (min-width: 992px) {
   .app-sidebar {
     position: sticky;
