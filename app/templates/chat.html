@@ -3,72 +3,108 @@
 
 {% block content %}
   <div
-    class="container"
+    class="container chat-page"
     id="chat-root"
     data-participant="{{ participant|e }}"
   >
-    <div class="row align-items-center mb-4">
+    <div class="row align-items-center mb-4 gy-3">
       <div class="col-md-8">
         <a class="btn btn-link px-0 text-decoration-none mb-2" href="/">&larr; Powrót do panelu</a>
         <h1 class="display-6 fw-semibold text-primary mb-1">Rozmowa z {{ display_number or 'Nieznany numer' }}</h1>
-        <p class="text-muted mb-0">Przeglądaj pełną historię i odpowiadaj bezpośrednio.</p>
+        <p class="text-muted mb-0">Przeglądaj historię, zarządzaj wątkiem i odpowiadaj bezpośrednio.</p>
       </div>
-      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+      <div class="col-md-4 text-md-end">
         <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2">
           Środowisko: <strong class="ms-1">{{ app_env|upper }}</strong>
         </span>
       </div>
     </div>
 
-    <div class="row g-4">
-      <div class="col-lg-4">
-        <div class="card shadow-sm border-0 h-100">
+    <div class="row chat-layout g-4">
+      <aside class="col-xl-4">
+        <div class="card shadow-sm border-0 chat-sidebar h-100">
           <div class="card-body">
-            <h2 class="h5 mb-3">Szczegóły rozmowy</h2>
-            <ul class="list-unstyled small text-muted mb-4 conversation-meta">
-              <li>
-                <span class="conversation-meta__label">Numer</span>
-                <span class="conversation-meta__value">{{ display_number or 'Nieznany numer' }}</span>
-              </li>
-              <li>
-                <span class="conversation-meta__label">Kanał</span>
-                <span class="conversation-meta__value">SMS / MMS</span>
-              </li>
-              <li>
-                <span class="conversation-meta__label">Ostatnia aktywność</span>
-                <span class="conversation-meta__value" id="chat-last-updated">—</span>
-              </li>
-            </ul>
-            <div class="alert alert-info small mb-4" role="alert">
-              Wątek odświeża się automatycznie co kilka sekund. Użyj przycisku, aby wymusić natychmiastową aktualizację.
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-              <button type="button" class="btn btn-outline-secondary" id="chat-refresh-btn">Odśwież</button>
-              <a class="btn btn-outline-primary" href="https://console.twilio.com/" target="_blank" rel="noreferrer">Twilio Console</a>
-              <button type="button" class="btn btn-outline-danger" id="chat-delete-conversation-btn">
-                Usuń rozmowę
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+              <h2 class="h5 mb-0">Szczegóły rozmowy</h2>
+              <button
+                class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center d-xl-none"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#chat-sidebar-details"
+                aria-expanded="false"
+                aria-controls="chat-sidebar-details"
+              >
+                Podgląd
               </button>
             </div>
-            <p class="text-danger small mt-3 mb-0">
-              Usunięcie rozmowy jest trwałe i czyści również historię na Twilio.
-            </p>
+            <div class="collapse d-xl-block" id="chat-sidebar-details">
+              <ul class="list-unstyled small text-muted mb-4 conversation-meta">
+                <li>
+                  <span class="conversation-meta__label">Numer</span>
+                  <span class="conversation-meta__value">{{ display_number or 'Nieznany numer' }}</span>
+                </li>
+                <li>
+                  <span class="conversation-meta__label">Kanał</span>
+                  <span class="conversation-meta__value">SMS / MMS</span>
+                </li>
+                <li>
+                  <span class="conversation-meta__label">Ostatnia aktywność</span>
+                  <span class="conversation-meta__value" id="chat-last-updated">—</span>
+                </li>
+              </ul>
+              <div class="alert alert-info small mb-4" role="alert">
+                Wątek odświeża się co kilka sekund. Użyj przycisku, aby wymusić natychmiastową aktualizację.
+              </div>
+              <div class="chat-sidebar__actions d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-secondary" id="chat-refresh-btn">Odśwież</button>
+                <a class="btn btn-outline-primary" href="https://console.twilio.com/" target="_blank" rel="noreferrer">Twilio Console</a>
+                <button type="button" class="btn btn-outline-danger" id="chat-delete-conversation-btn">
+                  Usuń rozmowę
+                </button>
+              </div>
+              <p class="text-danger small mt-3 mb-0">
+                Usunięcie rozmowy czyści historię lokalnie i w Twilio.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div class="card shadow-sm border-0 mt-4">
+        <div class="card shadow-sm border-0 mt-4 chat-sidebar__stat">
           <div class="card-body">
             <p class="text-uppercase text-muted fs-6 mb-1">Wiadomości w wątku</p>
             <h2 class="fw-bold mb-0" id="chat-total-messages">0</h2>
             <small class="text-muted">Liczba wpisów w lokalnej bazie.</small>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <div class="col-lg-8">
+      <section class="col-xl-8">
         <div class="card shadow-sm border-0 chat-shell h-100">
           <div class="card-body p-0 d-flex flex-column h-100">
-            <div class="chat-thread" id="chat-thread">
-              <div class="text-center text-muted py-4">Wczytywanie historii...</div>
+            <div class="chat-header border-bottom px-3 py-3">
+              <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 align-items-lg-center">
+                <div>
+                  <p class="text-uppercase text-muted fs-6 mb-1">Aktywny wątek</p>
+                  <h2 class="h5 mb-0">{{ display_number or 'Nieznany numer' }}</h2>
+                  <small class="text-muted">Ostatnia synchronizacja: <span id="chat-last-updated-inline">—</span></small>
+                </div>
+                <div class="chat-toolbar d-flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-outline-secondary" id="chat-refresh-btn-inline">
+                    Odśwież teraz
+                  </button>
+                  <button type="button" class="btn btn-outline-light border" data-bs-toggle="collapse" data-bs-target="#chat-sidebar-details" aria-controls="chat-sidebar-details">
+                    Szczegóły
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="chat-thread-wrapper position-relative flex-grow-1">
+              <div class="chat-thread" id="chat-thread" tabindex="0" aria-live="polite">
+                <div class="text-center text-muted py-4">Wczytywanie historii...</div>
+              </div>
+              <button type="button" class="btn btn-primary chat-scroll-latest is-hidden" id="chat-scroll-latest-btn">
+                Przejdź na dół
+              </button>
             </div>
             <div class="chat-composer border-top">
               <form id="chat-send-form" class="p-3" novalidate>
@@ -77,10 +113,14 @@
                     <label for="chat-message-input" class="form-label">Twoja odpowiedź</label>
                     <textarea class="form-control" id="chat-message-input" rows="2" maxlength="1000" placeholder="Napisz wiadomość..." required></textarea>
                     <div class="invalid-feedback">Treść wiadomości jest wymagana.</div>
+                    <div class="d-flex justify-content-between mt-2">
+                      <small class="text-muted">Odbiorca: <strong>{{ participant }}</strong></small>
+                      <small class="text-muted" id="chat-message-counter" data-max="1000">0 / 1000</small>
+                    </div>
                   </div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                  <small class="text-muted">Odbiorca: <strong>{{ participant }}</strong></small>
+                <div class="d-flex justify-content-end align-items-center mt-3 flex-wrap gap-2">
+                  <button type="button" class="btn btn-outline-secondary" id="chat-clear-btn">Wyczyść</button>
                   <button type="submit" class="btn btn-primary" id="chat-send-btn">
                     <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
                     Wyślij odpowiedź
@@ -90,7 +130,7 @@
             </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="chat-toast-wrapper"></div>

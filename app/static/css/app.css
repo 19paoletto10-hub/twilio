@@ -34,6 +34,17 @@ body {
   box-shadow: 0 0.6rem 1.4rem rgba(124, 64, 255, 0.45);
 }
 
+.btn-outline-light {
+  color: #495057;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+
+.btn-outline-light:hover,
+.btn-outline-light:focus {
+  color: #212529;
+  background-color: #fff;
+}
+
 .form-control:focus,
 .form-check-input:focus {
   border-color: #7c40ff;
@@ -69,6 +80,72 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chat-page {
+  padding-bottom: 2rem;
+}
+
+.chat-layout {
+  align-items: stretch;
+}
+
+.chat-sidebar {
+  position: sticky;
+  top: 1.5rem;
+}
+
+.chat-sidebar__actions .btn {
+  flex: 1 1 auto;
+}
+
+.chat-sidebar__stat {
+  position: sticky;
+  top: calc(1.5rem + 320px);
+}
+
+.chat-toolbar .btn {
+  min-width: 140px;
+}
+
+.chat-header {
+  background: linear-gradient(135deg, rgba(124, 64, 255, 0.08), rgba(242, 47, 70, 0.08));
+}
+
+.chat-thread-wrapper {
+  display: flex;
+  position: relative;
+  min-height: clamp(360px, 55vh, 640px);
+  background: #fdfcfe;
+}
+
+.chat-thread {
+  flex: 1 1 auto;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.chat-thread[aria-live='polite'] {
+  scroll-behavior: smooth;
+}
+
+.chat-scroll-latest {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  box-shadow: 0 0.75rem 1.6rem rgba(124, 64, 255, 0.45);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.chat-scroll-latest.is-hidden {
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+}
+
+.chat-scroll-latest:not(.is-hidden) {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .messages-datetime {
@@ -201,15 +278,7 @@ body {
 }
 
 .chat-shell {
-  min-height: 480px;
-}
-
-.chat-thread {
-  flex: 1;
-  padding: 1.5rem;
-  background: #fdfcfe;
-  overflow-y: auto;
-  max-height: 60vh;
+  min-height: 520px;
 }
 
 .chat-thread--ai {
@@ -350,12 +419,30 @@ body {
 }
 
 @media (max-width: 767px) {
-  .chat-thread {
-    max-height: none;
+  .chat-sidebar {
+    position: static;
+  }
+
+  .chat-sidebar__stat {
+    position: static;
+    margin-bottom: 1rem;
+  }
+
+  .chat-toolbar .btn {
+    min-width: auto;
   }
 
   .chat-bubble {
     max-width: 100%;
+  }
+
+  .chat-thread-wrapper {
+    min-height: clamp(320px, 60vh, 520px);
+  }
+
+  .chat-scroll-latest {
+    right: 1rem;
+    bottom: 1rem;
   }
 }
 

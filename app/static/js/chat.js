@@ -10,14 +10,19 @@
   const participantParam = encodeURIComponent(participant);
 
   const threadEl = document.getElementById('chat-thread');
+  const scrollToLatestBtn = document.getElementById('chat-scroll-latest-btn');
   const totalMessagesEl = document.getElementById('chat-total-messages');
   const lastUpdatedEl = document.getElementById('chat-last-updated');
+  const lastUpdatedInlineEl = document.getElementById('chat-last-updated-inline');
   const refreshBtn = document.getElementById('chat-refresh-btn');
+  const refreshBtnInline = document.getElementById('chat-refresh-btn-inline');
   const deleteConversationBtn = document.getElementById('chat-delete-conversation-btn');
   const form = document.getElementById('chat-send-form');
   const messageInput = document.getElementById('chat-message-input');
   const sendBtn = document.getElementById('chat-send-btn');
   const sendSpinner = sendBtn?.querySelector('.spinner-border');
+  const clearBtn = document.getElementById('chat-clear-btn');
+  const messageCounter = document.getElementById('chat-message-counter');
   const toastWrapper = document.getElementById('chat-toast-wrapper');
 
   let autoRefreshTimer = null;
@@ -89,6 +94,30 @@
     toast.addEventListener('hidden.bs.toast', () => toast.remove());
   };
 
+  const isNearBottom = () => {
+    if (!threadEl) {
+      return true;
+    }
+    const distanceFromBottom = threadEl.scrollHeight - threadEl.scrollTop - threadEl.clientHeight;
+    return distanceFromBottom <= 120;
+  };
+
+  const updateScrollHint = () => {
+    if (!scrollToLatestBtn || !threadEl) {
+      return;
+    }
+    const shouldHide = isNearBottom() || threadEl.scrollHeight <= threadEl.clientHeight;
+    scrollToLatestBtn.classList.toggle('is-hidden', shouldHide);
+  };
+
+  const scrollThreadToBottom = () => {
+    if (!threadEl) {
+      return;
+    }
+    threadEl.scrollTop = threadEl.scrollHeight;
+    updateScrollHint();
+  };
+
   const renderThread = (items) => {
     if (!threadEl) {
       return;
@@ -96,9 +125,11 @@
 
     if (!items.length) {
       threadEl.innerHTML = '<div class="text-center text-muted py-4">Brak wiadomości w tym wątku.</div>';
+      updateScrollHint();
       return;
     }
 
+    const shouldStickToBottom = isNearBottom();
     const bubbles = items.map((item) => {
       const isInbound = item.direction === 'inbound';
       const bubbleClass = isInbound ? 'chat-bubble chat-bubble--inbound' : 'chat-bubble chat-bubble--outbound';
@@ -128,7 +159,11 @@
 
     threadEl.innerHTML = bubbles.join('');
     requestAnimationFrame(() => {
-      threadEl.scrollTop = threadEl.scrollHeight;
+      if (shouldStickToBottom) {
+        scrollThreadToBottom();
+      } else {
+        updateScrollHint();
+      }
     });
   };
 
@@ -144,7 +179,13 @@
         totalMessagesEl.textContent = data.count ?? 0;
       }
       if (lastUpdatedEl) {
-        lastUpdatedEl.textContent = new Date().toLocaleString();
+        const timestamp = new Date().toLocaleString();
+        lastUpdatedEl.textContent = timestamp;
+        if (lastUpdatedInlineEl) {
+          lastUpdatedInlineEl.textContent = timestamp;
+        }
+      } else if (lastUpdatedInlineEl) {
+        lastUpdatedInlineEl.textContent = new Date().toLocaleString();
       }
     } catch (error) {
       console.error(error);
@@ -168,6 +209,16 @@
   };
 
   const normalizeRecipient = () => participant.replace(/^whatsapp:/i, '');
+
+  const updateMessageCounter = () => {
+    if (!messageCounter || !messageInput) {
+      return;
+    }
+    const max = Number(messageCounter.dataset.max) || messageInput.maxLength || 1000;
+    const length = messageInput.value.length;
+    messageCounter.textContent = `${length} / ${max}`;
+    messageCounter.classList.toggle('text-danger', max - length <= 40);
+  };
 
   const deleteMessage = async (sid) => {
     if (!sid) {
@@ -252,6 +303,7 @@
       });
       messageInput.value = '';
       form.classList.remove('was-validated');
+      updateMessageCounter();
       showToast({ title: 'Sukces', message: 'Wiadomość wysłana.', type: 'success' });
       refreshThread();
     } catch (error) {
@@ -274,7 +326,9 @@
       return;
     }
 
-    refreshBtn?.addEventListener('click', () => refreshThread());
+    [refreshBtn, refreshBtnInline]
+      .filter(Boolean)
+      .forEach((btn) => btn.addEventListener('click', () => refreshThread()));
     deleteConversationBtn?.addEventListener('click', handleConversationDelete);
     threadEl?.addEventListener('click', (event) => {
       const target = event.target;
@@ -286,7 +340,17 @@
         deleteMessage(sid);
       }
     });
+    threadEl?.addEventListener('scroll', () => updateScrollHint());
     form?.addEventListener('submit', handleSubmit);
+    clearBtn?.addEventListener('click', () => {
+      messageInput.value = '';
+      form.classList.remove('was-validated');
+      messageInput.focus();
+      updateMessageCounter();
+    });
+    messageInput?.addEventListener('input', updateMessageCounter);
+    scrollToLatestBtn?.addEventListener('click', () => scrollThreadToBottom());
+    updateMessageCounter();
     refreshThread();
     startAutoRefresh();
   };
