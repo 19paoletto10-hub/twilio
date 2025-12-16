@@ -1,5 +1,58 @@
 # Changelog
 
+## ver3.2.1 (Collapsible Sidebar + Compose Modal)
+
+### Podsumowanie
+
+Release 3.2.1 wprowadza znaczące ulepszenia interfejsu użytkownika, koncentrując się na
+ergonomii pracy operatora. Główne zmiany to zwijane menu boczne (collapsible sidebar)
+oraz nowoczesny modal kompozycji wiadomości, który umożliwia tworzenie SMS bez opuszczania
+bieżącego widoku.
+
+### Najważniejsze zmiany
+
+#### 📐 Collapsible Sidebar (Zwijane menu boczne)
+- Tryb rozwinięty (280px) z pełnymi etykietami i ikonami
+- Tryb zwinięty (84px) z kompaktowymi ikonami i tooltipami
+- Persystencja stanu w localStorage przeglądarki
+- Płynne animacje CSS (0.25s ease)
+- Responsywność: overlay na mobile, automatyczne zwijanie na tabletach
+
+#### 📨 Compose Modal (Modal kompozycji wiadomości)
+- Nowoczesne okno dialogowe do tworzenia wiadomości
+- Walidacja numeru w formacie E.164
+- Licznik znaków z ostrzeżeniem przy przekroczeniu 160
+- Skróty klawiszowe: Ctrl+Enter (wyślij), Escape (zamknij)
+- Toast z potwierdzeniem sukcesu/błędu
+
+#### 🎨 Ulepszenia CSS
+- Nowe zmienne CSS: `--app-sidebar-width`, `--app-sidebar-collapsed-width`
+- Gradient accent color (#7c40ff → #f22f46)
+- Spójne border-radius i shadows w całej aplikacji
+
+#### 📱 Responsywność
+- Desktop (≥992px): sidebar rozwinięty, zwijany ręcznie
+- Tablet (<992px): sidebar zwinięty domyślnie
+- Mobile (<576px): sidebar jako overlay z animacją slide-in
+
+### Zaktualizowane pliki
+
+```
+app/templates/base.html           # Struktura sidebara i header
+app/templates/dashboard.html      # Integracja z sidebar i modal
+app/static/css/app.css            # Nowy design system + style sidebara
+app/static/js/app.js              # Logika collapse
+app/static/js/dashboard.js        # Obsługa modala
+```
+
+### Kompatybilność
+
+- **Brak zmian łamiących** – wszystkie istniejące funkcjonalności działają bez modyfikacji
+- **Brak migracji DB** – schemat pozostaje na wersji 7
+- Wymaga przeglądarki z obsługą CSS Custom Properties (Chrome 88+, Firefox 78+, Safari 14+)
+
+---
+
 ## ver3.2.0 (Docker Documentation + CI/CD + DevOps Toolkit)
 
 ### Podsumowanie

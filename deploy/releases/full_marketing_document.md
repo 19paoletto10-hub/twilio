@@ -1,13 +1,14 @@
- # Twilio Chat App — Pełna prezentacja produktu
+# Twilio Chat App — Pełna prezentacja produktu
 
- Data: 2025-12-10
- Wersja: ver3.0.1
+Data: 2025-12-16  
+Wersja: ver3.2.1
 
- ## Executive Summary
+## Executive Summary
 
- Twilio Chat App to komercyjnie gotowe, samodzielne rozwiązanie do zarządzania komunikacją SMS/MMS.
- Produkt łączy panel operatora, REST API, wsparcie webhooków Twilio oraz zaawansowany tryb auto‑reply oparty na OpenAI.
- Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przykłady (zrzuty ekranu) ilustrujące sposób użycia.
+Twilio Chat App to komercyjnie gotowe, samodzielne rozwiązanie do zarządzania komunikacją SMS/MMS.
+Produkt łączy panel operatora z nowoczesnym UI (collapsible sidebar, compose modal), REST API,
+wsparcie webhooków Twilio oraz zaawansowany tryb auto‑reply oparty na OpenAI.
+Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przykłady ilustrujące sposób użycia.
 
  ---
 
@@ -19,12 +20,41 @@
 
  ## 2. Krótki przegląd funkcji
 
- - Dashboard operatora — statystyki, ręczna wysyłka, szybki dostęp do historii.
- - Historia wiadomości — czytelna tabela z filtrem kierunku, statusami i metadanymi kanału.
- - Widok czatu — pełna rozmowa z numerem, dymki wiadomości, timestampy.
- - Auto‑reply — prosty szablon tekstowy do natychmiastowego włączenia.
- - AI auto‑reply — generowanie odpowiedzi przez OpenAI z wykorzystaniem historii rozmowy.
- - Przypomnienia (scheduler) — cykliczne SMS zarządzane z panelu.
+- **Dashboard operatora** — statystyki, ręczna wysyłka, szybki dostęp do historii.
+- **Collapsible sidebar** — zwijane menu boczne z ikonami i szybkimi akcjami (nowość 3.2.1).
+- **Compose modal** — tworzenie wiadomości bez opuszczania bieżącego widoku (nowość 3.2.1).
+- Historia wiadomości — czytelna tabela z filtrem kierunku, statusami i metadanymi kanału.
+- Widok czatu — pełna rozmowa z numerem, dymki wiadomości, timestampy.
+- Auto‑reply — prosty szablon tekstowy do natychmiastowego włączenia.
+- AI auto‑reply — generowanie odpowiedzi przez OpenAI z wykorzystaniem historii rozmowy.
+- Przypomnienia (scheduler) — cykliczne SMS zarządzane z panelu.
+- **Multi‑SMS** — kampanie do wielu odbiorców z kolejką w tle i raportami.
+- **News/FAISS/RAG** — scraping artykułów, generowanie streszczeń, dystrybucja SMS.
+ - Multi‑SMS — kampanie jednorazowe do wielu odbiorców z historią batchy.
+ - News / FAISS / RAG — scraping artykułów i inteligentne streszczenia.
+ - **[NOWOŚĆ 3.2.1]** Collapsible Sidebar — zwijane menu boczne (280px → 84px) z persystencją stanu.
+ - **[NOWOŚĆ 3.2.1]** Compose Modal — modal kompozycji wiadomości z walidacją i skrótami klawiszowymi.
+
+ ---
+
+ ## 2.1 Nowości w wersji 3.2.1
+
+ ### Collapsible Sidebar (Zwijane menu boczne)
+ - **Tryb rozwinięty (280px):** Pełne etykiety i ikony dla wszystkich zakładek
+ - **Tryb zwinięty (84px):** Kompaktowe ikony z tooltipami dla power users
+ - **Persystencja:** Stan zwijania zapisywany w localStorage przeglądarki
+ - **Responsywność:** Na mobile sidebar działa jako overlay z animacją slide-in
+
+ ### Compose Modal (Modal kompozycji)
+ - **Walidacja numeru:** Format E.164 z automatyczną normalizacją
+ - **Licznik znaków:** Ostrzeżenie przy przekroczeniu 160 znaków (podział na segmenty)
+ - **Skróty klawiszowe:** Ctrl+Enter (wyślij), Escape (zamknij modal)
+ - **Toast powiadomienia:** Potwierdzenie sukcesu lub informacja o błędzie
+
+ ### Szybkie akcje w sidebar
+ - Wyślij nową wiadomość (otwiera modal)
+ - Historia konwersacji (scroll do tabeli)
+ - Odśwież dane (reload bez przeładowania strony)
 
  ---
 
