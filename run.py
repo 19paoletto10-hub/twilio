@@ -18,8 +18,11 @@ if __name__ == "__main__":
     print(f"📍 Server: http://{settings.host}:{settings.port}")
     print(f"🔧 Debug mode: {'enabled' if settings.debug else 'disabled'}")
     
+    # Wyłączamy reloader w dev, aby uniknąć podwójnego startu workerów oraz
+    # sytuacji, w której pierwszy proces kończy się przed pełnym rozruchem.
     app.run(
         host=settings.host,
         port=settings.port,
         debug=settings.debug,
+        use_reloader=False,
     )

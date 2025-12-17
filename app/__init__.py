@@ -7,6 +7,8 @@ all components including database, background workers, and routes.
 
 from __future__ import annotations
 
+import os
+
 from flask import Flask
 
 from .config import get_settings
@@ -20,6 +22,15 @@ from .reminder import start_reminder_worker
 from .news_scheduler import start_news_scheduler
 from .multi_sms import start_multi_sms_worker
 from .security import add_security_headers
+
+
+def _should_start_workers(app_settings) -> bool:
+    """Return True only for the main process to avoid double-start in reloader."""
+    if not app_settings.debug:
+        return True
+
+    # Werkzeug reloader sets these flags for the "real" process.
+    return os.environ.get("WERKZEUG_RUN_MAIN") == "true" or os.environ.get("RUN_MAIN") == "true"
 
 
 def create_app() -> Flask:
@@ -65,11 +76,14 @@ def create_app() -> Flask:
     app.register_blueprint(webhooks_bp)
     app.register_blueprint(ui_bp)
 
-    # Start background workers for automated tasks
-    start_auto_reply_worker(app)  # Auto-reply on inbound SMS
-    start_reminder_worker(app)     # Scheduled reminders
-    start_news_scheduler(app)      # News notifications
-    start_multi_sms_worker(app)    # Batch SMS sending
+    # Start background workers for automated tasks (only in the main process)
+    if _should_start_workers(app_settings):
+        start_auto_reply_worker(app)  # Auto-reply on inbound SMS
+        start_reminder_worker(app)     # Scheduled reminders
+        start_news_scheduler(app)      # News notifications
+        start_multi_sms_worker(app)    # Batch SMS sending
+    else:
+        app.logger.info("Skipping background workers in reloader bootstrap process")
 
     # Add security headers to all responses
     @app.after_request

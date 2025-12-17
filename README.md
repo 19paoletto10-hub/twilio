@@ -135,6 +135,8 @@ python run.py                         # lub: make run-dev
 
 Adres panelu: http://0.0.0.0:3000
 
+> Reloader Flask jest wyłączony (`use_reloader=False`), aby nie startować workerów dwukrotnie i nie potrzebować drugiego uruchomienia komendy. Po zmianach kodu zrestartuj proces ręcznie.
+
 Po starcie skonfiguruj webhooki Twilio (Incoming i Status Callback) na `PUBLIC_BASE_URL/twilio/inbound` oraz `PUBLIC_BASE_URL/twilio/status`.
 
 ---

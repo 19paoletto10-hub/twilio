@@ -35,6 +35,10 @@ bieżącego widoku.
 - Tablet (<992px): sidebar zwinięty domyślnie
 - Mobile (<576px): sidebar jako overlay z animacją slide-in
 
+#### ⚙️ Stabilność startu
+- Wyłączony reloader Flask (`use_reloader=False`), aby uniknąć wymogu podwójnego uruchomienia
+- Workery tła odpalają się tylko w głównym procesie (guard na `WERKZEUG_RUN_MAIN`)
+
 ### Zaktualizowane pliki
 
 ```
