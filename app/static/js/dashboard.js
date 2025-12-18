@@ -216,6 +216,51 @@
     });
   };
 
+  // Ensure requested tab is visible before running an action (e.g. opening modal/scrolling).
+  const showDashboardTab = (tabId, callback) => {
+    if (!tabId) {
+      callback?.();
+      return;
+    }
+
+    const trigger = document.querySelector(`#dashboard-tabs [data-bs-target="#${tabId}"]`);
+    if (!trigger || typeof bootstrap === 'undefined' || !bootstrap.Tab) {
+      callback?.();
+      return;
+    }
+
+    if (trigger.classList.contains('active')) {
+      callback?.();
+      return;
+    }
+
+    const tabInstance = bootstrap.Tab.getOrCreateInstance(trigger);
+    if (callback) {
+      const handleShown = () => {
+        trigger.removeEventListener('shown.bs.tab', handleShown);
+        callback();
+      };
+      trigger.addEventListener('shown.bs.tab', handleShown);
+    }
+    tabInstance.show();
+  };
+
+  const runWhenTabVisible = (element, action) => {
+    if (!element) {
+      return;
+    }
+    const pane = element.closest('.tab-pane');
+    if (!pane) {
+      action?.();
+      return;
+    }
+    if (pane.classList.contains('active')) {
+      action?.();
+      return;
+    }
+    showDashboardTab(pane.id, action);
+  };
+
   const initSidebarNavigation = () => {
     modalTriggers.forEach((trigger) => {
       trigger.addEventListener('click', (event) => {
@@ -232,8 +277,11 @@
           return;
         }
         event.preventDefault();
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
-        modalInstance.show();
+        const openModal = () => {
+          const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
+          modalInstance.show();
+        };
+        runWhenTabVisible(modalElement, openModal);
       });
     });
 
@@ -301,7 +349,9 @@
           return;
         }
         event.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        runWhenTabVisible(target, () => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
       });
     });
 
@@ -309,6 +359,7 @@
       link.addEventListener('click', async (event) => {
         event.preventDefault();
         try {
+          showDashboardTab('tab-messages');
           const jobs = [];
           if (typeof refreshMessages === 'function') {
             jobs.push(refreshMessages());
