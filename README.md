@@ -1,6 +1,30 @@
 # Twilio Chat App
 
-> Produkcyjny serwer SMS oparty o Flask + Twilio, z panelem www, AI auto‑reply i wyszukiwaniem semantycznym (FAISS). Dokument napisany z perspektywy twórcy i dewelopera, który ma to realnie utrzymywać.
+<div align="center">
+
+![Version](https://img.shields.io/badge/version-3.2.2-blue.svg)
+![Python](https://img.shields.io/badge/python-3.10+-green.svg)
+![Flask](https://img.shields.io/badge/flask-3.x-red.svg)
+![License](https://img.shields.io/badge/license-MIT-yellow.svg)
+
+**Profesjonalny hub SMS z panelem WWW, AI auto-reply i wyszukiwaniem semantycznym (FAISS)**
+
+[Dokumentacja](#dokumentacja-mdhtml) • [Szybki start](#szybki-start-lokalnie) • [Docker](#uruchomienie-w-dockerze) • [API](#cli--kontrola-z-konsoli)
+
+</div>
+
+---
+
+## ✨ Highlights
+
+- 🔐 **Secrets Manager** – centralne zarządzanie kluczami API z hot reload
+- 💬 **Nowoczesny czat** – animowane dymki, ikony statusu, responsywny design
+- 🤖 **AI Auto-reply** – OpenAI GPT dla inteligentnych odpowiedzi
+- 📰 **RAG/FAISS** – semantyczne wyszukiwanie i podsumowania newsów
+- 📱 **Multi-SMS** – batch wysyłka do wielu odbiorców
+- 🐳 **Docker Ready** – compose dla dev/prod/SSL
+
+---
 
 > Zaprojektowana aplikacja to panel do **zarządzania komunikacją SMS** (Twilio), który umożliwia wysyłkę pojedynczych i masowych wiadomości, automatyczne odpowiedzi oraz cykliczne przypomnienia z jednego miejsca. Zawiera **moduł AI** oparty o OpenAI, który może prowadzić rozmowy, generować treści oraz tworzyć raporty/summaries na podstawie zebranych danych. Dodatkowo wykorzystuje **bazę wiedzy FAISS (RAG)** zasilaną skrapowanymi newsami, dzięki czemu potrafi odpowiadać na pytania i wysyłać odbiorcom uporządkowane powiadomienia tematyczne.
 ---
