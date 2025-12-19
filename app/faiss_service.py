@@ -52,7 +52,24 @@ def _get_embedding_model() -> str:
 
 
 def _get_chat_model() -> str:
+    # Prefer runtime override stored in app_settings (when running inside Flask).
+    db_override = _get_chat_model_from_db()
+    if db_override:
+        return db_override
     return os.getenv("SECOND_MODEL", os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")).strip()
+
+
+def _get_chat_model_from_db() -> Optional[str]:
+    try:
+        from flask import current_app  # type: ignore
+        from .database import get_app_setting  # type: ignore
+
+        if not current_app:
+            return None
+        value = get_app_setting("rag_chat_model")
+        return value.strip() if value else None
+    except Exception:
+        return None
 
 
 def _get_embed_batch_size() -> int:

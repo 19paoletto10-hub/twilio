@@ -29,6 +29,17 @@ def dashboard():
     )
 
 
+@ui_bp.get("/secrets")
+def secrets_view():
+    app_settings = current_app.config["APP_SETTINGS"]
+
+    return render_template(
+        "secrets.html",
+        app_env=app_settings.env,
+        app_debug=app_settings.debug,
+    )
+
+
 @ui_bp.get("/chat/<path:participant>")
 def chat_view(participant: str):
     app_settings = current_app.config["APP_SETTINGS"]

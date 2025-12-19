@@ -235,3 +235,28 @@ def get_settings() -> tuple[AppSettings, TwilioSettings, OpenAISettings]:
             )
 
     return app_settings, twilio_settings, openai_settings
+
+
+def reload_runtime_settings(app) -> dict:
+    """Reload settings from environment and refresh runtime clients.
+
+    Re-evaluates env vars, re-validates Twilio/OpenAI config and swaps
+    objects stored in ``app.config``. Raises if required credentials
+    are missing to avoid half-configured state.
+    """
+
+    from .twilio_client import TwilioService  # local import to avoid cycle
+
+    app_settings, twilio_settings, openai_settings = get_settings()
+    app.config["APP_SETTINGS"] = app_settings
+    app.config["TWILIO_SETTINGS"] = twilio_settings
+    app.config["OPENAI_SETTINGS"] = openai_settings
+    app.config["TWILIO_CLIENT"] = TwilioService(twilio_settings)
+
+    return {
+        "app_env": app_settings.env,
+        "twilio_account": twilio_settings.account_sid,
+        "openai_enabled": openai_settings.enabled,
+        "chat_model": openai_settings.chat_model,
+        "embedding_model": openai_settings.embedding_model,
+    }

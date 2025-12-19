@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Release Notes: ver3.2.2 | Twilio Chat App</title>
+  <style>
+    :root{--bg:#f7f9fb;--card:#ffffff;--muted:#6c757d;--accent:#7c40ff;--accent-2:#f22f46;--text:#172042}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.65;color:var(--text);background:var(--bg)}
+    .container{max-width:900px;margin:0 auto;padding:32px 24px}
+    header{text-align:center;margin-bottom:32px}
+    .badge{display:inline-block;padding:6px 16px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:0.85rem;margin-bottom:12px}
+    h1{margin:0 0 8px;font-size:2rem}
+    .subtitle{color:var(--muted);font-size:1.1rem}
+    .date{color:var(--muted);font-size:0.9rem;margin-top:8px}
+    .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 24px rgba(20,30,60,0.06)}
+    h2{margin:0 0 16px;font-size:1.4rem;display:flex;align-items:center;gap:10px}
+    h2 .icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem}
+    h3{margin:16px 0 8px;font-size:1.1rem;color:var(--accent)}
+    p{margin:8px 0}
+    ul{margin:8px 0;padding-left:24px}
+    li{margin:4px 0}
+    table{width:100%;border-collapse:collapse;margin:16px 0}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #eef2fb}
+    th{background:#f8fafc;font-weight:600}
+    .code{background:#1e293b;color:#f1f5f9;padding:16px;border-radius:10px;font-family:monospace;font-size:0.9rem;overflow-x:auto;white-space:pre}
+    .highlight{background:linear-gradient(135deg,rgba(124,64,255,0.08),rgba(242,47,70,0.06));border-radius:12px;padding:20px;margin:16px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0}
+    .grid-item{background:#f8fafc;padding:16px;border-radius:10px;border:1px solid #eef2fb}
+    .grid-item strong{display:block;margin-bottom:4px;color:var(--accent)}
+    .feature-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:16px 0}
+    .feature{background:#f8fafc;padding:14px;border-radius:10px;border-left:4px solid var(--accent)}
+    .feature strong{display:block;margin-bottom:4px}
+    .ascii-art{background:#0f172a;color:#94a3b8;padding:20px;border-radius:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;overflow-x:auto;white-space:pre}
+    footer{text-align:center;color:var(--muted);font-size:0.9rem;margin-top:40px;padding-top:24px;border-top:1px solid #eef2fb}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    @media(max-width:600px){.container{padding:16px}.card{padding:16px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">🚀 NEW RELEASE</span>
+      <h1>ver3.2.2</h1>
+      <p class="subtitle">UI/UX Modernization: Chat Page + Secrets Manager + Design System Refresh</p>
+      <p class="date">📅 Data wydania: 2025-12-19</p>
+    </header>
+
+    <div class="card">
+      <h2><span class="icon">📋</span> Podsumowanie</h2>
+      <p>
+        Release 3.2.2 wprowadza kompleksową modernizację interfejsu użytkownika z naciskiem na
+        stronę czatu i nową dedykowaną stronę zarządzania kluczami API (Secrets Manager).
+        Dodano spójny design system z gradientowymi nagłówkami, ikonami w nawigacji,
+        oraz ulepszono responsywność całej aplikacji.
+      </p>
+      <div class="grid">
+        <div class="grid-item"><strong>🔐 Secrets Manager</strong>Centralne zarządzanie kluczami API</div>
+        <div class="grid-item"><strong>💬 Chat Redesign</strong>Animowane dymki i ikony statusu</div>
+        <div class="grid-item"><strong>🎨 Design System</strong>Gradientowe nagłówki i awatary</div>
+        <div class="grid-item"><strong>⚡ Hot Reload</strong>Zmiany bez restartu serwera</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🔐</span> Secrets Manager</h2>
+      <p>Nowa strona <code>/secrets</code> do centralnego zarządzania kluczami API:</p>
+      <table>
+        <tr><th>Funkcja</th><th>Opis</th></tr>
+        <tr><td>Klucze Twilio</td><td>Account SID, Auth Token, Sender ID, Messaging Service SID</td></tr>
+        <tr><td>Klucze OpenAI</td><td>API Key, Model selection</td></tr>
+        <tr><td>Maskowanie</td><td>Wartości wyświetlane jako <code>••••••••</code></td></tr>
+        <tr><td>Test połączenia</td><td>Przycisk "Test" weryfikuje konfigurację na żywo</td></tr>
+        <tr><td>Persystencja</td><td>Opcja "Zapisz do .env" dla trwałej konfiguracji</td></tr>
+        <tr><td>Hot reload</td><td>Zmiany aplikowane bez restartu serwera</td></tr>
+      </table>
+      <p><strong>Przycisk "Top Secret"</strong> dodany do header'a aplikacji zapewnia szybki dostęp z każdego miejsca.</p>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">💬</span> Modernizacja strony czatu</h2>
+      <p>Kompletna przebudowa widoku rozmowy z nowoczesnymi elementami UI:</p>
+      <div class="ascii-art">┌─────────────────────────────────────────────────────────────────┐
+│ ← [Avatar] Rozmowa z +48123456789     [Online] [DEV]           │
+│     Rozmowa SMS                                                 │
+├────────────────────────────┬────────────────────────────────────┤
+│  ┌──────────────────────┐  │  ┌────────────────────────────┐   │
+│  │ [Avatar] +48...      │  │  │ [💬] +48123456789          │   │
+│  │ SMS / MMS            │  │  │     🕐 19.12.2025 12:30    │   │
+│  ├──────────────────────┤  │  ├────────────────────────────┤   │
+│  │ 🕐 Ostatnia aktywn.  │  │  │ ┌────────────────────────┐ │   │
+│  │ 💬 Wiadomości: 12    │  │  │ │ 👤 Klient  🕐 12:25    │ │   │
+│  ├──────────────────────┤  │  │ │ Treść wiadomości...   │ │   │
+│  │ [🔄 Odśwież teraz]   │  │  │ │ ↙ odebrano            │ │   │
+│  │ [↗ Twilio Console]   │  │  │ └────────────────────────┘ │   │
+│  │ [🗑 Usuń rozmowę]    │  │  │                            │   │
+│  └──────────────────────┘  │  │ ┌────────────────────────┐ │   │
+│                            │  │ │ 🎧 Zespół  🕐 12:28   ││   │
+│                            │  │ │ Odpowiedź...          ││   │
+│                            │  │ │ ✓✓ dostarczono        ││   │
+│                            │  │ └────────────────────────┘ │   │
+└────────────────────────────┴────────────────────────────────────┘</div>
+      <div class="feature-list">
+        <div class="feature"><strong>Nagłówek strony</strong>Awatar z gradientem i badge'e statusu (Online/DEV)</div>
+        <div class="feature"><strong>Animowane dymki</strong>Efekt bubbleIn z subtelnymi cieniami</div>
+        <div class="feature"><strong>Ikony statusu</strong>✓ wysłano, ✓✓ dostarczono, ⚠ błąd</div>
+        <div class="feature"><strong>Ikony autorów</strong>👤 Klient, 🎧 Zespół</div>
+        <div class="feature"><strong>Siatka meta-danych</strong>2-kolumnowy layout z ikonami</div>
+        <div class="feature"><strong>Spinner ładowania</strong>Animowany podczas pobierania historii</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🎨</span> Design System Refresh</h2>
+      <p>Nowe komponenty CSS dla spójnego wyglądu:</p>
+      <table>
+        <tr><th>Komponent</th><th>Opis</th></tr>
+        <tr><td><code>.page-icon-badge</code></td><td>Ikona strony z gradientem (42x42px)</td></tr>
+        <tr><td><code>.page-icon-badge--dark</code></td><td>Ciemny wariant dla strony Secrets</td></tr>
+        <tr><td><code>.dashboard-header</code></td><td>Spójny nagłówek z gradientowym tłem</td></tr>
+        <tr><td><code>.chat-page-header</code></td><td>Nagłówek strony czatu z awatarem</td></tr>
+        <tr><td><code>.nav-pills-modern</code></td><td>Zakładki z ikonami i efektami hover</td></tr>
+        <tr><td><code>.chat-meta-grid</code></td><td>Siatka 2-kolumnowa dla meta-danych</td></tr>
+        <tr><td><code>.chat-bubble</code></td><td>Ulepszone dymki z animacjami</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📊</span> Panel sterowania</h2>
+      <p>Zaktualizowany dashboard z ikonami w zakładkach:</p>
+      <div class="highlight">
+        <strong>Zakładki z ikonami:</strong>
+        💬 Wiadomości • 🔄 Auto-odpowiedź • ⏱️ Przypomnienia • ✨ AI • 📰 News • 👥 Multi-SMS
+      </div>
+      <ul>
+        <li>Nowy nagłówek z gradientem i ikoną strony</li>
+        <li>Ciemny badge środowiska z ikoną serwera</li>
+        <li>Responsywny układ dla wszystkich rozmiarów ekranu</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🔌</span> API Endpoints</h2>
+      <p>Nowe endpointy dla Secrets Manager:</p>
+      <div class="code">GET  /api/secrets         # Lista kluczy (zmaskowane)
+POST /api/secrets         # Zapisz klucz
+POST /api/secrets/test    # Test połączenia
+GET  /api/models          # Lista dostępnych modeli OpenAI
+POST /api/settings/reload # Hot reload konfiguracji</div>
+      <h3>Przykład odpowiedzi</h3>
+      <div class="code">{
+  "secrets": {
+    "TWILIO_ACCOUNT_SID": {
+      "is_set": true,
+      "masked": "ACxx••••••••••••••••••••••xx"
+    },
+    "OPENAI_API_KEY": {
+      "is_set": true,
+      "masked": "sk-••••••••••••••••••••••AA"
+    }
+  }
+}</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📁</span> Zaktualizowane pliki</h2>
+      <div class="code"># Nowe pliki
+app/secrets_manager.py           # SecretsManager - CRUD kluczy API
+app/templates/secrets.html       # Strona zarządzania kluczami
+app/static/js/secrets.js         # Logika strony secrets
+
+# Zmodyfikowane
+app/templates/base.html          # Przycisk "Top Secret" w header
+app/templates/chat.html          # Zmodernizowany layout czatu
+app/templates/dashboard.html     # Nowy nagłówek, ikony w zakładkach
+app/static/css/app.css           # Design system refresh (~400 linii)
+app/static/js/chat.js            # Ikony statusu, animacje dymków
+app/static/js/dashboard.js       # Obsługa responsywnych tabel
+app/ui.py                        # Route /secrets
+app/webhooks.py                  # Endpointy /api/secrets, /api/models
+app/config.py                    # reload_runtime_settings()
+app/database.py                  # app_settings + settings_audit tables</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">⬆️</span> Upgrade Path</h2>
+      <div class="code"># 1. Pull najnowszych zmian
+git pull origin main
+
+# 2. Restart aplikacji
+docker-compose restart app
+# lub lokalnie:
+python run.py
+
+# 3. Skonfiguruj klucze przez nowy UI
+# Przejdź do: http://localhost:3000/secrets</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🗺️</span> Roadmap</h2>
+      <ul>
+        <li><strong>ver3.2.3</strong> – Audit log zmian kluczy, eksport konfiguracji</li>
+        <li><strong>ver3.3.0</strong> – Integracja z HashiCorp Vault</li>
+        <li><strong>ver3.4.0</strong> – WebSocket dla real-time updates</li>
+      </ul>
+    </div>
+
+    <footer>
+      <p>Twilio Chat App © 2025 | <a href="https://github.com/19paoletto10-hub/twilio">GitHub Repository</a></p>
+    </footer>
+  </div>
+</body>
+</html>

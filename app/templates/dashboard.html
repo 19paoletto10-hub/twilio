@@ -57,48 +57,55 @@
 {% endblock %}
 
 {% block content %}
-  <div class="container" id="dashboard-root" data-app-env="{{ app_env }}" data-app-debug="{{ 'true' if app_debug else 'false' }}">
-    <div class="row align-items-center mb-4">
-      <div class="col-lg-8">
-        <h1 class="display-6 fw-semibold text-primary mb-1">Panel czatu</h1>
-        <p class="text-muted mb-0">Zarządzaj rozmowami SMS z jednego miejsca.</p>
-      </div>
-      <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-        <span class="badge bg-secondary-subtle text-secondary-emphasis px-3 py-2">
-          Środowisko: <strong class="ms-1">{{ app_env|upper }}</strong>
-        </span>
+  <div class="container-fluid px-lg-4" id="dashboard-root" data-app-env="{{ app_env }}" data-app-debug="{{ 'true' if app_debug else 'false' }}">
+    <div class="dashboard-header mb-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <span class="page-icon-badge">
+            <i class="bi bi-grid-1x2-fill"></i>
+          </span>
+          <div>
+            <h1 class="h4 fw-bold mb-0">Panel sterowania</h1>
+            <p class="text-muted small mb-0">Zarządzaj rozmowami SMS z jednego miejsca.</p>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="badge bg-dark px-3 py-2 d-inline-flex align-items-center gap-1">
+            <i class="bi bi-server"></i> {{ app_env|upper }}
+          </span>
+        </div>
       </div>
     </div>
 
-    <ul class="nav nav-pills gap-2 mb-4" id="dashboard-tabs" role="tablist">
+    <ul class="nav nav-pills nav-pills-modern gap-2 mb-4" id="dashboard-tabs" role="tablist">
       <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="tab-messages-btn" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="true">
-          Wiadomości
+        <button class="nav-link active d-flex align-items-center gap-2" id="tab-messages-btn" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab" aria-controls="tab-messages" aria-selected="true">
+          <i class="bi bi-chat-dots"></i> Wiadomości
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-auto-reply-btn" data-bs-toggle="tab" data-bs-target="#tab-auto-reply" type="button" role="tab" aria-controls="tab-auto-reply" aria-selected="false">
-          Auto-odpowiedź
+        <button class="nav-link d-flex align-items-center gap-2" id="tab-auto-reply-btn" data-bs-toggle="tab" data-bs-target="#tab-auto-reply" type="button" role="tab" aria-controls="tab-auto-reply" aria-selected="false">
+          <i class="bi bi-arrow-repeat"></i> Auto-odpowiedź
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-reminders-btn" data-bs-toggle="tab" data-bs-target="#tab-reminders" type="button" role="tab" aria-controls="tab-reminders" aria-selected="false">
-          Przypomnienia
+        <button class="nav-link d-flex align-items-center gap-2" id="tab-reminders-btn" data-bs-toggle="tab" data-bs-target="#tab-reminders" type="button" role="tab" aria-controls="tab-reminders" aria-selected="false">
+          <i class="bi bi-stopwatch"></i> Przypomnienia
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-ai-btn" data-bs-toggle="tab" data-bs-target="#tab-ai" type="button" role="tab" aria-controls="tab-ai" aria-selected="false">
-          AI
+        <button class="nav-link d-flex align-items-center gap-2" id="tab-ai-btn" data-bs-toggle="tab" data-bs-target="#tab-ai" type="button" role="tab" aria-controls="tab-ai" aria-selected="false">
+          <i class="bi bi-stars"></i> AI
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-news-btn" data-bs-toggle="tab" data-bs-target="#tab-news" type="button" role="tab" aria-controls="tab-news" aria-selected="false">
-          News
+        <button class="nav-link d-flex align-items-center gap-2" id="tab-news-btn" data-bs-toggle="tab" data-bs-target="#tab-news" type="button" role="tab" aria-controls="tab-news" aria-selected="false">
+          <i class="bi bi-newspaper"></i> News
         </button>
       </li>
       <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tab-multi-sms-btn" data-bs-toggle="tab" data-bs-target="#tab-multi-sms" type="button" role="tab" aria-controls="tab-multi-sms" aria-selected="false">
-          Multi-SMS
+        <button class="nav-link d-flex align-items-center gap-2" id="tab-multi-sms-btn" data-bs-toggle="tab" data-bs-target="#tab-multi-sms" type="button" role="tab" aria-controls="tab-multi-sms" aria-selected="false">
+          <i class="bi bi-people"></i> Multi-SMS
         </button>
       </li>
     </ul>
@@ -143,56 +150,83 @@
           </div>
         </div>
 
-        <div class="row g-4">
-          <div class="col-lg-4">
-            <div class="card shadow-sm border-0 h-100" id="send-message-card">
-              <div class="card-header bg-white border-0 pb-0">
-                <h2 class="h5 mb-0">Wyślij nową wiadomość</h2>
-              </div>
-              <div class="card-body d-flex flex-column gap-3">
-                <p class="text-muted mb-0">
-                  Otwórz dynamiczny kreator, aby przygotować i wysłać pojedynczą wiadomość SMS bez opuszczania bieżącego widoku.
-                </p>
-                <button type="button" class="btn btn-primary align-self-start" data-dashboard-modal-target="#sendMessageModal">
-                  <i class="bi bi-pencil-square me-2"></i>Utwórz wiadomość
+        <div class="row g-4 align-items-start">
+          <div class="col-lg-3">
+            <div class="card shadow-sm border-0" id="send-message-card">
+              <div class="card-body text-center py-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle mb-3" style="width: 3.5rem; height: 3.5rem;">
+                  <i class="bi bi-send-fill fs-4 text-primary"></i>
+                </div>
+                <h2 class="h6 fw-semibold mb-2">Nowa wiadomość</h2>
+                <p class="text-muted small mb-3">Szybko wyślij SMS do dowolnego odbiorcy.</p>
+                <button type="button" class="btn btn-primary btn-sm w-100" data-dashboard-modal-target="#sendMessageModal">
+                  <i class="bi bi-pencil-square me-1"></i>Utwórz
                 </button>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-              <div class="card-header bg-white border-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
-                <div>
-                  <h2 class="h5 mb-0">Historia wiadomości</h2>
-                  <small class="text-muted">Ostatnie 50 pozycji (auto-odświeżanie co 15 sek.)</small>
-                </div>
-                <div class="btn-group" role="group" aria-label="Filtruj">
-                  <button type="button" class="btn btn-outline-secondary active" data-filter="all">Wszystkie</button>
-                  <button type="button" class="btn btn-outline-secondary" data-filter="inbound">Przychodzące</button>
-                  <button type="button" class="btn btn-outline-secondary" data-filter="outbound">Wychodzące</button>
+          <div class="col-lg-9">
+            <div class="card shadow-sm border-0 messages-card">
+              <div class="card-header bg-white border-0 py-3">
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="d-inline-flex align-items-center justify-content-center rounded bg-secondary-subtle" style="width: 2.5rem; height: 2.5rem;">
+                      <i class="bi bi-chat-text fs-5 text-secondary"></i>
+                    </div>
+                    <div>
+                      <h2 class="h5 mb-0 fw-semibold">Historia wiadomości</h2>
+                      <small class="text-muted">Ostatnie 50 · <span id="messages-refresh-status">Auto-odświeżanie co 15s</span></small>
+                    </div>
+                  </div>
+                  <div class="d-flex flex-wrap align-items-center gap-2">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Filtruj">
+                      <button type="button" class="btn btn-outline-secondary active" data-filter="all">
+                        <i class="bi bi-list-ul me-1 d-none d-md-inline"></i>Wszystkie
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary" data-filter="inbound">
+                        <i class="bi bi-arrow-down-left me-1 d-none d-md-inline"></i>Przychodzące
+                      </button>
+                      <button type="button" class="btn btn-outline-secondary" data-filter="outbound">
+                        <i class="bi bi-arrow-up-right me-1 d-none d-md-inline"></i>Wychodzące
+                      </button>
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="messages-manual-refresh" title="Odśwież teraz">
+                      <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               <div class="card-body p-0">
-                <div class="table-responsive">
-                  <table class="table table-hover mb-0 messages-table" id="messages-table">
-                    <thead class="table-light">
+                <div class="table-responsive messages-table-wrapper">
+                  <table class="table table-hover align-middle mb-0 messages-table" id="messages-table">
+                    <thead class="table-light sticky-top">
                       <tr>
-                        <th scope="col" class="text-nowrap">Kierunek</th>
-                        <th scope="col" class="text-nowrap">Odbiorca / Nadawca</th>
+                        <th scope="col" class="text-nowrap ps-3">Kierunek</th>
+                        <th scope="col" class="text-nowrap">Kontakt</th>
                         <th scope="col">Treść</th>
                         <th scope="col" class="text-nowrap">Status</th>
-                        <th scope="col" class="text-nowrap">Akcje</th>
-                        <th scope="col" class="text-nowrap">Czat</th>
-                        <th scope="col" class="text-nowrap">Czas</th>
+                        <th scope="col" class="text-nowrap text-center">Akcje</th>
+                        <th scope="col" class="text-nowrap text-end pe-3">Czas</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td colspan="7" class="text-center text-muted py-4">Brak danych. Wczytywanie...</td>
+                        <td colspan="6" class="text-center text-muted py-5">
+                          <div class="d-flex flex-column align-items-center gap-2">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <span>Wczytywanie wiadomości...</span>
+                          </div>
+                        </td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+              <div class="card-footer bg-white border-top-0 py-2 px-3">
+                <div class="d-flex justify-content-between align-items-center small text-muted">
+                  <span id="messages-count-label">Wyświetlono: <strong>0</strong> wiadomości</span>
+                  <span id="messages-last-updated">—</span>
                 </div>
               </div>
             </div>

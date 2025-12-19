@@ -118,44 +118,88 @@
     updateScrollHint();
   };
 
+  const getStatusIcon = (status, isInbound) => {
+    const statusLower = (status || '').toLowerCase();
+    if (statusLower.includes('delivered') || statusLower.includes('dostarczono')) {
+      return '<i class="bi bi-check2-all"></i>';
+    }
+    if (statusLower.includes('sent') || statusLower.includes('wysłano')) {
+      return '<i class="bi bi-check2"></i>';
+    }
+    if (statusLower.includes('failed') || statusLower.includes('błąd')) {
+      return '<i class="bi bi-exclamation-circle"></i>';
+    }
+    if (isInbound) {
+      return '<i class="bi bi-arrow-down-left"></i>';
+    }
+    return '<i class="bi bi-arrow-up-right"></i>';
+  };
+
   const renderThread = (items) => {
     if (!threadEl) {
       return;
     }
 
     if (!items.length) {
-      threadEl.innerHTML = '<div class="text-center text-muted py-4">Brak wiadomości w tym wątku.</div>';
+      threadEl.innerHTML = `
+        <div class="chat-empty">
+          <div class="chat-empty__icon"><i class="bi bi-chat-dots"></i></div>
+          <div class="chat-empty__title">Brak wiadomości</div>
+          <div class="chat-empty__desc">Ten wątek nie zawiera jeszcze żadnych wiadomości.</div>
+        </div>`;
       updateScrollHint();
       return;
     }
 
     const shouldStickToBottom = isNearBottom();
-    const bubbles = items.map((item) => {
+    
+    const getDateKey = (dateStr) => {
+      if (!dateStr) return '';
+      const iso = dateStr.endsWith('Z') ? dateStr : `${dateStr}Z`;
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleDateString('pl-PL', { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+    
+    const bubbles = [];
+    let lastDateKey = '';
+    
+    for (const item of items) {
+      const dateKey = getDateKey(item.created_at);
+      if (dateKey && dateKey !== lastDateKey) {
+        bubbles.push(`<div class="chat-date-divider">${dateKey}</div>`);
+        lastDateKey = dateKey;
+      }
+      
       const isInbound = item.direction === 'inbound';
       const bubbleClass = isInbound ? 'chat-bubble chat-bubble--inbound' : 'chat-bubble chat-bubble--outbound';
+      const authorIcon = isInbound ? '<i class="bi bi-person"></i>' : '<i class="bi bi-headset"></i>';
       const author = isInbound ? 'Klient' : 'Zespół';
       const timestamp = formatDateTime(item.created_at);
       const status = item.status ? item.status : isInbound ? 'odebrano' : 'wysłano';
+      const statusIcon = getStatusIcon(status, isInbound);
       const body = escapeHtml(item.body || '');
-      const errorLine = item.error ? `<div class="chat-bubble__error">${escapeHtml(item.error)}</div>` : '';
+      const errorLine = item.error 
+        ? `<div class="chat-bubble__error"><i class="bi bi-exclamation-triangle-fill"></i> ${escapeHtml(item.error)}</div>` 
+        : '';
       const sid = item.sid ? String(item.sid) : '';
       const deleteAction = sid
-        ? `<button type="button" class="btn btn-link p-0 text-danger chat-delete-message" data-sid="${sid}">Usuń</button>`
+        ? `<button type="button" class="btn btn-sm ${isInbound ? 'btn-outline-danger' : 'btn-light'} chat-delete-message" data-sid="${sid}" title="Usuń wiadomość"><i class="bi bi-trash3"></i></button>`
         : '';
 
-      return `
+      bubbles.push(`
         <div class="${bubbleClass}">
           <div class="chat-bubble__meta">
-            <span>${author}</span>
-            <span>${timestamp}</span>
-            ${deleteAction ? `<span class="chat-bubble__actions">${deleteAction}</span>` : ''}
+            <span>${authorIcon} ${author}</span>
+            <span><i class="bi bi-clock"></i> ${timestamp}</span>
           </div>
           <div class="chat-bubble__body">${body.replace(/\n/g, '<br>')}</div>
-          <div class="chat-bubble__status">Status: ${status}</div>
+          <div class="chat-bubble__status">${statusIcon} ${status}</div>
+          ${deleteAction ? `<div class="chat-bubble__actions">${deleteAction}</div>` : ''}
           ${errorLine}
         </div>
-      `;
-    });
+      `);
+    }
 
     threadEl.innerHTML = bubbles.join('');
     requestAnimationFrame(() => {

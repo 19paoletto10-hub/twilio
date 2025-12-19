@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from flask import current_app, g
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 _NORMALIZE_PREFIXES = ("whatsapp:", "sms:", "mms:", "client:", "sip:")
 _NORMALIZE_STRIP_CHARS = (" ", "-", "(", ")", ".", "_")
@@ -299,6 +299,36 @@ def _migration_add_multi_sms_tables(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_add_app_settings(conn: sqlite3.Connection) -> None:
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS app_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'db',
+            updated_at TEXT NOT NULL DEFAULT ''
+        );
+
+        CREATE TABLE IF NOT EXISTS settings_audit (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            setting_key TEXT NOT NULL,
+            old_value TEXT,
+            new_value TEXT,
+            action TEXT NOT NULL,
+            source TEXT NOT NULL,
+            user_ip TEXT,
+            created_at TEXT NOT NULL DEFAULT ''
+        );
+        """
+    )
+
+
+def _ensure_app_settings_table(conn: sqlite3.Connection) -> None:
+    """Ensure app_settings/settings_audit tables exist (idempotent)."""
+    if not _table_exists(conn, "app_settings") or not _table_exists(conn, "settings_audit"):
+        _migration_add_app_settings(conn)
+
+
 def _ensure_multi_sms_tables(conn: sqlite3.Connection) -> None:
     has_batches = _table_exists(conn, "multi_sms_batches")
     has_recipients = _table_exists(conn, "multi_sms_recipients")
@@ -352,6 +382,10 @@ def _ensure_schema() -> None:
             if current_version < 7:
                 _migration_add_multi_sms_tables(conn)
                 current_version = 7
+
+            if current_version < 8:
+                _migration_add_app_settings(conn)
+                current_version = 8
 
         _ensure_multi_sms_tables(conn)
 
@@ -916,6 +950,115 @@ def set_ai_config(
     )
     conn.commit()
     return get_ai_config()
+
+
+# ---------------------------------------------------------------------------
+# App settings (non-secret)
+# ---------------------------------------------------------------------------
+
+
+def _insert_settings_audit(
+    *,
+    setting_key: str,
+    old_value: Optional[str],
+    new_value: Optional[str],
+    action: str,
+    source: str,
+    user_ip: Optional[str] = None,
+) -> None:
+    conn = _get_connection()
+    conn.execute(
+        """
+        INSERT INTO settings_audit (setting_key, old_value, new_value, action, source, user_ip, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (setting_key, old_value, new_value, action, source, user_ip, _utc_timestamp()),
+    )
+    conn.commit()
+
+
+def get_app_setting(key: str, default: Optional[str] = None) -> Optional[str]:
+    conn = _get_connection()
+    _ensure_app_settings_table(conn)
+    row = conn.execute(
+        "SELECT value FROM app_settings WHERE key = ?",
+        (key,),
+    ).fetchone()
+    if row is None:
+        return default
+    return row["value"]
+
+
+def list_app_settings(keys: Optional[Sequence[str]] = None) -> Dict[str, str]:
+    conn = _get_connection()
+    _ensure_app_settings_table(conn)
+    if keys:
+        placeholders = ",".join(["?"] * len(keys))
+        rows = conn.execute(
+            f"SELECT key, value FROM app_settings WHERE key IN ({placeholders})",
+            tuple(keys),
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT key, value FROM app_settings").fetchall()
+    return {row["key"]: row["value"] for row in rows}
+
+
+def set_app_setting(
+    *,
+    key: str,
+    value: str,
+    source: str = "db",
+    user_ip: Optional[str] = None,
+) -> Dict[str, str]:
+    conn = _get_connection()
+    _ensure_app_settings_table(conn)
+    existing = conn.execute("SELECT value FROM app_settings WHERE key = ?", (key,)).fetchone()
+    old_value = existing["value"] if existing else None
+
+    conn.execute(
+        """
+        INSERT INTO app_settings (key, value, source, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(key)
+        DO UPDATE SET value = excluded.value,
+                      source = excluded.source,
+                      updated_at = excluded.updated_at
+        """,
+        (key, value, source or "db", _utc_timestamp()),
+    )
+    conn.commit()
+
+    _insert_settings_audit(
+        setting_key=key,
+        old_value=old_value,
+        new_value=value,
+        action="update" if existing else "create",
+        source=source or "db",
+        user_ip=user_ip,
+    )
+
+    return {"key": key, "value": value, "source": source or "db"}
+
+
+def delete_app_setting(*, key: str, source: str = "db", user_ip: Optional[str] = None) -> bool:
+    conn = _get_connection()
+    _ensure_app_settings_table(conn)
+    existing = conn.execute("SELECT value FROM app_settings WHERE key = ?", (key,)).fetchone()
+    if not existing:
+        return False
+
+    conn.execute("DELETE FROM app_settings WHERE key = ?", (key,))
+    conn.commit()
+
+    _insert_settings_audit(
+        setting_key=key,
+        old_value=existing["value"],
+        new_value=None,
+        action="delete",
+        source=source or "db",
+        user_ip=user_ip,
+    )
+    return True
 
 
 def _row_to_dict(row: Optional[sqlite3.Row]) -> Dict[str, Any]:

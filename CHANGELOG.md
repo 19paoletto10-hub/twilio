@@ -1,5 +1,85 @@
 # Changelog
 
+## ver3.2.2 (UI/UX Modernization: Chat Page + Secrets Manager + Design System Refresh)
+
+### Podsumowanie
+
+Release 3.2.2 wprowadza kompleksową modernizację interfejsu użytkownika z naciskiem na
+stronę czatu i nową dedykowaną stronę zarządzania kluczami API (Secrets Manager).
+Dodano spójny design system z gradientowymi nagłówkami, ikonami w nawigacji,
+oraz ulepszono responsywność całej aplikacji.
+
+### Najważniejsze zmiany
+
+#### 🔐 Secrets Manager (Nowa strona /secrets)
+- Centralne zarządzanie kluczami Twilio (SID, Token, Sender, Messaging Service)
+- Konfiguracja OpenAI (API Key, Model selection)
+- Maskowanie wartości z możliwością odsłonięcia
+- Przycisk "Test" do weryfikacji połączenia na żywo
+- Opcja "Zapisz do .env" dla trwałej konfiguracji
+- Hot reload konfiguracji bez restartu serwera
+- Przycisk "Top Secret" w header'ze aplikacji
+
+#### 💬 Modernizacja strony czatu
+- Nowoczesny nagłówek strony z awatarem i badge'ami statusu (Online/DEV)
+- Awatary z gradientowym tłem (sidebar i header)
+- Siatka meta-danych (2 kolumny: aktywność + liczba wiadomości)
+- Animowane dymki z efektem `bubbleIn`
+- Ikony statusu dostarczenia (✓ wysłano, ✓✓ dostarczono)
+- Ikony autorów (👤 Klient, 🎧 Zespół)
+- Spinner ładowania historii wiadomości
+- Responsywny układ dla wszystkich rozmiarów ekranów
+
+#### 🎨 Design System Refresh
+- `.page-icon-badge` – ikona strony z gradientem (42x42px)
+- `.page-icon-badge--dark` – ciemny wariant dla strony Secrets
+- `.dashboard-header`, `.chat-page-header`, `.secrets-header` – spójne nagłówki
+- `.nav-pills-modern` – zakładki z ikonami i efektami hover
+- `.chat-meta-grid`, `.chat-meta-item` – siatka meta-danych
+- `.chat-composer-form`, `.chat-composer-textarea` – zmodernizowany formularz wysyłki
+- Ulepszone `.chat-bubble` z animacjami i ikonami statusu
+
+#### 📊 Panel sterowania
+- Nowy nagłówek z gradientem i ikoną strony
+- Zakładki z ikonami (💬 🔄 ⏱️ ✨ 📰 👥)
+- Ciemny badge środowiska z ikoną serwera
+
+#### 🔌 Nowe API Endpoints
+- `GET /api/secrets` – lista kluczy (zmaskowane)
+- `POST /api/secrets` – zapisz klucz
+- `POST /api/secrets/test` – test połączenia
+- `GET /api/models` – lista dostępnych modeli OpenAI
+- `POST /api/settings/reload` – hot reload konfiguracji
+
+### Zaktualizowane pliki
+
+```
+# Nowe pliki
+app/secrets_manager.py           # SecretsManager - CRUD kluczy API
+app/templates/secrets.html       # Strona zarządzania kluczami
+app/static/js/secrets.js         # Logika strony secrets
+
+# Zmodyfikowane
+app/templates/base.html          # Przycisk "Top Secret" w header
+app/templates/chat.html          # Zmodernizowany layout czatu
+app/templates/dashboard.html     # Nowy nagłówek, ikony w zakładkach
+app/static/css/app.css           # Design system refresh (~400 linii)
+app/static/js/chat.js            # Ikony statusu, animacje dymków
+app/static/js/dashboard.js       # Obsługa responsywnych tabel
+app/ui.py                        # Route /secrets
+app/webhooks.py                  # Endpointy /api/secrets, /api/models
+app/config.py                    # reload_runtime_settings()
+app/database.py                  # app_settings + settings_audit tables
+```
+
+### Kompatybilność
+
+- **Migracja DB:** Schema version pozostaje 8 (bez zmian)
+- **Brak zmian łamiących** – istniejące API pozostaje kompatybilne
+- Wymaga przeglądarki z obsługą CSS Custom Properties (Chrome 88+, Firefox 78+, Safari 14+)
+
+---
+
 ## ver3.2.1 (Collapsible Sidebar + Compose Modal)
 
 ### Podsumowanie

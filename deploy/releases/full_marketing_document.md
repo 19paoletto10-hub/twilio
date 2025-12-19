@@ -1,28 +1,31 @@
 # Twilio Chat App — Pełna prezentacja produktu
 
-Data: 2025-12-16  
-Wersja: ver3.2.1
+Data: 2025-12-19  
+Wersja: ver3.2.2
 
 ## Executive Summary
 
 Twilio Chat App to komercyjnie gotowe, samodzielne rozwiązanie do zarządzania komunikacją SMS/MMS.
-Produkt łączy panel operatora z nowoczesnym UI (collapsible sidebar, compose modal), REST API,
-wsparcie webhooków Twilio oraz zaawansowany tryb auto‑reply oparty na OpenAI.
+Produkt łączy panel operatora z nowoczesnym UI (collapsible sidebar, compose modal, secrets manager),
+REST API, wsparcie webhooków Twilio oraz zaawansowany tryb auto‑reply oparty na OpenAI.
 Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przykłady ilustrujące sposób użycia.
 
- ---
+---
 
- ## 1. Value Proposition — dlaczego to działa
+## 1. Value Proposition — dlaczego to działa
 
- - Szybkie wdrożenie kanału SMS z kontrolą nad danymi (własny serwer + SQLite).
- - Redukcja kosztów obsługi dzięki automatycznym odpowiedziom (klasycznym i AI).
- - Łatwe integrowanie z CRM i innymi systemami dzięki prostemu REST API i webhookom.
+- Szybkie wdrożenie kanału SMS z kontrolą nad danymi (własny serwer + SQLite).
+- Redukcja kosztów obsługi dzięki automatycznym odpowiedziom (klasycznym i AI).
+- Łatwe integrowanie z CRM i innymi systemami dzięki prostemu REST API i webhookom.
+- **[NOWOŚĆ 3.2.2]** Centralne zarządzanie kluczami API z poziomu UI bez edycji plików.
 
- ## 2. Krótki przegląd funkcji
+## 2. Krótki przegląd funkcji
 
 - **Dashboard operatora** — statystyki, ręczna wysyłka, szybki dostęp do historii.
-- **Collapsible sidebar** — zwijane menu boczne z ikonami i szybkimi akcjami (nowość 3.2.1).
-- **Compose modal** — tworzenie wiadomości bez opuszczania bieżącego widoku (nowość 3.2.1).
+- **Collapsible sidebar** — zwijane menu boczne z ikonami i szybkimi akcjami.
+- **Compose modal** — tworzenie wiadomości bez opuszczania bieżącego widoku.
+- **[NOWOŚĆ 3.2.2] Secrets Manager** — dedykowana strona /secrets do zarządzania kluczami API.
+- **[NOWOŚĆ 3.2.2] Zmodernizowany czat** — animowane dymki, ikony statusu, awatary.
 - Historia wiadomości — czytelna tabela z filtrem kierunku, statusami i metadanymi kanału.
 - Widok czatu — pełna rozmowa z numerem, dymki wiadomości, timestampy.
 - Auto‑reply — prosty szablon tekstowy do natychmiastowego włączenia.
@@ -30,14 +33,46 @@ Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przy
 - Przypomnienia (scheduler) — cykliczne SMS zarządzane z panelu.
 - **Multi‑SMS** — kampanie do wielu odbiorców z kolejką w tle i raportami.
 - **News/FAISS/RAG** — scraping artykułów, generowanie streszczeń, dystrybucja SMS.
- - Multi‑SMS — kampanie jednorazowe do wielu odbiorców z historią batchy.
- - News / FAISS / RAG — scraping artykułów i inteligentne streszczenia.
- - **[NOWOŚĆ 3.2.1]** Collapsible Sidebar — zwijane menu boczne (280px → 84px) z persystencją stanu.
- - **[NOWOŚĆ 3.2.1]** Compose Modal — modal kompozycji wiadomości z walidacją i skrótami klawiszowymi.
 
- ---
+---
 
- ## 2.1 Nowości w wersji 3.2.1
+## 2.1 Nowości w wersji 3.2.2
+
+### 🔐 Secrets Manager (Nowa strona /secrets)
+
+Centralne miejsce do zarządzania kluczami API:
+
+| Funkcja | Opis |
+|---------|------|
+| Klucze Twilio | Account SID, Auth Token, Sender ID, Messaging Service SID |
+| Klucze OpenAI | API Key, Model selection |
+| Maskowanie | Wartości wyświetlane jako `••••••••` z możliwością odsłonięcia |
+| Test połączenia | Przycisk "Test" weryfikuje konfigurację na żywo |
+| Persystencja | Opcja "Zapisz do .env" dla trwałej konfiguracji |
+| Hot reload | Zmiany aplikowane bez restartu serwera |
+
+**Przycisk "Top Secret"** w header'ze aplikacji zapewnia szybki dostęp z każdego miejsca.
+
+### 💬 Zmodernizowana strona czatu
+
+- **Nagłówek strony** z awatarem i badge'ami statusu (Online/DEV)
+- **Awatary** z gradientowym tłem w sidebar i header
+- **Siatka meta-danych** (2 kolumny: ostatnia aktywność + liczba wiadomości)
+- **Animowane dymki** z efektem `bubbleIn`
+- **Ikony statusu** dostarczenia (✓ wysłano, ✓✓ dostarczono)
+- **Ikony autorów** (👤 Klient, 🎧 Zespół)
+- **Spinner ładowania** historii wiadomości
+
+### 🎨 Design System Refresh
+
+- Nowe komponenty CSS: `.page-icon-badge`, `.dashboard-header`, `.chat-page-header`
+- Zakładki z ikonami w panelu sterowania
+- Spójne gradienty i animacje w całej aplikacji
+- Responsywność dla mobile/tablet/desktop
+
+---
+
+## 2.2 Nowości w wersji 3.2.1
 
  ### Collapsible Sidebar (Zwijane menu boczne)
  - **Tryb rozwinięty (280px):** Pełne etykiety i ikony dla wszystkich zakładek

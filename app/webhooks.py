@@ -14,6 +14,7 @@ from urllib.parse import unquote
 
 from flask import Blueprint, current_app, request, Response, jsonify, send_file
 from twilio.request_validator import RequestValidator
+from openai import OpenAI, OpenAIError
 
 from .chat_logic import build_chat_engine
 from .ai_service import AIResponder, AIReplyError, send_ai_generated_sms
@@ -25,6 +26,9 @@ from .database import (
     get_ai_config,
     set_ai_config,
     normalize_contact,
+    apply_ai_env_defaults,
+    get_app_setting,
+    set_app_setting,
 )
 from .database import (
     list_scheduled_messages,
@@ -50,6 +54,8 @@ from .database import (
     list_multi_sms_recipients,
 )
 from .scraper_service import ScraperService, SCRAPED_DIR, DATA_DIR
+from .secrets_manager import SecretsManager, SecretStatus
+from .config import reload_runtime_settings
 from .faiss_service import (
     FAISS_INDEX_PATH,
     DOCS_JSONL_PATH,
@@ -330,6 +336,59 @@ def _mask_secret(value: Optional[str]) -> Optional[str]:
     if len(trimmed) <= 4:
         return "•" * len(trimmed)
     return "•" * (len(trimmed) - 4) + trimmed[-4:]
+
+
+def _serialize_secret(status: SecretStatus) -> Dict[str, Any]:
+    return {
+        "key": status.key,
+        "exists": status.exists,
+        "masked": status.masked,
+        "source": status.source,
+    }
+
+
+def _resolve_rag_chat_model() -> str:
+    stored = get_app_setting("rag_chat_model")
+    if stored:
+        return stored
+    return os.getenv("SECOND_MODEL", os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini")).strip()
+
+
+def _select_openai_key() -> Optional[str]:
+    # Priority: dedicated RAG key, primary key in env, ai_config db value
+    for env_key in ("SECOND_OPENAI", "OPENAI_API_KEY"):
+        candidate = (os.getenv(env_key, "") or "").strip()
+        if candidate:
+            return candidate
+
+    cfg = get_ai_config()
+    api_key = (cfg.get("api_key") or "").strip()
+    return api_key or None
+
+
+def _available_openai_models() -> List[str]:
+    key = _select_openai_key()
+    if not key:
+        return []
+    try:
+        return _list_openai_chat_models(key)
+    except ValueError as exc:
+        current_app.logger.warning("Listing OpenAI models failed: %s", exc)
+        return []
+
+
+def _list_openai_chat_models(api_key: str) -> List[str]:
+    client = OpenAI(api_key=api_key)
+    try:
+        response = client.models.list()
+    except OpenAIError as exc:
+        raise ValueError(f"Pobieranie listy modeli nie powiodło się: {exc}") from exc
+    except Exception as exc:  # noqa: BLE001
+        raise ValueError(f"Nieoczekiwany błąd podczas listowania modeli: {exc}") from exc
+
+    model_ids = [getattr(item, "id", "") for item in getattr(response, "data", []) if getattr(item, "id", None)]
+    chat_like = [mid for mid in model_ids if "embedding" not in mid.lower() and not mid.lower().startswith("whisper")]
+    return sorted(set(chat_like))
 
 
 def _split_multi_sms_numbers(raw_value: str) -> List[str]:
@@ -929,6 +988,118 @@ def api_update_ai_config():
             set_auto_reply_config(enabled=False, message=auto_cfg.get("message", ""))
 
     return jsonify(_serialize_ai_config(updated_cfg))
+
+
+@webhooks_bp.get("/api/secrets")
+def api_list_secrets():
+    mgr = SecretsManager()
+    statuses = mgr.list_statuses()
+    return jsonify({key: _serialize_secret(status) for key, status in statuses.items()})
+
+
+@webhooks_bp.post("/api/secrets/<key_name>")
+def api_set_secret(key_name: str):
+    payload = request.get_json(force=True, silent=True) or {}
+    value = (payload.get("value") or "").strip()
+    persist_env = bool(payload.get("persist_env", False))
+    run_test = bool(payload.get("test", False))
+
+    mgr = SecretsManager()
+    try:
+        status = mgr.set(key_name, value, persist_env=persist_env)
+        test_result = mgr.test(key_name, value) if run_test else None
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+    # Keep runtime config in sync after secret updates
+    if key_name in {"OPENAI_API_KEY", "SECOND_OPENAI"}:
+        try:
+            apply_ai_env_defaults(current_app)
+            reload_runtime_settings(current_app)
+        except Exception as exc:  # noqa: BLE001
+            current_app.logger.warning("OpenAI runtime reload after secret update failed: %s", exc)
+
+    if key_name in {"TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_DEFAULT_FROM", "TWILIO_MESSAGING_SERVICE_SID"}:
+        try:
+            reload_runtime_settings(current_app)
+        except Exception as exc:  # noqa: BLE001
+            current_app.logger.warning("Twilio runtime reload after secret update failed: %s", exc)
+
+    response: Dict[str, Any] = {"status": _serialize_secret(status)}
+    if test_result is not None:
+        response["test"] = test_result
+    return jsonify(response)
+
+
+@webhooks_bp.post("/api/secrets/<key_name>/test")
+def api_test_secret(key_name: str):
+    payload = request.get_json(force=True, silent=True) or {}
+    value = (payload.get("value") or "").strip()
+    mgr = SecretsManager()
+    try:
+        result = mgr.test(key_name, value or None)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    return jsonify(result)
+
+
+@webhooks_bp.get("/api/models")
+def api_get_models():
+    ai_cfg = get_ai_config()
+    return jsonify(
+        {
+            "chat_model": ai_cfg.get("model", "gpt-4o-mini"),
+            "rag_chat_model": _resolve_rag_chat_model(),
+            "available_models": _available_openai_models(),
+        }
+    )
+
+
+@webhooks_bp.post("/api/models")
+def api_update_models():
+    payload = request.get_json(force=True, silent=True) or {}
+    chat_model = (payload.get("chat_model") or "").strip()
+    rag_model = (payload.get("rag_chat_model") or "").strip()
+
+    if not chat_model and not rag_model:
+        return jsonify({"error": "Brak pól do aktualizacji."}), 400
+
+    updates: Dict[str, Any] = {}
+    if chat_model:
+        current_cfg = get_ai_config()
+        updated = set_ai_config(
+            enabled=current_cfg.get("enabled", False),
+            api_key=None,
+            system_prompt=None,
+            target_number=None,
+            model=chat_model,
+            temperature=None,
+            enabled_source=current_cfg.get("enabled_source", "ui"),
+        )
+        updates["chat_model"] = updated.get("model")
+
+    if rag_model:
+        set_app_setting(
+            key="rag_chat_model",
+            value=rag_model,
+            source="ui",
+            user_ip=request.remote_addr,
+        )
+        updates["rag_chat_model"] = rag_model
+
+    updates["available_models"] = _available_openai_models()
+    return jsonify(updates)
+
+
+@webhooks_bp.post("/api/settings/reload")
+def api_reload_settings():
+    try:
+        summary = reload_runtime_settings(current_app)
+        apply_ai_env_defaults(current_app)
+        return jsonify({"ok": True, "summary": summary})
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Reload settings failed: %s", exc)
+        return jsonify({"error": f"Nie udało się przeładować konfiguracji: {exc}"}), 500
 
 
 @webhooks_bp.post("/api/ai/test")

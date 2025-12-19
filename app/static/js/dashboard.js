@@ -56,6 +56,16 @@
   const aiTestStatus = document.getElementById('ai-test-status');
   const aiTestResult = document.getElementById('ai-test-result');
 
+  // Secrets & models
+  const secretsForm = document.getElementById('secrets-form');
+  const secretFields = document.querySelectorAll('[data-secret-field]');
+  const modelsForm = document.getElementById('models-config-form');
+  const modelChatSelect = document.getElementById('model-chat');
+  const modelRagSelect = document.getElementById('model-rag');
+  const modelsSaveBtn = document.getElementById('models-save-btn');
+  const modelsSaveSpinner = modelsSaveBtn?.querySelector('.spinner-border');
+  const modelsReloadBtn = document.getElementById('models-reload-btn');
+
   // News tab  
   const newsAddRecipientForm = document.getElementById('news-add-recipient-form');
   const newsRecipientPhone = document.getElementById('news-recipient-phone');
@@ -625,6 +635,229 @@
 
     if (aiConversationParticipant) {
       aiConversationParticipant.textContent = config.target_number || 'Brak skonfigurowanego numeru';
+    }
+  };
+
+  // -----------------------------
+  // Secrets (env-backed)
+  // -----------------------------
+  const setSecretLoading = (field, isLoading) => {
+    const saveBtn = field?.querySelector('[data-secret-save]');
+    const spinner = saveBtn?.querySelector('.spinner-border');
+    if (!saveBtn || !spinner) return;
+    if (isLoading) {
+      saveBtn.setAttribute('disabled', 'true');
+      spinner.classList.remove('d-none');
+    } else {
+      saveBtn.removeAttribute('disabled');
+      spinner.classList.add('d-none');
+    }
+  };
+
+  const renderSecrets = (payload = {}) => {
+    if (!secretFields?.length) return;
+    secretFields.forEach((field) => {
+      const keyName = field.dataset.secretName;
+      const statusEl = field.querySelector('[data-secret-status]');
+      const saveBtn = field.querySelector('[data-secret-save]');
+      const testBtn = field.querySelector('[data-secret-test]');
+      const persist = field.querySelector('[data-secret-persist]');
+
+      if (!keyName) return;
+      const status = payload[keyName] || {};
+      const masked = status.masked || '—';
+      const exists = Boolean(status.exists);
+
+      if (statusEl) {
+        statusEl.textContent = exists ? `Zapisano (${masked})` : 'Brak klucza';
+        statusEl.className = exists ? 'form-text text-success' : 'form-text text-muted';
+      }
+      saveBtn?.removeAttribute('disabled');
+      testBtn?.removeAttribute('disabled');
+      persist?.removeAttribute('disabled');
+    });
+  };
+
+  const handleSecretAction = async (event) => {
+    const actionBtn = event.target.closest('[data-secret-save],[data-secret-test]');
+    if (!actionBtn) return;
+    const field = actionBtn.closest('[data-secret-field]');
+    if (!field) return;
+
+    const keyName = field.dataset.secretName;
+    const input = field.querySelector('[data-secret-input]');
+    const persist = field.querySelector('[data-secret-persist]');
+    const statusEl = field.querySelector('[data-secret-status]');
+
+    if (!keyName || !input) return;
+
+    const value = input.value.trim();
+    const isSave = actionBtn.hasAttribute('data-secret-save');
+    const isTest = actionBtn.hasAttribute('data-secret-test');
+
+    if (!value && isSave) {
+      input.focus();
+      return;
+    }
+
+    if (isSave) setSecretLoading(field, true);
+    if (statusEl) statusEl.textContent = 'Przetwarzanie...';
+
+    try {
+      if (isSave) {
+        const payload = {
+          value,
+          persist_env: !!persist?.checked,
+          test: true
+        };
+        const res = await fetchJSON(`/api/secrets/${encodeURIComponent(keyName)}`, {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        renderSecrets(res.status ? { [keyName]: res.status } : {});
+        showToast({ title: 'Zapisano', message: 'Klucz został zapisany.', type: 'success' });
+        if (res.test && res.test.details) {
+          showToast({ title: 'Test klucza', message: res.test.details, type: 'success' });
+        }
+        input.value = '';
+      }
+
+      if (isTest && !isSave) {
+        const res = await fetchJSON(`/api/secrets/${encodeURIComponent(keyName)}/test`, {
+          method: 'POST',
+          body: JSON.stringify({ value })
+        });
+        const details = res?.details || 'Połączenie OK';
+        showToast({ title: 'Test klucza', message: details, type: 'success' });
+      }
+    } catch (error) {
+      console.error(error);
+      const msg = error?.message || 'Operacja na kluczach nie powiodła się.';
+      showToast({ title: 'Błąd', message: msg, type: 'error' });
+      if (statusEl) statusEl.textContent = msg;
+    } finally {
+      if (isSave) setSecretLoading(field, false);
+    }
+  };
+
+  const loadSecrets = async () => {
+    if (!secretFields?.length) return;
+    try {
+      const data = await fetchJSON('/api/secrets');
+      renderSecrets(data || {});
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać kluczy.', type: 'error' });
+    }
+  };
+
+  // -----------------------------
+  // Models (chat + RAG)
+  // -----------------------------
+  const setModelsSaving = (isSaving) => {
+    if (!modelsSaveBtn) return;
+    if (isSaving) {
+      modelsSaveBtn.setAttribute('disabled', 'true');
+      modelsSaveSpinner?.classList.remove('d-none');
+    } else {
+      modelsSaveBtn.removeAttribute('disabled');
+      modelsSaveSpinner?.classList.add('d-none');
+    }
+  };
+
+  const ensureOption = (select, value, label) => {
+    if (!select || !value) return;
+    const exists = Array.from(select.options).some((opt) => opt.value === value);
+    if (!exists) {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label || value;
+      select.appendChild(opt);
+    }
+  };
+
+  const renderModels = (payload = {}) => {
+    if (!modelsForm) return;
+    const available = payload.available_models || [];
+    const chatModel = payload.chat_model || 'gpt-4o-mini';
+    const ragModel = payload.rag_chat_model || chatModel;
+
+    if (modelChatSelect) {
+      modelChatSelect.innerHTML = '';
+      available.forEach((id) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = id;
+        modelChatSelect.appendChild(opt);
+      });
+      ensureOption(modelChatSelect, chatModel, chatModel);
+      modelChatSelect.value = chatModel;
+    }
+
+    if (modelRagSelect) {
+      modelRagSelect.innerHTML = '';
+      available.forEach((id) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = id;
+        modelRagSelect.appendChild(opt);
+      });
+      ensureOption(modelRagSelect, ragModel, ragModel);
+      modelRagSelect.value = ragModel;
+    }
+  };
+
+  const loadModels = async () => {
+    if (!modelsForm) return;
+    try {
+      const data = await fetchJSON('/api/models');
+      renderModels(data || {});
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się pobrać modeli.', type: 'error' });
+    }
+  };
+
+  const submitModels = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!modelsForm) return;
+
+    const chatModel = modelChatSelect?.value.trim();
+    const ragModel = modelRagSelect?.value.trim();
+
+    if (!chatModel && !ragModel) {
+      showToast({ title: 'Błąd', message: 'Wybierz model do zapisania.', type: 'error' });
+      return;
+    }
+
+    try {
+      setModelsSaving(true);
+      const data = await fetchJSON('/api/models', {
+        method: 'POST',
+        body: JSON.stringify({ chat_model: chatModel, rag_chat_model: ragModel })
+      });
+      renderModels(data || {});
+      showToast({ title: 'Zapisano', message: 'Modele zostały zaktualizowane.', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się zapisać modeli.', type: 'error' });
+    } finally {
+      setModelsSaving(false);
+    }
+  };
+
+  const reloadModelsFromEnv = async () => {
+    try {
+      setModelsSaving(true);
+      await fetchJSON('/api/settings/reload', { method: 'POST' });
+      await Promise.all([loadModels(), loadSecrets(), loadAiConfig?.()]);
+      showToast({ title: 'Przeładowano', message: 'Konfiguracja załadowana z .env.', type: 'success' });
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się przeładować konfiguracji.', type: 'error' });
+    } finally {
+      setModelsSaving(false);
     }
   };
 
@@ -2383,8 +2616,23 @@
   };
 
   const renderMessages = (items) => {
+    const countLabel = document.getElementById('messages-count-label');
+    const lastUpdatedEl = document.getElementById('messages-last-updated');
+
+    if (countLabel) {
+      countLabel.innerHTML = `Wyświetlono: <strong>${items.length}</strong> wiadomości`;
+    }
+    if (lastUpdatedEl) {
+      lastUpdatedEl.textContent = `Ostatnia aktualizacja: ${new Date().toLocaleTimeString()}`;
+    }
+
     if (!items.length) {
-      tableBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Brak wiadomości do wyświetlenia.</td></tr>';
+      tableBody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5">
+        <div class="d-flex flex-column align-items-center gap-2">
+          <i class="bi bi-inbox fs-1 text-secondary"></i>
+          <span>Brak wiadomości do wyświetlenia.</span>
+        </div>
+      </td></tr>`;
       return;
     }
 
@@ -2396,9 +2644,6 @@
       const { dateLabel, timeLabel, fullLabel } = buildDateTimeParts(item.created_at);
       const errorLine = item.error ? `<div class="text-danger small mt-1 text-truncate-2">${escapeHtml(item.error)}</div>` : '';
       const chatUrl = buildChatLink(participantRaw);
-      const chatCell = chatUrl
-        ? `<a class="btn btn-outline-primary btn-sm" href="${chatUrl}">Otwórz</a>`
-        : '—';
       const rawBody = (item.body || '').trim();
       const bodyTitle = rawBody || 'Brak treści';
       const bodyHtml = rawBody ? escapeHtml(rawBody).replace(/\n/g, '<br>') : '<span class="text-muted">Brak treści</span>';
@@ -2407,11 +2652,16 @@
         rowClasses.push('messages-row--clickable');
       }
       const sid = (item.sid || '').trim();
-      const actionsCell = sid
-        ? `<div class="messages-actions">
-            <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-message" data-sid="${sid}">Usuń</button>
-          </div>`
-        : '<span class="text-muted small">Brak SID</span>';
+      const actionsHtml = [];
+      if (chatUrl) {
+        actionsHtml.push(`<a class="btn btn-sm btn-outline-primary" href="${chatUrl}" title="Otwórz czat"><i class="bi bi-chat-dots"></i></a>`);
+      }
+      if (sid) {
+        actionsHtml.push(`<button type="button" class="btn btn-sm btn-outline-danger" data-action="delete-message" data-sid="${sid}" title="Usuń"><i class="bi bi-trash"></i></button>`);
+      }
+      const actionsCell = actionsHtml.length
+        ? `<div class="messages-actions">${actionsHtml.join('')}</div>`
+        : '<span class="text-muted small">—</span>';
       const rowAttrs = [
         `class="${rowClasses.join(' ')}"`,
         chatUrl ? `data-chat-url="${chatUrl}"` : '',
@@ -2420,23 +2670,22 @@
 
       return `
         <tr ${rowAttrs}>
-          <td class="text-nowrap">${directionCell}</td>
-          <td class="text-nowrap" title="${escapeHtml(participant.main)}">
+          <td class="text-nowrap ps-3" data-label="Kierunek">${directionCell}</td>
+          <td class="text-nowrap" title="${escapeHtml(participant.main)}" data-label="Kontakt">
             <div class="messages-participant">
               <span class="messages-participant__number text-truncate-1">${escapeHtml(participant.main)}</span>
               <span class="messages-participant__meta text-truncate-1">${escapeHtml(participant.meta)}</span>
             </div>
           </td>
-          <td>
+          <td data-label="Treść">
             <div class="messages-body" title="${escapeHtml(bodyTitle)}">${bodyHtml}</div>
           </td>
-          <td class="text-nowrap">
+          <td class="text-nowrap" data-label="Status">
             ${statusCell}
             ${errorLine}
           </td>
-          <td>${actionsCell}</td>
-          <td class="text-nowrap">${chatCell}</td>
-          <td class="text-nowrap">
+          <td class="text-nowrap text-center" data-label="Akcje">${actionsCell}</td>
+          <td class="text-nowrap text-end pe-3" data-label="Czas">
             <div class="messages-datetime" title="${escapeHtml(fullLabel)}">
               <span class="messages-datetime__time">${escapeHtml(timeLabel)}</span>
               <span class="messages-datetime__date">${escapeHtml(dateLabel)}</span>
@@ -2627,6 +2876,18 @@
       filterButtons.forEach((button) => button.addEventListener('click', handleFilterClick));
       tableBody.addEventListener('click', handleMessagesRowClick);
       tableBody.addEventListener('click', handleMessagesActionClick);
+      
+      // Manual refresh button
+      const manualRefreshBtn = document.getElementById('messages-manual-refresh');
+      manualRefreshBtn?.addEventListener('click', () => {
+        manualRefreshBtn.disabled = true;
+        manualRefreshBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i>';
+        refreshMessages().finally(() => {
+          manualRefreshBtn.disabled = false;
+          manualRefreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise"></i>';
+        });
+      });
+      
       refreshMessages();
       refreshStats();
       startAutoRefresh();
@@ -2708,6 +2969,17 @@
           loadAiConversation();
         }, 20000);
       }
+    }
+
+    if (secretsForm && secretFields.length) {
+      secretsForm.addEventListener('click', handleSecretAction);
+      loadSecrets();
+    }
+
+    if (modelsForm) {
+      modelsForm.addEventListener('submit', submitModels);
+      modelsReloadBtn?.addEventListener('click', reloadModelsFromEnv);
+      loadModels();
     }
 
     aiTestBtn?.addEventListener('click', runAiTest);
