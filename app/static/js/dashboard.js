@@ -108,9 +108,11 @@
   const newsScrapeSpinner = document.getElementById('news-scrape-spinner');
   const newsScrapeStatus = document.getElementById('news-scrape-status');
   const newsScrapeLog = document.getElementById('news-scrape-log');
+  const newsScrapeStopBtn = document.getElementById('news-scrape-stop-btn');
   const newsFilesGrid = document.getElementById('news-files-grid');
   const newsFilesEmpty = document.getElementById('news-files-empty');
   const newsFilesRefreshBtn = document.getElementById('news-files-refresh-btn');
+  const newsFilesDeleteAllBtn = document.getElementById('news-files-delete-all-btn');
   const newsBuildIndexBtn = document.getElementById('news-build-index-btn');
   const newsBuildIndexSpinner = document.getElementById('news-build-index-spinner');
   const newsFileOverlay = document.getElementById('news-file-overlay');
@@ -1750,34 +1752,43 @@
   const renderNewsFiles = (items = []) => {
     if (!newsFilesGrid) return;
 
-    if (!items.length) {
+    // Filtruj tylko pliki .txt
+    const txtFiles = items.filter(file => {
+      const name = (file.name || '').toLowerCase();
+      return name.endsWith('.txt');
+    });
+
+    if (!txtFiles.length) {
       newsFilesGrid.innerHTML = '<div class="col-12 text-center text-muted py-4">Brak plików. Uruchom skrapowanie, aby zobaczyć kafelki.</div>';
       return;
     }
 
-    const cards = items.map((file) => {
-      const category = escapeHtml(file.category || file.name || '—');
+    const cards = txtFiles.map((file) => {
+      const categoryName = (file.name || '').replace(/\.txt$/i, '').replace(/_/g, ' ');
+      const category = escapeHtml(categoryName.charAt(0).toUpperCase() + categoryName.slice(1));
       const size = file.size_bytes ? `${(file.size_bytes / 1024).toFixed(1)} KB` : '—';
-      const updated = file.updated_at ? new Date(file.updated_at).toLocaleString() : '—';
-      const format = escapeHtml(file.format || 'txt');
+      const updated = file.updated_at ? new Date(file.updated_at).toLocaleString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
       const fileName = escapeHtml(file.name || '');
 
       return `
         <div class="col-lg-4 col-md-6">
-          <div class="card shadow-sm border-0 news-file-card position-relative" data-filename="${fileName}">
-            <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2" data-action="delete-file" data-filename="${fileName}">
-              <i class="bi bi-trash"></i>
-            </button>
-            <div class="card-body">
+          <div class="card news-file-card h-100" data-filename="${fileName}">
+            <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-start mb-2">
-                <h6 class="mb-0 text-truncate flex-grow-1">${category}</h6>
-                <span class="badge bg-primary-subtle text-primary-emphasis ms-2">${format}</span>
+                <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                  <div class="news-file-icon">
+                    <i class="bi bi-newspaper"></i>
+                  </div>
+                  <h6 class="mb-0 text-truncate fw-semibold">${category}</h6>
+                </div>
+                <button class="news-file-delete-btn" data-action="delete-file" data-filename="${fileName}" title="Usuń plik">
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
-              <div class="small text-muted">
-                <div class="text-truncate" title="${fileName}">${fileName}</div>
-                <div class="d-flex justify-content-between mt-1">
-                  <span>${size}</span>
-                  <span>${updated.split(',')[0]}</span>
+              <div class="news-file-meta">
+                <div class="d-flex justify-content-between align-items-center">
+                  <span><i class="bi bi-hdd me-1"></i>${size}</span>
+                  <span><i class="bi bi-clock me-1"></i>${updated}</span>
                 </div>
               </div>
             </div>
@@ -1810,16 +1821,18 @@
         return;
       }
 
-      const category = filename.replace(/\.(txt|json)$/i, '').replace(/_/g, ' ');
+      const categoryName = filename.replace(/\.(txt|json)$/i, '').replace(/_/g, ' ');
+      const category = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
       if (newsOverlayTitle) newsOverlayTitle.textContent = category;
       if (newsOverlayMeta) {
         const size = data.size_bytes ? `${(data.size_bytes / 1024).toFixed(1)} KB` : '—';
-        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString() : '—';
-        newsOverlayMeta.textContent = `${size} • ${updated}`;
+        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+        newsOverlayMeta.innerHTML = `<i class="bi bi-hdd me-1"></i>${size} <span class="mx-2">•</span> <i class="bi bi-clock me-1"></i>${updated}`;
       }
       if (newsOverlayContent) {
-        const content = escapeHtml(data.content || '(pusty plik)');
-        newsOverlayContent.innerHTML = `<pre class="mb-0">${content}</pre>`;
+        const rawContent = data.content || '(pusty plik)';
+        const formattedContent = formatNewsContent(rawContent);
+        newsOverlayContent.innerHTML = formattedContent;
       }
 
       newsFileOverlay.classList.remove('d-none');
@@ -1828,6 +1841,59 @@
       console.error(error);
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się wczytać pliku.', type: 'error' });
     }
+  };
+
+  const formatNewsContent = (content) => {
+    if (!content || content === '(pusty plik)') {
+      return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Brak treści</div>';
+    }
+
+    // Podziel treść na artykuły (rozdzielone podwójną nową linią)
+    const rawArticles = content.split(/\n{2,}/).filter(a => a.trim());
+    
+    // Filtruj separatory i puste elementy
+    const articles = rawArticles.filter(article => {
+      const trimmed = article.trim();
+      // Odrzuć jeśli to tylko kreski (separator)
+      if (/^[-─—_=]+$/.test(trimmed)) return false;
+      // Odrzuć jeśli zawiera głównie kreski (np. "---...---")
+      if (trimmed.replace(/[-─—_=\s]/g, '').length < 5) return false;
+      // Odrzuć bardzo krótkie teksty
+      if (trimmed.length < 10) return false;
+      return true;
+    });
+    
+    if (articles.length === 0) {
+      return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Brak treści</div>';
+    }
+    
+    if (articles.length === 1) {
+      // Pojedynczy blok tekstu
+      return `<div class="news-article-single">${escapeHtml(articles[0])}</div>`;
+    }
+
+    // Wiele artykułów - każdy jako osobna karta
+    let html = '<div class="news-articles-list">';
+    articles.forEach((article, index) => {
+      const lines = article.trim().split('\n').filter(l => l.trim() && !/^[-─—_=]+$/.test(l.trim()));
+      if (lines.length === 0) return;
+      
+      const title = lines[0] || '';
+      const body = lines.slice(1).join('\n').trim();
+      
+      html += `
+        <div class="news-article-item">
+          <div class="news-article-number">${index + 1}</div>
+          <div class="news-article-content">
+            ${title ? `<div class="news-article-title">${escapeHtml(title)}</div>` : ''}
+            ${body ? `<div class="news-article-body">${escapeHtml(body)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    
+    return html;
   };
 
   const closeNewsFileOverlay = () => {
@@ -1869,6 +1935,36 @@
     } catch (error) {
       console.error(error);
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się usunąć pliku.', type: 'error' });
+    }
+  };
+
+  const deleteAllNewsFiles = async () => {
+    const confirmDelete = confirm('Czy na pewno chcesz usunąć WSZYSTKIE zeskrapowane pliki? Tej operacji nie można cofnąć.');
+    if (!confirmDelete) return;
+
+    try {
+      newsFilesDeleteAllBtn?.setAttribute('disabled', 'true');
+      const res = await fetchJSON('/api/news/files', { method: 'DELETE' });
+      
+      if (res.success || res.deleted_count > 0) {
+        showToast({ 
+          title: 'Usunięto', 
+          message: `Usunięto ${res.deleted_count || 0} plików.`, 
+          type: 'success' 
+        });
+        await loadNewsFiles();
+      } else {
+        showToast({ 
+          title: 'Błąd', 
+          message: res.error || 'Nie udało się usunąć plików.', 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się usunąć plików.', type: 'error' });
+    } finally {
+      newsFilesDeleteAllBtn?.removeAttribute('disabled');
     }
   };
 
@@ -2103,6 +2199,27 @@
     }
   };
 
+  let activeScrapeEventSource = null;
+
+  const stopNewsScrape = () => {
+    if (activeScrapeEventSource) {
+      activeScrapeEventSource.close();
+      activeScrapeEventSource = null;
+      
+      const logText = document.getElementById('news-scrape-log-text');
+      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zatrzymano';
+      if (logText) logText.textContent = 'Skrapowanie zostało zatrzymane przez użytkownika.';
+      showToast({ title: 'Zatrzymano', message: 'Proces skrapowania został przerwany.', type: 'warning' });
+      
+      newsScrapeBtn?.removeAttribute('disabled');
+      newsScrapeSpinner?.classList.add('d-none');
+      newsScrapeStopBtn?.classList.add('d-none');
+      
+      // Odśwież listę plików (może część została zapisana)
+      loadNewsFiles().catch(console.error);
+    }
+  };
+
   const runNewsScrape = async () => {
     if (!newsScrapeBtn) return;
 
@@ -2110,38 +2227,145 @@
 
     newsScrapeBtn.setAttribute('disabled', 'true');
     newsScrapeSpinner?.classList.remove('d-none');
+    newsScrapeStopBtn?.classList.remove('d-none');
     if (newsScrapeStatus) newsScrapeStatus.textContent = 'Pobieranie...';
-    if (newsScrapeLog) {
-      newsScrapeLog.classList.remove('d-none');
-      newsScrapeLog.textContent = 'Rozpoczynam skrapowanie kategorii...';
+    
+    const logContainer = newsScrapeLog;
+    const logText = document.getElementById('news-scrape-log-text');
+    const categoriesContainer = document.getElementById('news-scrape-categories');
+    
+    if (logContainer) {
+      logContainer.classList.remove('d-none');
+      if (logText) logText.textContent = 'Rozpoczynam skrapowanie kategorii...';
+      if (categoriesContainer) categoriesContainer.innerHTML = '';
     }
 
-    try {
-      const data = await fetchJSON('/api/news/scrape', { method: 'POST' });
-
-      if (!data.success) {
-        if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
-        if (newsScrapeLog) newsScrapeLog.textContent = data.error || 'Skrapowanie nie powiodło się.';
-        showToast({ title: 'Błąd', message: data.error || 'Skrapowanie nie powiodło się.', type: 'error' });
-        return;
+    // Funkcja do renderowania statusu kategorii
+    const renderCategoryItem = (category, status, message = '') => {
+      if (!categoriesContainer) return;
+      
+      let icon, textClass;
+      switch (status) {
+        case 'pending':
+          icon = '<i class="bi bi-circle text-muted me-2"></i>';
+          textClass = 'text-muted';
+          break;
+        case 'processing':
+          icon = '<span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>';
+          textClass = 'text-primary fw-medium';
+          break;
+        case 'success':
+          icon = '<i class="bi bi-check-circle-fill text-success me-2"></i>';
+          textClass = 'text-success';
+          break;
+        case 'error':
+          icon = '<i class="bi bi-x-circle-fill text-danger me-2"></i>';
+          textClass = 'text-danger';
+          break;
+        default:
+          icon = '<i class="bi bi-circle text-muted me-2"></i>';
+          textClass = 'text-muted';
       }
+      
+      const itemId = `scrape-cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
+      let item = document.getElementById(itemId);
+      
+      if (!item) {
+        item = document.createElement('div');
+        item.id = itemId;
+        item.className = 'd-flex align-items-center py-1';
+        categoriesContainer.appendChild(item);
+      }
+      
+      const messageSpan = message ? `<small class="ms-2 text-muted">(${message})</small>` : '';
+      item.innerHTML = `${icon}<span class="${textClass}">${category}</span>${messageSpan}`;
+    };
 
-      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
-      const summary = `Pobrano ${data.items?.length || 0} kategorii. FAISS odbudowany.`;
-      if (newsScrapeLog) newsScrapeLog.textContent = summary;
-      showToast({ title: 'Sukces', message: summary, type: 'success' });
-
-      if (newsLastBuild && data.completed_at) newsLastBuild.textContent = data.completed_at;
-
-      await Promise.all([loadNewsFiles(), loadNewsIndices()]);
+    try {
+      const eventSource = new EventSource('/api/news/scrape/stream');
+      activeScrapeEventSource = eventSource;
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'start':
+              // Inicjalizacja listy kategorii
+              if (data.categories && categoriesContainer) {
+                data.categories.forEach(cat => renderCategoryItem(cat, 'pending'));
+              }
+              break;
+              
+            case 'processing':
+              renderCategoryItem(data.category, 'processing');
+              if (newsScrapeStatus) {
+                newsScrapeStatus.textContent = `${data.index + 1}/${data.total}`;
+              }
+              break;
+              
+            case 'done':
+              if (data.success) {
+                const msg = data.articles_count ? `${data.articles_count} art.` : '';
+                renderCategoryItem(data.category, 'success', msg);
+              } else {
+                renderCategoryItem(data.category, 'error', data.message || 'błąd');
+              }
+              break;
+              
+            case 'building_faiss':
+              if (logText) logText.textContent = 'Budowanie indeksu FAISS...';
+              break;
+              
+            case 'complete':
+              eventSource.close();
+              activeScrapeEventSource = null;
+              
+              if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
+              const successCount = data.items?.filter(i => i.success).length || 0;
+              const totalCount = data.items?.length || 0;
+              const summary = `Pobrano ${successCount}/${totalCount} kategorii. FAISS odbudowany.`;
+              if (logText) logText.textContent = summary;
+              showToast({ title: 'Sukces', message: summary, type: 'success' });
+              
+              if (newsLastBuild && data.completed_at) newsLastBuild.textContent = data.completed_at;
+              
+              Promise.all([loadNewsFiles(), loadNewsIndices()]).catch(console.error);
+              
+              newsScrapeBtn.removeAttribute('disabled');
+              newsScrapeSpinner?.classList.add('d-none');
+              newsScrapeStopBtn?.classList.add('d-none');
+              break;
+          }
+        } catch (parseError) {
+          console.error('SSE parse error:', parseError);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error('SSE error:', error);
+        eventSource.close();
+        activeScrapeEventSource = null;
+        
+        if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
+        if (logText) logText.textContent = 'Błąd połączenia z serwerem.';
+        showToast({ title: 'Błąd', message: 'Skrapowanie nie powiodło się.', type: 'error' });
+        
+        newsScrapeBtn.removeAttribute('disabled');
+        newsScrapeSpinner?.classList.add('d-none');
+        newsScrapeStopBtn?.classList.add('d-none');
+      };
+      
     } catch (error) {
       console.error(error);
+      activeScrapeEventSource = null;
       if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
-      if (newsScrapeLog) newsScrapeLog.textContent = error.message || 'Błąd serwera.';
+      if (logText) logText.textContent = error.message || 'Błąd serwera.';
       showToast({ title: 'Błąd', message: error.message || 'Skrapowanie nie powiodło się.', type: 'error' });
-    } finally {
+      
       newsScrapeBtn.removeAttribute('disabled');
       newsScrapeSpinner?.classList.add('d-none');
+      newsScrapeStopBtn?.classList.add('d-none');
     }
   };
 
@@ -2939,6 +3163,10 @@
       newsScrapeBtn.addEventListener('click', runNewsScrape);
     }
 
+    if (newsScrapeStopBtn) {
+      newsScrapeStopBtn.addEventListener('click', stopNewsScrape);
+    }
+
     if (newsBuildIndexBtn) {
       newsBuildIndexBtn.addEventListener('click', buildNewsIndex);
     }
@@ -2946,6 +3174,7 @@
     if (newsFilesGrid) {
       newsFilesGrid.addEventListener('click', handleNewsFileCardClick);
       newsFilesRefreshBtn?.addEventListener('click', loadNewsFiles);
+      newsFilesDeleteAllBtn?.addEventListener('click', deleteAllNewsFiles);
       loadNewsFiles();
     }
 

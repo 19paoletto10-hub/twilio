@@ -685,9 +685,15 @@
                     <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="news-scrape-spinner"></span>
                     Pobierz i zbuduj
                   </button>
+                  <button class="btn btn-outline-danger d-none" id="news-scrape-stop-btn" title="Zatrzymaj skrapowanie">
+                    <i class="bi bi-stop-circle"></i> Zatrzymaj
+                  </button>
                   <span class="badge bg-light text-muted border" id="news-scrape-status">Oczekuje</span>
                 </div>
-                <div class="alert alert-light border small d-none" id="news-scrape-log"></div>
+                <div class="alert alert-light border small d-none" id="news-scrape-log">
+                  <div id="news-scrape-log-text">Rozpoczynam skrapowanie kategorii...</div>
+                  <div id="news-scrape-categories" class="mt-2"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -704,7 +710,10 @@
                     <span class="spinner-border spinner-border-sm me-1 d-none" role="status" id="news-build-index-spinner"></span>
                     🔨 Zbuduj Indeks FAISS
                   </button>
-                  <button class="btn btn-outline-secondary btn-sm" id="news-files-refresh-btn">Odśwież</button>
+                  <button class="btn btn-outline-danger btn-sm" id="news-files-delete-all-btn" title="Usuń wszystkie pliki">
+                    <i class="bi bi-trash3"></i> Usuń wszystkie
+                  </button>
+                  <button class="btn btn-outline-secondary btn-sm" id="news-files-refresh-btn"><i class="bi bi-arrow-clockwise"></i></button>
                 </div>
               </div>
               <div class="card-body">

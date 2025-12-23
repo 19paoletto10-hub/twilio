@@ -1740,6 +1740,89 @@ def api_news_scrape():
     )
 
 
+@webhooks_bp.get("/api/news/scrape/stream")
+def api_news_scrape_stream():
+    """SSE endpoint for streaming scrape progress per category."""
+
+    def generate():
+        cfg = _load_news_config()
+        svc = ScraperService()
+        started_at = datetime.utcnow().isoformat() + "Z"
+
+        # Send initial event with categories list
+        categories = list(svc.news_sites.keys())
+        yield f"data: {json.dumps({'type': 'start', 'categories': categories, 'started_at': started_at})}\n\n"
+
+        results: Dict[str, str] = {}
+        all_articles: list = []
+
+        for idx, (category, url) in enumerate(svc.news_sites.items()):
+            # Send "processing" event
+            yield f"data: {json.dumps({'type': 'processing', 'category': category, 'index': idx, 'total': len(categories)})}\n\n"
+
+            try:
+                articles = svc.scrape_category(category, url)
+                if not articles:
+                    msg = f"❌ Brak artykułów dla kategorii {category}"
+                    results[category] = msg
+                    yield f"data: {json.dumps({'type': 'done', 'category': category, 'success': False, 'message': msg})}\n\n"
+                    svc._sleep()
+                    continue
+
+                combined_text = "\n\n".join(a.text for a in articles).strip()
+                if not combined_text:
+                    msg = f"❌ Pusta treść po czyszczeniu dla {category}"
+                    results[category] = msg
+                    yield f"data: {json.dumps({'type': 'done', 'category': category, 'success': False, 'message': msg})}\n\n"
+                    svc._sleep()
+                    continue
+
+                svc._save_category(category, articles)
+                svc.scraped_cache[category] = combined_text
+                results[category] = combined_text
+                all_articles.extend(articles)
+
+                yield f"data: {json.dumps({'type': 'done', 'category': category, 'success': True, 'articles_count': len(articles)})}\n\n"
+
+            except Exception as exc:  # noqa: BLE001
+                msg = f"❌ Błąd podczas pobierania: {exc}"
+                results[category] = msg
+                yield f"data: {json.dumps({'type': 'done', 'category': category, 'success': False, 'message': str(exc)})}\n\n"
+            finally:
+                svc._sleep()
+
+        # Save articles store
+        if all_articles:
+            svc._upsert_articles_store(all_articles)
+
+        # Build FAISS
+        yield f"data: {json.dumps({'type': 'building_faiss'})}\n\n"
+        svc._build_faiss_from_results(results)
+
+        completed_at = datetime.utcnow().isoformat() + "Z"
+        cfg["last_build_at"] = completed_at
+        _save_news_config(cfg)
+
+        # Final summary
+        items = []
+        for category, content in results.items():
+            ok = bool(content) and not str(content).startswith("❌")
+            items.append({"category": category, "success": ok})
+
+        files = _list_scraped_files()
+        yield f"data: {json.dumps({'type': 'complete', 'completed_at': completed_at, 'items': items, 'files_count': len(files)})}\n\n"
+
+    return Response(
+        generate(),
+        mimetype="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
+
 @webhooks_bp.get("/api/news/files")
 def api_news_files():
     items = _list_scraped_files()
@@ -1768,6 +1851,37 @@ def api_news_file_delete(filename: str):
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Cannot delete scraped file %s: %s", path, exc)
         return jsonify({"error": f"Nie udało się usunąć pliku: {exc}"}), 500
+
+
+@webhooks_bp.delete("/api/news/files")
+def api_news_files_delete_all():
+    """Delete all scraped files."""
+    try:
+        files = _list_scraped_files()
+        deleted = []
+        errors = []
+
+        for file_info in files:
+            safe_name = os.path.basename(file_info.get("name", ""))
+            if not safe_name:
+                continue
+            path = os.path.join(SCRAPED_DIR, safe_name)
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+                    deleted.append(safe_name)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{safe_name}: {exc}")
+
+        return jsonify({
+            "success": len(errors) == 0,
+            "deleted": deleted,
+            "deleted_count": len(deleted),
+            "errors": errors,
+        })
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Cannot delete all scraped files: %s", exc)
+        return jsonify({"error": f"Nie udało się usunąć plików: {exc}"}), 500
 
 
 @webhooks_bp.get("/api/news/faiss/export")

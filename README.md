@@ -367,10 +367,15 @@ Panel jest responsywny (Bootstrap 5) i składa się z kilku głównych widoków:
   - przycisk „Przetestuj połączenie” – prośba do API `/api/ai/test` i podgląd odpowiedzi.
 
 - **Zakładka „News / FAISS”**
-  - lista plików scrapów (podgląd, usuwanie),
-  - przyciski „Scrape / Build index / Test FAISS”,
-  - zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie),
-  - sekcja „Backup FAISS” z przyciskiem pobrania zipa oraz uploaderem przywracającym indeks/dokumenty.
+  - **Dynamiczny postęp skrapowania** – real-time streaming SSE z wizualnymi statusami kategorii (⚪ oczekuje, 🔄 w trakcie, ✅ sukces, ❌ błąd)
+  - **Przycisk „Zatrzymaj"** – przerywa skrapowanie w dowolnym momencie
+  - **Kafelki kategorii** – eleganckie karty z ikoną, rozmiarem i datą (tylko pliki .txt)
+  - **Profesjonalny podgląd** – numerowane artykuły z pogrubionym tytułem, bez separatorów
+  - **Przycisk „Usuń wszystkie"** – masowe kasowanie zeskrapowanych plików
+  - Przyciski „Pobierz i zbuduj / Zbuduj indeks FAISS / Test FAISS"
+  - Zarządzanie listą odbiorców newsów (numer, prompt, godzina, ON/OFF, Wyślij ręcznie)
+  - Sekcja „Backup FAISS" z przyciskiem pobrania zipa oraz uploaderem przywracającym indeks/dokumenty
+
 - **Zakładka „Multi‑SMS”**
   - formularz batch: wklej numery (free‑form, jeden na linię lub przecinki), treść wiadomości, przycisk „Wyślij batch”,
   - worker w tle obsługuje kolejkę – karta historii pokazuje status partii, licznik sukcesów/błędów i rozwijaną listę odbiorców z indywidualnymi statusami.
@@ -390,11 +395,12 @@ Uwaga UX: w historii wiadomości kolumna „Treść” ma stałą wysokość wie
 
 Aplikacja potrafi:
 
-1. **Scrapować** – endpoint `/api/news/scrape` oraz przycisk w panelu „Scrape” (używa `ScraperService`).
+1. **Scrapować z live progressem** – streaming SSE przez `/api/news/scrape/stream` pokazuje dynamicznie statusy kategorii; przycisk „Zatrzymaj" kończy proces w dowolnym momencie.
 2. **Zbudować indeks** – automatycznie po scrapowaniu lub ręcznie przez `/api/news/indices/build`.
 3. **Testować zapytania** – endpoint `/api/news/test-faiss`, w UI: pole zapytania + wynik (liczba trafień, odpowiedź modelu).
-4. **Zarządzać plikami** – usuwać pojedyncze pliki scrapów lub cały indeks z poziomu panelu.
-5. **Eksportować / importować backupy** – `GET /api/news/faiss/export` buduje zip z manifestem, a `POST /api/news/faiss/import` przywraca pliki (limit 250 MB, walidacja obecności wymaganych pozycji). `GET /api/news/faiss/status` raportuje gotowość backupu, a `DELETE /api/news/indices/faiss_openai_index` czyści całą bazę FAISS wraz z dokumentami.
+4. **Zarządzać plikami** – usuwać pojedyncze pliki scrapów, usunąć wszystkie pliki jednym kliknięciem (`DELETE /api/news/files`), lub cały indeks z poziomu panelu.
+5. **Profesjonalny podgląd** – kafelki plików .txt z eleganckim podglądem artykułów (numerowanie, formatowanie, bez separatorów).
+6. **Eksportować / importować backupy** – `GET /api/news/faiss/export` buduje zip z manifestem, a `POST /api/news/faiss/import` przywraca pliki (limit 250 MB, walidacja obecności wymaganych pozycji). `GET /api/news/faiss/status` raportuje gotowość backupu, a `DELETE /api/news/indices/faiss_openai_index` czyści całą bazę FAISS wraz z dokumentami.
 
 ### Limity długości SMS (Twilio) i dzielenie wiadomości
 
