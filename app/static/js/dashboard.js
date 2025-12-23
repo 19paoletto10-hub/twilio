@@ -1752,18 +1752,23 @@
   const renderNewsFiles = (items = []) => {
     if (!newsFilesGrid) return;
 
-    if (!items.length) {
+    // Filtruj tylko pliki .txt
+    const txtFiles = items.filter(file => {
+      const name = (file.name || '').toLowerCase();
+      return name.endsWith('.txt');
+    });
+
+    if (!txtFiles.length) {
       newsFilesGrid.innerHTML = '<div class="col-12 text-center text-muted py-4">Brak plików. Uruchom skrapowanie, aby zobaczyć kafelki.</div>';
       return;
     }
 
-    const cards = items.map((file) => {
-      const category = escapeHtml(file.category || file.name || '—');
+    const cards = txtFiles.map((file) => {
+      const categoryName = (file.name || '').replace(/\.txt$/i, '').replace(/_/g, ' ');
+      const category = escapeHtml(categoryName.charAt(0).toUpperCase() + categoryName.slice(1));
       const size = file.size_bytes ? `${(file.size_bytes / 1024).toFixed(1)} KB` : '—';
-      const updated = file.updated_at ? new Date(file.updated_at).toLocaleString() : '—';
-      const format = escapeHtml(file.format || 'txt');
+      const updated = file.updated_at ? new Date(file.updated_at).toLocaleString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
       const fileName = escapeHtml(file.name || '');
-      const formatBadgeClass = format === 'json' ? 'bg-info-subtle text-info-emphasis' : 'bg-primary-subtle text-primary-emphasis';
 
       return `
         <div class="col-lg-4 col-md-6">
@@ -1772,24 +1777,18 @@
               <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
                   <div class="news-file-icon">
-                    <i class="bi bi-file-earmark-text"></i>
+                    <i class="bi bi-newspaper"></i>
                   </div>
                   <h6 class="mb-0 text-truncate fw-semibold">${category}</h6>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge ${formatBadgeClass} rounded-pill">${format}</span>
-                  <button class="news-file-delete-btn" data-action="delete-file" data-filename="${fileName}" title="Usuń plik">
-                    <i class="bi bi-x-lg"></i>
-                  </button>
-                </div>
+                <button class="news-file-delete-btn" data-action="delete-file" data-filename="${fileName}" title="Usuń plik">
+                  <i class="bi bi-x-lg"></i>
+                </button>
               </div>
               <div class="news-file-meta">
-                <div class="text-truncate mb-1" title="${fileName}">
-                  <i class="bi bi-file-text me-1"></i>${fileName}
-                </div>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                   <span><i class="bi bi-hdd me-1"></i>${size}</span>
-                  <span><i class="bi bi-clock me-1"></i>${updated.split(',')[0]}</span>
+                  <span><i class="bi bi-clock me-1"></i>${updated}</span>
                 </div>
               </div>
             </div>
@@ -1822,16 +1821,18 @@
         return;
       }
 
-      const category = filename.replace(/\.(txt|json)$/i, '').replace(/_/g, ' ');
+      const categoryName = filename.replace(/\.(txt|json)$/i, '').replace(/_/g, ' ');
+      const category = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
       if (newsOverlayTitle) newsOverlayTitle.textContent = category;
       if (newsOverlayMeta) {
         const size = data.size_bytes ? `${(data.size_bytes / 1024).toFixed(1)} KB` : '—';
-        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString() : '—';
-        newsOverlayMeta.textContent = `${size} • ${updated}`;
+        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+        newsOverlayMeta.innerHTML = `<i class="bi bi-hdd me-1"></i>${size} <span class="mx-2">•</span> <i class="bi bi-clock me-1"></i>${updated}`;
       }
       if (newsOverlayContent) {
-        const content = escapeHtml(data.content || '(pusty plik)');
-        newsOverlayContent.innerHTML = `<pre class="mb-0">${content}</pre>`;
+        const rawContent = data.content || '(pusty plik)';
+        const formattedContent = formatNewsContent(rawContent);
+        newsOverlayContent.innerHTML = formattedContent;
       }
 
       newsFileOverlay.classList.remove('d-none');
@@ -1840,6 +1841,41 @@
       console.error(error);
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się wczytać pliku.', type: 'error' });
     }
+  };
+
+  const formatNewsContent = (content) => {
+    if (!content || content === '(pusty plik)') {
+      return '<div class="text-center text-muted py-4">(pusty plik)</div>';
+    }
+
+    // Podziel treść na artykuły (rozdzielone podwójną nową linią)
+    const articles = content.split(/\n{2,}/).filter(a => a.trim());
+    
+    if (articles.length <= 1) {
+      // Pojedynczy blok tekstu - sformatuj jako jeden artykuł
+      return `<div class="news-article-single">${escapeHtml(content)}</div>`;
+    }
+
+    // Wiele artykułów - każdy jako osobna karta
+    let html = '<div class="news-articles-list">';
+    articles.forEach((article, index) => {
+      const lines = article.trim().split('\n');
+      const title = lines[0] || '';
+      const body = lines.slice(1).join('\n').trim();
+      
+      html += `
+        <div class="news-article-item">
+          <div class="news-article-number">${index + 1}</div>
+          <div class="news-article-content">
+            ${title ? `<div class="news-article-title">${escapeHtml(title)}</div>` : ''}
+            ${body ? `<div class="news-article-body">${escapeHtml(body)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+    html += '</div>';
+    
+    return html;
   };
 
   const closeNewsFileOverlay = () => {
