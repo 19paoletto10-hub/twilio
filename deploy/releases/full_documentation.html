@@ -103,7 +103,7 @@
         </div>
       </div>
       <div style="text-align:right">
-        <div class="meta">ver3.2.2 • 2025-12-19</div>
+        <div class="meta">ver3.2.3 • 2025-12-23</div>
         <a class="cta" href="#download">Pobierz PDF</a>
       </div>
     </header>
@@ -140,7 +140,7 @@
             <div class="feature"><strong>SQLite</strong><div class="muted">Łatwa persystencja i prosty backup plikowy</div></div>
           </div>
           <div class="kpi" aria-label="Szybkie podsumowanie">
-            <span class="tag">ver3.2.2</span>
+            <span class="tag">ver3.2.3</span>
             <span class="tag">Flask + Twilio</span>
             <span class="tag">Workery w tle</span>
             <span class="tag">FAISS / RAG</span>
@@ -158,7 +158,7 @@
             <li><strong>Auto‑reply & AI Studio</strong> — przełączanie trybów odpowiedzi (szablon, AI, fallback bot) i testy bez wysyłki.</li>
             <li><strong>Przypomnienia</strong> — harmonogram cyklicznych SMS-ów z kontrolą statusu i logiem prób wysyłki.</li>
             <li><strong>Multi‑SMS</strong> — kampanie do wielu odbiorców: import numerów w dowolnym formacie, deduplikacja, raporty sukcesów/błędów.</li>
-            <li><strong>News / FAISS / RAG</strong> — scraping artykułów, generowanie streszczeń, zarządzanie odbiorcami i backup indeksu.</li>
+            <li><strong>News / FAISS / RAG <span class="badge">3.2.3</span></strong> — scraping z SSE streaming (live progress), przycisk zatrzymania, masowe usuwanie plików, profesjonalny podgląd artykułów, backup indeksu.</li>
             <li><strong>Długie treści bez awarii</strong> — AI/News mogą generować dłuższe odpowiedzi; aplikacja dzieli je na bezpieczne części (1500 znaków) i wysyła jako kilka SMS.</li>
             <li><strong>API + webhooki</strong> — REST API do integracji z CRM i automatyzacją, w tym wysyłką, pobieraniem historii i zarządzaniem workerami.</li>
             <li><strong>Operacje & DevOps</strong> — docker-compose, healthcheck, logowanie strukturalne i rozpisany runbook prod.</li>
@@ -328,6 +328,18 @@ EMBEDDING_MODEL=text-embedding-3-large</pre>
           <h2>Panel WWW — zakładki i widoki</h2>
           <p class="lead">Panel jest responsywny i zoptymalizowany pod pracę wielu operatorów. Każda zakładka skupia się na innym procesie, a układ (flex + grid) płynnie dopasowuje się do rozdzielczości i ustawień drukowania.</p>
 
+          <div class="callout" style="margin-bottom:16px;background:linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);border:1px solid #10b981;">
+            <strong>🆕 Nowość w ver3.2.3 — News Scraping UX Improvements</strong>
+            <p class="muted">Zakładka News została gruntownie ulepszona o real-time progress, kontrolę procesu i profesjonalny podgląd treści.</p>
+            <ul>
+              <li><strong>📡 SSE Streaming:</strong> Live progress skrapowania z wizualnymi statusami kategorii (⚪ oczekuje, 🔄 w trakcie, ✅ sukces, ❌ błąd)</li>
+              <li><strong>🛑 Przycisk „Zatrzymaj":</strong> Przerwanie procesu skrapowania w dowolnym momencie</li>
+              <li><strong>🗑️ Usuń wszystkie:</strong> Masowe kasowanie zeskrapowanych plików jednym kliknięciem</li>
+              <li><strong>📰 Eleganckie kafelki:</strong> Karty plików z ikoną gazety, polskim formatem daty, tylko pliki .txt</li>
+              <li><strong>📄 Pro Preview:</strong> Numerowane artykuły z pogrubionym tytułem, bez separatorów</li>
+            </ul>
+          </div>
+
           <div class="callout" style="margin-bottom:16px;background:linear-gradient(135deg, #e8f4fd 0%, #f0e6fa 100%);border:1px solid #dbeafe;">
             <strong>🆕 Nowość w ver3.2.2 — Collapsible Sidebar</strong>
             <p class="muted">Nowy zwijany sidebar zapewnia więcej przestrzeni roboczej. Tryb rozwinięty (280px) pokazuje pełne etykiety, tryb zwinięty (84px) wyświetla tylko ikony z tooltipami. Stan jest zapisywany w przeglądarce.</p>
@@ -345,7 +357,7 @@ EMBEDDING_MODEL=text-embedding-3-large</pre>
             <div class="feature"><strong>AI Studio</strong><div class="muted">Konfiguracja AI, testy offline, podgląd historii w bąbelkach.</div></div>
             <div class="feature"><strong>Przypomnienia</strong><div class="muted">Scheduler cyklicznych SMS-ów, historia wykonań, diagnostyka.</div></div>
             <div class="feature"><strong>Multi‑SMS</strong><div class="muted">Kampanie batchowe, licznik sukcesów/błędów, drill-down odbiorców.</div></div>
-            <div class="feature"><strong>News / FAISS</strong><div class="muted">Scraping, zarządzanie odbiorcami, backup indeksu, testy RAG.</div></div>
+            <div class="feature"><strong>News / FAISS <span class="badge">3.2.3</span></strong><div class="muted">SSE live progress, zatrzymanie procesu, masowe usuwanie, profesjonalny podgląd artykułów.</div></div>
             <div class="feature"><strong>Admin & Runbook</strong><div class="muted">Linki do dokumentacji, dostęp do logów, checklisty powdrożeniowe.</div></div>
           </div>
 
@@ -530,37 +542,50 @@ EMBEDDING_MODEL=text-embedding-3-large</pre>
 
         <section id="news" class="card">
           <h2>News / FAISS (RAG) — scraping, indeksowanie i dystrybucja</h2>
-          <p class="lead">Trzy zakładki News prowadzą operatora przez cały cykl życia informacji: od scrapingu i budowy indeksu po dystrybucję i backup. Każda sekcja ma jasne opisy, kontrolki i mechanizmy bezpieczeństwa (np. limit rozmiaru uploadu).</p>
+          <p class="lead">Zakładka News prowadzi operatora przez cały cykl życia informacji: od scrapingu z live progress po dystrybucję i backup. Każda sekcja ma jasne opisy, kontrolki i mechanizmy bezpieczeństwa.</p>
+
+          <div class="callout" style="margin-bottom:16px;background:linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);border:1px solid #10b981;">
+            <strong>📡 Nowość ver3.2.3 — SSE Streaming i kontrola procesu</strong>
+            <table class="spec" style="margin-top:8px">
+              <tr><th>Funkcja</th><th>Opis</th></tr>
+              <tr><td><strong>Live Progress</strong></td><td>Real-time statusy kategorii: ⚪ oczekuje, 🔄 w trakcie, ✅ sukces, ❌ błąd</td></tr>
+              <tr><td><strong>Przycisk „Zatrzymaj"</strong></td><td>Przerwanie skrapowania w dowolnym momencie</td></tr>
+              <tr><td><strong>Usuń wszystkie</strong></td><td>Masowe kasowanie plików scrape jednym kliknięciem</td></tr>
+              <tr><td><strong>Eleganckie kafelki</strong></td><td>Ikona 📰, polski format daty, tylko pliki .txt</td></tr>
+              <tr><td><strong>Pro Preview</strong></td><td>Numerowane artykuły, pogrubione tytuły, bez separatorów</td></tr>
+            </table>
+          </div>
 
           <figure class="doc-figure">
             <div class="screenshot">
               <img src="../../app/screenshot/panel_news1.jpg" alt="News — panel (konfiguracja i akcje)">
             </div>
-            <figcaption>Panel operacyjny: przyciski testu, wymuszenia scrapingu, podgląd plików źródłowych oraz status ostatniej aktualizacji.</figcaption>
+            <figcaption>Panel operacyjny: SSE streaming z wizualnymi statusami kategorii, przycisk zatrzymania, podgląd plików .txt.</figcaption>
           </figure>
           <div class="panel-notes" aria-label="Opis panelu — News (ekran 1)">
             <div class="note">
               <h4>Co widzisz</h4>
               <ul>
-                <li>Akcje administracyjne: test połączenia, wymuszenie scrapingu, podgląd plików źródłowych.</li>
-                <li>Komunikaty o ostatnim buildzie, liczbie artykułów i stanie indeksu.</li>
-                <li>Wskazówki jak często uruchamiać scraping i jakie kategorie są objęte.</li>
+                <li>Dynamiczny progress skrapowania z ikonami statusu dla każdej kategorii.</li>
+                <li>Przyciski „Pobierz i zbuduj", „Zatrzymaj" oraz „Usuń wszystkie".</li>
+                <li>Eleganckie kafelki plików .txt z podglądem profesjonalnym artykułów.</li>
               </ul>
             </div>
             <div class="note">
               <h4>Możliwe interakcje</h4>
               <ul>
-                <li>Test generacji bez wysyłki (bezpieczne sprawdzenie jakości streszczeń i konfiguracji promptu).</li>
-                <li>Uruchomienie scrapingu „na żądanie” (ręczny refresh danych) oraz szybka weryfikacja, czy pliki zostały zapisane.</li>
-                <li>Pobranie plików wejściowych (JSON/TXT) do audytu jakości danych.</li>
+                <li>Uruchomienie scrapingu z SSE streaming (real-time aktualizacja statusów).</li>
+                <li>Zatrzymanie procesu w dowolnym momencie jednym kliknięciem.</li>
+                <li>Podgląd artykułów w profesjonalnym formacie (numerowanie, tytuły).</li>
+                <li>Masowe usuwanie wszystkich plików lub pojedyncze kasowanie.</li>
               </ul>
             </div>
             <div class="note">
               <h4>Co dzieje się w tle</h4>
               <ul>
-                <li>Scraper pobiera treści i zapisuje pliki w katalogu danych (dla każdej kategorii osobno).</li>
-                <li>Po pobraniu danych budowany/aktualizowany jest indeks FAISS, aby zapytania RAG miały świeży kontekst.</li>
-                <li>API: <span class="code">POST /api/news/scrape</span>, <span class="code">GET /api/news/files</span>, <span class="code">GET /api/news/files/&lt;filename&gt;</span>.</li>
+                <li>SSE endpoint streamuje zdarzenia: start → processing → done → building_faiss → complete.</li>
+                <li>Scraper pobiera kategorie sekwencyjnie, UI aktualizuje się w czasie rzeczywistym.</li>
+                <li>API: <span class="code">GET /api/news/scrape/stream</span>, <span class="code">DELETE /api/news/files</span>.</li>
               </ul>
             </div>
           </div>
@@ -643,10 +668,11 @@ EMBEDDING_MODEL=text-embedding-3-large</pre>
           <h3>API modułu News (skrót)</h3>
           <ul>
             <li><strong>Konfiguracja/odbiorcy</strong>: <span class="code">GET /api/news/config</span>, <span class="code">GET/POST/DELETE /api/news/recipients</span>, <span class="code">POST /api/news/recipients/&lt;id&gt;/(toggle|test|send)</span></li>
-            <li><strong>Scraping</strong>: <span class="code">POST /api/news/scrape</span>, pliki: <span class="code">GET/DELETE /api/news/files</span></li>
+            <li><strong>Scraping (SSE)</strong>: <span class="code">GET /api/news/scrape/stream</span> (live progress), <span class="code">POST /api/news/scrape</span> (legacy)</li>
+            <li><strong>Pliki</strong>: <span class="code">GET /api/news/files</span>, <span class="code">DELETE /api/news/files</span> (masowe usuwanie), <span class="code">DELETE /api/news/files/&lt;filename&gt;</span></li>
             <li><strong>FAISS</strong>: <span class="code">GET /api/news/faiss/status</span>, <span class="code">GET /api/news/faiss/export</span>, <span class="code">POST /api/news/faiss/import</span>, <span class="code">POST /api/news/indices/build</span></li>
           </ul>
-          <p class="muted">Import backupu ma limit bezpieczeństwa 250&nbsp;MB.</p>
+          <p class="muted">Import backupu ma limit bezpieczeństwa 250&nbsp;MB. Endpoint SSE streamuje zdarzenia JSON w formacie EventSource.</p>
         </section>
 
         <section id="data" class="card">
@@ -689,6 +715,8 @@ EMBEDDING_MODEL=text-embedding-3-large</pre>
             <tr><td><span class="code">GET /api/multi-sms/batches</span></td><td>Lista kampanii z licznikami i statusami.</td></tr>
             <tr><td><span class="code">GET /api/multi-sms/batches/&lt;id&gt;/recipients</span></td><td>Lista odbiorców z wynikami (sent/failed, kod błędu).</td></tr>
             <tr><td><span class="code">POST /api/reminders</span></td><td>Tworzenie przypomnienia (numer, treść, interwał).</td></tr>
+            <tr><td><span class="code">GET /api/news/scrape/stream</span></td><td>SSE streaming postępu skrapowania z wizualnymi statusami kategorii <span class="badge">3.2.3</span>.</td></tr>
+            <tr><td><span class="code">DELETE /api/news/files</span></td><td>Masowe usuwanie wszystkich plików scrape <span class="badge">3.2.3</span>.</td></tr>
             <tr><td><span class="code">POST /api/news/scrape</span></td><td>Uruchomienia scrapingu newsów (planowane bądź manualne).</td></tr>
             <tr><td><span class="code">GET /api/news/faiss/status</span></td><td>Status indeksu, modele, informacja o backupie.</td></tr>
             <tr><td><span class="code">POST /api/ai/test</span></td><td>Test odpowiedzi AI bez wysyłania SMS (tryb preview).</td></tr>
@@ -868,7 +896,7 @@ EMBEDDING_MODEL=text-embedding-3-large</pre>
     </div>
 
     <footer>
-      <div>Twilio Chat App • ver3.2.2 • 2025-12-19</div>
+      <div>Twilio Chat App • ver3.2.3 • 2025-12-23</div>
     </footer>
   </div>
 </body>
