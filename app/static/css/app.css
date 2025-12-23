@@ -1624,3 +1624,103 @@ body {
 .news-file-delete-btn i {
   font-size: 0.75rem;
 }
+
+/* ===================== LISTENERS TAB STYLES ===================== */
+
+/**
+ * Karta listenera - główny kontener dla każdego nasłuchiwacza.
+ * Używana w zakładce Listeners do wyświetlania konfiguracji.
+ */
+.listener-card {
+  background: var(--app-bg-elevated);
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  padding: 1.25rem;
+  transition: all 0.2s ease;
+}
+
+.listener-card:hover {
+  border-color: var(--app-border-strong);
+  box-shadow: var(--app-shadow-sm);
+}
+
+/**
+ * Ikona listenera - wyświetla wizualny identyfikator komendy.
+ * Stan aktywny/nieaktywny zmienia kolor ikony.
+ */
+.listener-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--app-radius-sm);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.listener-icon.active {
+  background: rgba(25, 135, 84, 0.12);
+  color: #198754;
+}
+
+.listener-icon.inactive {
+  background: var(--app-primary-soft);
+  color: var(--app-text-muted);
+}
+
+/**
+ * Ikona kroku - używana w instrukcji dla odbiorców SMS.
+ * Numerowane kroki: 1, 2, 3 w sekcji "Jak używać".
+ */
+.listener-step-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--app-primary);
+  flex-shrink: 0;
+}
+
+/**
+ * Kontener odpowiedzi - formatowanie tekstu zwróconego z FAISS.
+ * Zawiera styl dla paragrafów i zachowuje białe znaki.
+ */
+.listener-answer-content {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--app-text);
+}
+
+.listener-answer-content p {
+  margin-bottom: 0.75rem;
+}
+
+.listener-answer-content p:last-child {
+  margin-bottom: 0;
+}
+
+/**
+ * Przełącznik listenera - niestandardowy styl dla form-switch.
+ * Większy rozmiar dla lepszej dostępności.
+ */
+.listener-card .form-switch .form-check-input {
+  width: 3rem;
+  height: 1.5rem;
+  cursor: pointer;
+}
+
+.listener-card .form-switch .form-check-input:checked {
+  background-color: var(--app-primary);
+  border-color: var(--app-primary);
+}
+
+.listener-card .form-switch .form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem var(--app-primary-soft);
+  border-color: var(--app-primary);
+}
+
+/* ===================== END LISTENERS TAB STYLES ===================== */

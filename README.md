@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.2.2-blue.svg)
+![Version](https://img.shields.io/badge/version-3.2.4-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.10+-green.svg)
 ![Flask](https://img.shields.io/badge/flask-3.x-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
@@ -17,6 +17,7 @@
 
 ## ✨ Highlights
 
+- 🎧 **Listeners** – interaktywne komendy SMS z odpowiedziami z bazy wiedzy
 - 🔐 **Secrets Manager** – centralne zarządzanie kluczami API z hot reload
 - 💬 **Nowoczesny czat** – animowane dymki, ikony statusu, responsywny design
 - 🤖 **AI Auto-reply** – OpenAI GPT dla inteligentnych odpowiedzi
@@ -86,7 +87,8 @@ Repo zawiera kilka poziomów dokumentacji – zależnie od tego, czy jesteś ope
 - **News / RAG na sterydach** – scheduler newsów, scraper kategorii Business Insider, indeks FAISS, tryb podsumowania wszystkich kategorii, testowe zapytania i ręczna wysyłka.
 - **Backup FAISS klasy enterprise** – eksport ZIP z manifestem, import z walidacją rozmiaru, automatyczne odtwarzanie plików oraz pełne czyszczenie indeksu wraz z raportem `removed/missing/failed` (UI i API).
 - **Gotowość do operacji** – docker-compose (dev/prod), healthcheck, rozpisany runbook i checklisty post‑deploy, kompatybilność z Codespaces.
-- **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień, News **oraz Multi‑SMS (batch)**; skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
+- **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień, News, **Listeners** oraz Multi‑SMS (batch); skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
+- **Interaktywne komendy SMS (Listeners)** – odbiorcy mogą wysłać `/news [pytanie]` i otrzymać odpowiedź z bazy wiedzy FAISS; dynamiczne włączanie/wyłączanie komend z panelu.
 - **Multi‑SMS worker** – kolejkuje wysyłki do wielu numerów (free‑form input, deduplikacja, walidacja E.164), zapisuje każdy wynik w SQLite i przetwarza w tle w jednym wątku na proces.
 - **Bezpieczna wysyłka długich treści** – wiadomości generowane przez AI/News są automatycznie dzielone na części (domyślnie 1500 znaków), aby uniknąć limitu Twilio dla pojedynczego SMS.
 

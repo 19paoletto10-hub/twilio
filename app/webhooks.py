@@ -29,6 +29,9 @@ from .database import (
     apply_ai_env_defaults,
     get_app_setting,
     set_app_setting,
+    get_listeners_config,
+    get_listener_by_command,
+    update_listener_config,
 )
 from .database import (
     list_scheduled_messages,
@@ -91,6 +94,10 @@ webhooks_bp = Blueprint("webhooks", __name__)
 
 
 CHAT_HISTORY_LIMIT = 50
+
+# Deduplikacja przetworzonych wiadomości listenerów (SID -> timestamp)
+from collections import deque
+_LISTENER_PROCESSED_SIDS: deque = deque(maxlen=500)
 
 
 def _datetime_to_iso(value: Optional[datetime]) -> Optional[str]:
@@ -252,8 +259,66 @@ def _validate_twilio_signature(req) -> bool:
     return is_valid
 
 
+def _handle_news_listener_sync(from_number: str, to_number: str, body: str, sid: Optional[str]) -> None:
+    """Synchronicznie obsłuż komendę /news - odpytaj FAISS i wyślij SMS."""
+    from .faiss_service import FAISSService
+
+    # Deduplikacja - nie przetwarzaj tej samej wiadomości dwa razy
+    if sid:
+        if sid in _LISTENER_PROCESSED_SIDS:
+            current_app.logger.debug("/news: SID %s already processed, skipping", sid)
+            return
+        _LISTENER_PROCESSED_SIDS.append(sid)
+
+    twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+
+    # Wyciągnij zapytanie po /news
+    query = body.strip()[5:].strip()  # Usuń "/news" z początku
+    if not query:
+        query = "Jakie są najnowsze wiadomości?"
+
+    current_app.logger.info("/news listener processing query: %s", query[:100])
+
+    try:
+        faiss_svc = FAISSService()
+        response = faiss_svc.answer_query(query, top_k=5)
+
+        if response.get("answer"):
+            reply_text = f"📰 News:\n\n{response['answer']}"
+        else:
+            reply_text = "❌ Nie znaleziono odpowiedzi w bazie newsów."
+
+        # Wyślij odpowiedź SMS
+        origin_number = to_number or twilio_client.settings.default_from
+        if not origin_number:
+            current_app.logger.error("/news: No origin number configured")
+            return
+
+        message = twilio_client.send_reply_to_inbound(
+            inbound_from=from_number,
+            inbound_to=origin_number,
+            body=reply_text,
+        )
+        _persist_twilio_message(message)
+        current_app.logger.info(
+            "/news reply sent to %s (SID: %s, query: %s)",
+            from_number, message.sid, query[:50]
+        )
+    except Exception as exc:
+        current_app.logger.exception("/news listener error: %s", exc)
+        insert_message(
+            direction="outbound",
+            sid=None,
+            to_number=from_number,
+            from_number=to_number,
+            body="",
+            status="failed",
+            error=str(exc),
+        )
+
+
 def _maybe_enqueue_auto_reply_for_message(message) -> None:
-    """Queue reactive replies (AI or auto-reply) when enabled and inbound."""
+    """Queue reactive replies (AI, auto-reply or listeners) when enabled and inbound."""
 
     auto_cfg = get_auto_reply_config()
     ai_cfg = get_ai_config()
@@ -261,17 +326,32 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
     ai_enabled = bool(ai_cfg.get("enabled"))
     auto_enabled = bool(auto_cfg.get("enabled"))
 
-    if not ai_enabled and not auto_enabled:
-        return
-
+    # Pobierz dane wiadomości
+    body = getattr(message, "body", "") or ""
     direction = getattr(message, "direction", "") or ""
+    
     if not direction.startswith("inbound"):
         return
 
     from_number = (getattr(message, "from_", "") or "").strip()
     to_number = (getattr(message, "to", "") or "").strip()
-    body = getattr(message, "body", "") or ""
     sid = getattr(message, "sid", None)
+
+    # ─────────────────────────────────────────────────────────
+    # LISTENER /news - obsłuż synchronicznie przy pollingu
+    # ─────────────────────────────────────────────────────────
+    if body.strip().lower().startswith("/news"):
+        news_listener = get_listener_by_command("/news")
+        if news_listener and news_listener.get("enabled"):
+            current_app.logger.info(
+                "Processing /news command from polling: from=%s body=%s",
+                from_number, body[:100]
+            )
+            _handle_news_listener_sync(from_number, to_number, body, sid)
+            return  # Nie enqueue'uj dalej
+
+    if not ai_enabled and not auto_enabled:
+        return
 
     received_at_iso = None
     for attr in ("date_created", "date_sent", "date_updated"):
@@ -837,6 +917,52 @@ def inbound_message():
 
     ai_enabled = bool(ai_cfg.get("enabled"))
     auto_enabled = bool(auto_cfg.get("enabled"))
+
+    # Sprawdź czy wiadomość jest komendą listenera /news
+    if body.lower().startswith("/news"):
+        news_listener = get_listener_by_command("/news")
+        if news_listener and news_listener.get("enabled"):
+            # Wyciągnij zapytanie po komendzie /news
+            query = body[5:].strip()  # Usuń "/news" z początku
+            if query:
+                try:
+                    from .faiss_service import FAISSService
+                    faiss_svc = FAISSService()
+                    answer = faiss_svc.answer_query(query)
+                    if answer:
+                        # Wyślij odpowiedź SMS
+                        message = twilio_client.send_reply_to_inbound(
+                            inbound_from=from_number,
+                            inbound_to=to_number,
+                            body=answer,
+                        )
+                        _persist_twilio_message(message)
+                        app.logger.info("Sent /news reply to %s (SID: %s)", from_number, message.sid)
+                    else:
+                        # Brak odpowiedzi z FAISS
+                        no_answer = "Nie znaleziono informacji na temat: " + query[:50]
+                        message = twilio_client.send_reply_to_inbound(
+                            inbound_from=from_number,
+                            inbound_to=to_number,
+                            body=no_answer,
+                        )
+                        _persist_twilio_message(message)
+                        app.logger.info("Sent /news no-answer reply to %s", from_number)
+                except Exception as exc:
+                    app.logger.exception("Failed to process /news query: %s", exc)
+            else:
+                # Brak zapytania po /news
+                help_msg = "Użycie: /news <Twoje pytanie>\nPrzykład: /news co nowego w gospodarce?"
+                try:
+                    message = twilio_client.send_reply_to_inbound(
+                        inbound_from=from_number,
+                        inbound_to=to_number,
+                        body=help_msg,
+                    )
+                    _persist_twilio_message(message)
+                except Exception as exc:
+                    app.logger.exception("Failed to send /news help: %s", exc)
+            return Response("OK", mimetype="text/plain")
 
     if ai_enabled or auto_enabled:
         enqueue_auto_reply(
@@ -1882,6 +2008,122 @@ def api_news_files_delete_all():
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("Cannot delete all scraped files: %s", exc)
         return jsonify({"error": f"Nie udało się usunąć plików: {exc}"}), 500
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Listeners API
+# ─────────────────────────────────────────────────────────────────────────────
+# Listeners are command-based triggers that respond to incoming SMS messages
+# starting with specific prefixes (e.g., /news). This API provides management
+# endpoints for configuring and testing listeners.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@webhooks_bp.get("/api/listeners")
+def api_get_listeners():
+    """Get all listener configurations.
+    
+    Returns:
+        JSON with list of all configured listeners including:
+        - id: Unique identifier
+        - command: Command prefix (e.g., '/news')
+        - enabled: Whether the listener is active
+        - description: Human-readable description
+        - created_at, updated_at: Timestamps
+    """
+    try:
+        listeners = get_listeners_config()
+        return jsonify({"success": True, "listeners": listeners})
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Failed to get listeners: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@webhooks_bp.post("/api/listeners/<int:listener_id>")
+def api_update_listener(listener_id: int):
+    """Update listener configuration.
+    
+    Args:
+        listener_id: ID of the listener to update
+        
+    Request body:
+        - enabled (bool, optional): Enable or disable the listener
+        - description (str, optional): Update the description
+        
+    Returns:
+        Updated listener configuration
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    
+    enabled = payload.get("enabled")
+    description = payload.get("description")
+    
+    try:
+        result = update_listener_config(
+            listener_id,
+            enabled=enabled if enabled is not None else None,
+            description=description,
+        )
+        current_app.logger.info(
+            "Listener %d updated: enabled=%s",
+            listener_id,
+            enabled
+        )
+        return jsonify({"success": True, "listener": result})
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Failed to update listener: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
+@webhooks_bp.post("/api/listeners/test")
+def api_test_listener():
+    """Test /news listener with a sample query.
+    
+    Request body:
+        - query (str): Test query, optionally starting with /news
+        
+    Returns:
+        - success: Whether the test succeeded
+        - query: The processed query (without /news prefix)
+        - answer: The generated answer from FAISS
+        - llm_used: Whether an LLM was used for generation
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    query = (payload.get("query") or "").strip()
+    
+    if not query:
+        return jsonify({"success": False, "error": "Podaj zapytanie testowe"}), 400
+    
+    try:
+        from .faiss_service import FAISSService
+        faiss_service = FAISSService()
+        
+        # Remove /news prefix if present
+        clean_query = query
+        if clean_query.lower().startswith("/news"):
+            clean_query = clean_query[5:].strip()
+        
+        if not clean_query:
+            clean_query = "Jakie są najnowsze wiadomości?"
+        
+        response = faiss_service.answer_query(clean_query, top_k=5)
+        
+        if response.get("success") and response.get("answer"):
+            current_app.logger.info("Listener test successful for query: %s", clean_query[:50])
+            return jsonify({
+                "success": True,
+                "query": clean_query,
+                "answer": response["answer"],
+                "llm_used": response.get("llm_used", False),
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": response.get("error", "Brak odpowiedzi z FAISS"),
+            }), 500
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Listener test failed: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
 
 
 @webhooks_bp.get("/api/news/faiss/export")

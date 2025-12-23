@@ -1,5 +1,6 @@
 Firma
 https://businessinsider.com.pl/prawo/firma
+W ciągu trzech pierwszych kwartałów bieżącego roku liczba wniosków dotyczących zamknięcia jednoosobowej działalności gospodarczej wzrosła o niespełna jeden procent w porównaniu z analogicznym okresem ubiegłego roku. Eksperci podkreślają, że zmiana ta jest niewielka i nie powinna budzić większych obaw. W skali kraju więcej firm jest zakładanych niż likwidowanych.
 Hodowle zwierząt na futra zostaną zakazane. Przedsiębiorcy prowadzący fermy będą zobowiązani do wygaszenia działalności do końca 2033 roku. Ci, którzy zrobią to do 2031 roku, będą mogli uzyskać odszkodowanie — zdecydowali posłowie, uchwalając w piątek nowelizację ustawy o ochronie zwierząt. Od zakazu jest jednak jeden wyjątek.
 Ministerstwo Spraw Zagranicznych ponagla w sprawie pilnego procedowania projektu ustawy o cyberbezpieczeństwie. Jeśli tego szybko nie wdrożymy do porządku prawnego, Polsce grozi skarga Komisji Europejskiej do TSUE w związku z naruszeniem jednej z dyrektyw Parlamentu Europejskiego.
 Polski Fundusz Rozwoju koncentruje się na dwóch główny obszarach działalności w ramach grupy kapitałowej: wspieraniu innowacji oraz ekspansji zagranicznej — poinformował prezes PFR Piotr Matczuk. Dodał, że fundusz widzi zainteresowanie polskich przedsiębiorców zwiększenia obecności poza krajem.
@@ -28,12 +29,13 @@ Rafał Brzoska chwali się, że w ciągu 24 godzin spłynęło ponad tysiąc wia
 Jeszcze w lutym Komisja Europejska przedstawi pierwszy pakiet regulacji do zmian i uproszczenia. Kolejne omnibusy jeszcze w tym roku. Ale wcześniej urzędnicy wysłuchają przedstawicieli biznesu — pisze środowa "Rzeczpospolita".
 W Bankowym Funduszu Gwarancyjnym nie zostały wprowadzone odpowiednie uzgodnienia strukturalne, które by zapewniły niezależności operacyjną i brak konfliktu interesów pomiędzy różnymi funkcjami Funduszu. Chodzi o funkcję kuratora banku (tymczasowego administratora), funkcję organu przymusowej restrukturyzacji oraz gwarancyjną. Tak sąd uzasadnia wyrok w sprawie Getin Noble Banku, na razie w ustnych motywach.
 We wtorek rząd ma przyjąć przepisy, które oznaczają rewolucyjne zmiany dla palaczy i to już w 2025 r. Ceny jednorazówek, wielorazówek i podgrzewaczy wzrosną o ok. 50 zł. Znikną aromatyzowane wkłady. Młodzież nie będzie mogła też tak łatwo kupić jednorazowych e-papierosów, nawet tych bez nikotyny, czy saszetek nikotynowych. Taki będzie efekt uchwalenia trzech projektów ustaw.
-W rządzie i koalicji na razie nie ma zgody co do przepisów ograniczających sprzedaż alkoholu na stacjach paliw w godzinach od 22 do 6 rano i zakazujących sprzedaży alkoholu przez internet. Wojciech Konieczny, wiceminister zdrowia, zapowiedział w Sejmie, że decyzja w tej sprawie będzie zapewne podjęta "niebawem, w niedługim czasie". Jego propozycje kontrują resort rozwoju i Ryszard Petru z Polski 2050.
 
 --------------------------------------------------------------------------------
 
 Podatki
 https://businessinsider.com.pl/prawo/podatki
+Nawet trzy miliony Polaków inwestuje w kryptowaluty, ale zaledwie 1 proc. rozlicza podatki związane z transakcjami na tym rynku. Rząd przyjął dziś projekt, który przewiduje, że fiskus dowie się o tych wszystkich transakcjach, nawet jeśli zostały przeprowadzone na giełdach zagranicznych.
+Obowiązkowy Krajowy System e-Faktur ma ruszyć już za nieco ponad miesiąc, czyli od 1 lutego 2026 r. Wydawałoby się, że większość firm i podatników już powinna być gotowa lub prawie gotowa na KSeF. Badania pokazują, że jest z tym jednak różnie. Skrajne analizy mówią o zaledwie 12 proc. przygotowanych podmiotów. Stąd powracające pytanie: "czy rewolucja zostanie odroczona?".
 Prezydent Karol Nawrocki podpisał w poniedziałek cztery nowelizacje podatkowe. Zostaną one opublikowane w Dzienniku Ustaw, a zasadniczo mają wejść w życie od 1 stycznia 2026 r., czyli za niecałe dwa tygodnie. Chodzi m.in. o zmiany dotyczące indywidualnych stawek amortyzacyjnych. Na decyzję prezydenta czekają jeszcze trzy nowelizacje podatków.
 Po co płacić fiskusowi, jeśli można pieniądze wydać na własną firmę? Tak myśli wiele osób prowadzących działalność gospodarczą pod koniec roku. Faktycznie jest sporo możliwości, żeby podatek dochodowy za 2025 r. legalnie obniżyć. Tłumaczymy, na co pozwalają przepisy. Trzeba jednak pamiętać, żeby nie wylać dziecka z kąpielą.
 Ministerstwo Finansów nie porzuciło zmian w estońskim CIT, uldze IP Box i darowiznach samochodów poleasingowych. W zeszłym tygodniu przeprowadziło konsultacje z biznesem w sprawie tych zmian. Niestety wnioski z tych konsultacji nie są optymistyczne dla przedsiębiorców.
@@ -61,8 +63,6 @@ Krajowy System e-Faktur przewiduje, że na wizualizacjach faktur wystawianych w 
 Krajowy System e-Faktur będzie rewolucją podatkową, która wpłynie na procesy biznesowe — od sprzedaży, przez zakupy i logistykę, po księgowość. Jak się przygotować, co zrobić, a przede wszystkim: na co uważać? Na te i wiele innych pytań będą odpowiadać Sebastian Lasek, prezes spółki Aplikacje Krytyczne, która odpowiada za KSeF oraz Paweł Krupa z Comarch ERP.
 Przedsiębiorcy mają już tylko kilka dni na złożenie wniosku o wakacje składkowe. To ostatnia szansa w tym roku, aby nie zapłacić składek ZUS. Składki za grudzień 2025 r. zapłaci za przedsiębiorcę państwo. Oszczędności wynoszą od 442,90 zł do 1773,96 zł, w zależności jaki ZUS opłaca przedsiębiorca. Wniosek można złożyć wyłącznie przez PUE ZUS.
 Podatnicy, prowadzący określony rodzaj działalności gospodarczej, muszą instalować kasy fiskalne online. Część podatników może więc jeszcze korzystać z kasy fiskalnej starego typu, z elektronicznym zapisem kopii. Problem pojawia się, gdy chcą rozszerzyć działalność na czynności, które są objęte obowiązkiem ewidencjonowania przy pomocy kasy fiskalnej online. Co w takiej sytuacji? Wyjaśnił to Dyrektor Krajowej Informacji Skarbowej w nowej interpretacji.
-Nie wszystkie faktury będą przechodziły przez Krajowy System e-Faktur w 2026 r. Standardem, od 1 lutego i 1 kwietnia przyszłego roku mają być oczywiście faktury ustrukturyzowane, czyli właśnie w KSeF. Przedsiębiorcy będą mogli jednak nadal wystawiać faktury przy użyciu kas fiskalnych online.
-Nie będzie pakietu uszczelniającego PIT i CIT w 2026 r. Rząd nie przyjął bowiem projektu nowelizacji, choć miał to zrobić we wrześniu. W praktyce Sejm i Senat nie zdążą uchwalić zmian w leasingu, uldze mieszkaniowej, IP Box, ryczałcie ewidencjonowanym czy estońskim CIT. Nawet gdyby rząd przeprowadził projekt przez parlament jednego dnia, to prezydent ma 30 dni na decyzję, czy go podpisać, czy zawetować.
 
 --------------------------------------------------------------------------------
 
@@ -134,383 +134,350 @@ Rząd chwali się deregulacją prawa na niespotykaną dotąd skalę, opartą na 
 
 --------------------------------------------------------------------------------
 
-Kolejne weta prezydenta. Chodzi o podwyżki
-https://businessinsider.com.pl/prawo/weta-karola-nawrockiego-te-ustawy-prezydent-zablokowal-w-najnowszym-rozdaniu/8verpcy
-Kolejne weta prezydenta. Chodzi o podwyżki
-Karol Nawrocki kontynuuje seryjne wetowanie ustaw, jakie przychodzą do niego z Sejmu, gdzie uzyskały większość głosów. W czwartek ogłosił swój sprzeciw m.in. wobec podwyżek opłat i podatków.
-Kancelaria prezydenta ogłosiła weto wobec:
-- Ustawy z dnia 21 listopada 2025 r. o zmianie ustawy — Prawo oświatowe oraz niektórych innych ustaw (nr druku sejmowego 1857)
-- Ustawy z dnia 7 listopada 2025 r. o zmianie ustawy o zdrowiu publicznym oraz ustawy o podatku dochodowym od osób fizycznych (nr druku sejmowego 1836)
-- Ustawy z dnia 7 listopada 2025 r. o zmianie ustawy o podatku akcyzowym (nr druku sejmowego 1825)
-Więcej na temat weta dotyczącego prawa oświatowego pisaliśmy TUTAJ.
-Weto Karola Nawrockiego do wyższej akcyzy na alkohol
-Prezydent zawetował także ustawę zwiększającą podwyżki akcyzy na alkohol.
-Ustawa zakładała gwałtowne przyspieszenie harmonogramu podwyżek opodatkowania wyrobów alkoholowych planowanych na lata 2026–2027. Głównym założeniem odrzuconych przepisów było drastyczne zwiększenie stawek akcyzy na alkohol etylowy, piwo, wino oraz napoje fermentowane o 15 proc. już od 1 stycznia 2026 r., co miało zastąpić dotychczas obowiązującą tzw. mapę drogową zakładającą coroczne wzrosty jedynie o 5 proc.
-Zgodnie z rządowym projektem, stawka na alkohol etylowy miała wzrosnąć z 7991 zł do 9190 zł za hektolitr czystego alkoholu, a opłata za piwo miała skoczyć z 10,92 zł do 12,56 zł za hektolitr za każdy stopień Plato.
-Prezydenckie weto oznacza, że te dodatkowe, wysokie podwyżki nie wejdą w życie, co chroni konsumentów przed spodziewanym skokowym wzrostem cen detalicznych, szacowanym na dodatkowe kilka złotych na butelce wódki czy kilkadziesiąt groszy na puszce piwa.
-Skutkiem weta jest m.in. mniejszy wpływ do budżetu państwa oraz Narodowego Funduszu Zdrowia, gdzie miały trafiać środki z wyższej daniny na finansowanie profilaktyki uzależnień.
-Weto Karola Nawrockiego do wyższej opłaty cukrowej
-Prezydent zawetował również ustawę podnoszącą opłatę cukrową.
-Uchwalona przez polski rząd pod koniec 2025 r. nowelizacja ustawy o zdrowiu publicznym wprowadzała znaczące podwyżki stawek opłaty cukrowej, które miały wejść w życie 1 stycznia 2026 r. Kluczową zmianą było podniesienie części stałej opłaty z 0,50 zł do 0,70 zł za litr napoju zawierającego cukry lub substancje słodzące w ilości do 5 g na 100 ml.
-Jednocześnie dwukrotnie wzrosnąć miała część zmienna, czyli opłata za każdy gram cukru powyżej limitu 5 g, która zwiększy się z obecnych 5 groszy do 10 groszy. Najbardziej drastyczna zmiana dotyczyła napojów zawierających kofeinę lub taurynę, gdzie dodatkowa opłata wzrośnie aż dziesięciokrotnie — z 10 groszy do 1 złotego za litr.
-Zobacz także: Polska grozi wetem w UE. Grzmi o nieuczciwym rozwiązaniu
-Nowe przepisy miały na celu dalsze ograniczanie spożycia cukru oraz napojów energetycznych, co wpisuje się w strategię walki z otyłością i chorobami cywilizacyjnymi.
-Wpływy z podwyższonej daniny miały w dalszym ciągu zasilać Narodowy Fundusz Zdrowia, wspierając finansowanie profilaktyki i leczenia skutków nadmiernego spożycia cukru.
-
---------------------------------------------------------------------------------
-
-Prezydent zdecydował w sprawie wynagrodzeń dla nauczycieli. Jest też jedno weto
-https://businessinsider.com.pl/prawo/podpis-i-weto-karol-nawrocki-zdecydowal-w-sprawach-waznych-dla-szkol/9wpsnsq
-Prezydent zdecydował w sprawie wynagrodzeń dla nauczycieli. Jest też jedno weto
-Sejm większością głosów zdecydował, że nauczyciel otrzyma wynagrodzenie za niezrealizowane godziny ponadwymiarowe, pod pewnym warunkiem. Los nowych przepisów zależał już tylko od prezydenta. Tu jest zielone światło, ale oprócz tego jest też weto w sprawie nowelizacji Prawa oświatowego.
-Nauczyciel otrzyma wynagrodzenie za niezrealizowane godziny ponadwymiarowe, jeśli nastąpiło to z przyczyn niezależnych od niego — przewiduje podpisana w czwartek przez prezydenta Karola Nawrockiego nowela ustawy Karta nauczyciela. Przepisy wejdą w życie 1 stycznia 2026 r.
-"Ustawa odpowiada na realne oczekiwania środowiska nauczycielskiego" — powiedział prezydent w nagraniu zamieszczonym w czwartek wieczorem na platformie X.
-Podpis Karola Nawrockiego. Nauczyciele dostaną wyrównania
-Zgodnie z przepisami wynagrodzenie za niezrealizowane godziny ponadwymiarowe będzie przysługiwało w każdym przypadku, gdy niezrealizowanie przez nauczyciela przydzielonych mu godzin zajęć dydaktycznych, wychowawczych lub opiekuńczych nastąpiło z przyczyn niedotyczących nauczyciela, a nauczyciel był gotów do realizacji tych zajęć.
-Zobacz także: Kryzys w szkołach? "Teraz 40-letni nauczyciel to młody nauczyciel"
-Nauczyciele dostaną też wyrównania za okres od 1 września do 31 grudnia 2025 r. Mają być one wypłacone do 6 czerwca 2026 r.
-Godziny ponadwymiarowe to godziny zajęć lub lekcji przydzielone nauczycielowi ponad obowiązkowe pensum.
-Weto Karola Nawrockiego
-Nie wszystko, co wyszło z Sejmu, znalazło uznanie w oczach Karola Nawrockiego i jego zespołu doradców. Prezydent zawetował nowelizację Prawa oświatowego umożliwiającą m.in. wdrożenie reformy programowej.
-Zobacz także: Ile zarabia nauczyciel? Niektórzy powiedzą, że wcale niemało
-"Nie mogę wyrazić zgody na taką ustawę. To reforma prowadząca do chaosu, ideologizacji szkoły i eksperymentowania na całych rocznikach dzieci" — powiedział prezydent w nagraniu opublikowanym na platformie X w czwartek wieczorem.
-Nowelizacja Prawa oświatowego i niektórych innych ustaw zmieniała m.in. definicję podstawy programowej wychowania przedszkolnego i podstawy programowej kształcenia ogólnego. Miały one jasno i precyzyjnie określać cele kształcenia i efekty uczenia się, być spójne wewnętrznie i między przedmiotami. Wprowadzały metody pracy takie jak doświadczenie edukacyjne.
-Zmiana podstawy programowej wychowania przedszkolnego i podstawy programowej kształcenia ogólnego jest planowana do sukcesywnego wdrożenia, począwszy od roku szkolnego 2026/2027 w przedszkolach oraz w klasach I i IV szkoły podstawowej, a od roku szkolnego 2027/2028 w klasach I szkół ponadpodstawowych.
-Nowelizacja wprowadzała też m.in. zmiany w zakresie nadzoru pedagogicznego, w tym rezygnację z obowiązku opiniowania przez kuratora oświaty arkuszy organizacji publicznych szkół i placówek, podwyższenie wysokości opłaty wnoszonej z wnioskiem o dopuszczenie podręcznika do użytku szkolnego, zwiększenie kwoty dotacji podręcznikowej. Przywracała także, od roku szkolnego 2026/2027, do kwietniowego terminu przeprowadzania egzaminu ósmoklasisty. Rezygnowała też z przeprowadzania egzaminu maturalnego z języka łacińskiego jako alternatywy dla egzaminu z języka obcego nowożytnego.
-
---------------------------------------------------------------------------------
-
-To umożliwi nowy sposób zbierania podpisów przed wyborami. Jest decyzja Sejmu
-https://businessinsider.com.pl/prawo/kodeks-wyborczy-do-zmiany-sejm-zdecydowal-w-sprawie-podpisow/d1w8t0v
-To umożliwi nowy sposób zbierania podpisów przed wyborami. Jest decyzja Sejmu
-Sejm uchwalił w czwartek nowelizację Kodeksu wyborczego. Chodzi o możliwość zbierania podpisów dla kandydatów w wyborach powszechnych w formie elektronicznej. Znane są szacunkowe koszty związane z utworzeniem i prowadzeniem specjalnego portalu. Do wejścia tych przepisów w życie jeszcze potrzebnych jest kilka kroków.
-Nowela zakłada utworzenie "Portalu zgłaszania kandydatów lub list kandydatów w wyborach powszechnych", prowadzonego i utrzymywanego przez Krajowe Biuro Wyborcze. Za pośrednictwem portalu wyborcy będą mogli składać elektroniczne deklaracje poparcia, uwierzytelnione m.in. podpisem zaufanym, podpisem osobistym czy kwalifikowanym podpisem elektronicznym.
-Zobacz także: Błędne dane i podpisy zmarłych. PKW odmówiła udziału dwóm kandydatom w wyborach
+Dwa fundamentalne projekty na obradach rządu. Minister sprawiedliwości zapowiada
+https://businessinsider.com.pl/prawo/ustawa-o-krs-i-praworzadnosc-waldemar-zurek-zapowiada-wazny-dzien/4kvxm13
+Dwa fundamentalne projekty na obradach rządu. Minister sprawiedliwości zapowiada
+Rząd we wtorek rozpatrzy kluczowe projekty ustaw: o KRS i tzw. ustawę praworządnościową. Minister sprawiedliwości i prokurator generalny Waldemar Żurek wyraził nadzieję, że oba projekty zostaną przyjęte. Jakie zmiany zakładają?
+W poniedziałek minister sprawiedliwości zapowiedział, że jeszcze przed świętami rząd będzie miał ręce pełne roboty. We wtorek Rada Ministrów zajmie się dwoma — jak to określił — fundamentalnymi projektami przygotowanymi przez Ministerstwo Sprawiedliwości — ustawą o Krajowej Radzie Sądownictwa oraz tzw. ustawą praworządnościową.
 Dalsza część artykułu znajduje się poniżej materiału wideo
-Nowela przewiduje stworzenie hybrydowego sposobu zbierania podpisów bez rezygnacji z tradycyjnej zbiórki podpisów, urozmaiconego o podpisy elektroniczne.
-Za nowelą głosowało 240 posłów, 152 było przeciw, 30 wstrzymało się od głosu.
-Wybory do Sejmu i Senatu. Nowy sposób zbierania podpisów
-Sejm odrzucił poprawkę złożoną podczas drugiego czytania przez posła Konfederacji Witolda Tumanowicza, która miała na celu zapewnienie jawności liczby zebranych podpisów w formie elektronicznej po procesie rejestracyjnym przez dany komitet.
-Według noweli elektroniczna forma poparcia ma dotyczyć m.in. wyborów do Sejmu i Senatu, Parlamentu Europejskiego, wyborów samorządowych oraz wyborów wójtów, burmistrzów i prezydentów miast. Komitety wyborcze będą zobowiązane do przekazywania organom wyborczym wykazów podpisów zarówno w formie papierowej, jak i elektronicznej.
-Celem noweli jest zwiększenie partycypacji obywatelskiej.
-Nowelizacja zakłada udzielanie poparcia przez wyborcę za pomocą formularza elektronicznego przez wypełnienie formularza elektronicznego udostępnionego w Portalu, jego uwierzytelnienie oraz złożenie za pomocą portalu.
-Zobacz także: Hołownia złożył w PKW podpisy. Wiadomo, ile ich zebrał
-W noweli przewidziano, że formularz elektroniczny będzie zawierał nazwę komitetu wyborczego zgłaszającego listę lub kandydata, numer okręgu wyborczego, w którym lista lub kandydat jest zgłaszany, nazwisko, imię, adres zamieszkania i numer PESEL udzielającego poparcia oraz adnotację z udzieleniem poparcia z datą. Następnie formularze byłyby przekazywane komitetom wyborczym popartego kandydata.
-Zbieranie podpisów przed wyborami do zmiany. Jakie koszty i kary?
-Nowela zakłada również rozszerzenie przepisów karnych — odpowiedzialnością objęte mają być nadużycia związane z elektronicznym zbieraniem poparcia, w tym wywieranie nacisku na wyborców (grzywna od 1 tys. do 10 tys. zł) czy przyjmowanie korzyści majątkowych w zamian za udzielenie poparcia (grzywna od 10 tys. zł do 50 tys. zł).
-Nowela ma wejść w życie po sześciu miesiącach od ogłoszenia. Koszt utworzenia portalu oszacowano na 10 mln zł, a jego utrzymania na ok. 1 mln zł rocznie, finansowane z budżetu Państwowej Komisji Wyborczej.
-Projekt został złożony w czerwcu 2024 r. przez m.in. posłów Polski 2050.
-Nowela trafi teraz do dalszych prac w Senacie.
+Waldemar Żurek: naprawa tego, co zostało zepsute
+Minister Żurek podkreślił, że tempo prac legislacyjnych jest bardzo szybkie, ale jak zaznaczył, zobowiązał się do przygotowania projektów jeszcze w tym roku.
+Zobacz także: Karol Nawrocki szykuje własny projekt zmian w KRS. W grze także referendum
+"Jedna z ustaw, nazywana przez nas praworządnościową, dotyczy poprawy sytuacji związanej z tzw. neosędziami i naprawy tego, co zostało zepsute. Druga ustawa dotyczy Krajowej Rady Sądownictwa" — wskazał szef resortu.
+Projekt ustawy praworządnościowej został przyjęty przez Stały Komitet Rady Ministrów na początku grudnia. Nowe przepisy mają na celu przywrócenie prawa do niezależnego i bezstronnego sądu poprzez uregulowanie skutków uchwał KRS podjętych w latach 2018–2025.
+Ustawa o KRS i tzw. ustawa praworządnościowa. Czego dotyczą?
+Główne założenia obejmują powtórzenie konkursów na stanowiska sędziowskie obsadzone z udziałem KRS w obecnym kształcie oraz uporządkowanie statusu sędziów powołanych w latach 2018–2026. Przewidziano także specjalną procedurę umożliwiającą kwestionowanie niektórych orzeczeń wydanych z udziałem sędziego powołanego od 2018 r. — na wniosek strony rozstrzygnięcie ma być automatycznie uchylane.
+Zobacz także: Nowy pomysł na KRS. Minister Waldemar Żurek przedstawia szczegóły
+Projekt nowelizacji ustawy o KRS, który przewiduje wybór sędziowskich członków rady przez wszystkich sędziów, trafił do konsultacji i opiniowania w listopadzie. Jak podkreśla Ministerstwo Sprawiedliwości, kluczową zmianą jest wprowadzenie bezpośrednich wyborów 15 sędziów do KRS przez wszystkich sędziów w Polsce. Każdy sędzia będzie mógł oddać do 15 głosów na kandydatów z różnych szczebli sądownictwa. Za przeprowadzenie wyborów odpowiadać ma Państwowa Komisja Wyborcza.
+Przed 2018 r. członków KRS wybierały sędziowskie zgromadzenia ogólne. Po zmianach wprowadzonych przez rząd PiS, wyboru dokonuje Sejm.
 
 --------------------------------------------------------------------------------
 
-Sejm zdecydował w sprawie ustawy regulującej kryptowaluty i tego typu aktywa
-https://businessinsider.com.pl/prawo/ustawa-o-kryptoaktywach-znow-w-sejmie-jest-decyzja/jl5kghd
-Sejm zdecydował w sprawie ustawy regulującej kryptowaluty i tego typu aktywa
-Sejm w czwartek zdecydował po raz kolejny o uchwaleniu ustawy o rynku kryptoaktywów. Wiadomo, jak rozkładały się głosy posłów. Jej los zależy teraz od Senatu, a później od prezydenta, który wcześniej zajął wyraźne stanowisko w sprawie tych przepisów.
-Przez Sejm przeszedł ponownie projekt ustawy o rynku kryptoaktywów. To tzw. wersja 2.0, przyjęta przez rząd po tym, jak Sejmowi nie udało się odrzucić prezydenckiego weta do tzw. ustawy 1.0.
-Dalsza część artykułu znajduje się poniżej materiału wideo
-Problem w tym, że jej sporne kwestie nie zostały zmienione. Projekt w najmniejszym stopniu nie różnił się od ustawy zawetowanej przez prezydenta.
-Za przyjęciem ustawy głosowało 241 posłów, przeciw było 183 osób. Jedna się wstrzymała.
-Ustawa o kryptoaktywach. Dlaczego Karol Nawrocki zawetował?
-Prezydent Karol Nawrocki 1 grudnia zawetował ustawę, bo — jak wskazał — rozwiązania dotyczące blokowania domen są niejasne i stwarzają pole do nadużyć. Zdaniem prezydenta regulacje dawałyby rządowi możliwość wyłączania stron internetowych podmiotów działających w branży kryptoaktywów za pomocą jednego kliknięcia.
-Podkreślił również, że w większości krajów Unii Europejskiej stosuje się proste listy ostrzeżeń, które zabezpieczają interes konsumentów, nie wymagając blokowania całych serwisów i odcinania użytkowników od ich kont.
-Drugim kluczowym powodem decyzji prezydenta jest rozbudowanie i brak przejrzystości przyjętych regulacji. Przyznał, że regulacja jest konieczna. Musi być to jednak ustawa porządkująca ten rynek w sposób normalny, a nie nadregulacja szkodząca polskiej gospodarce. Zwrócił uwagę, że w takich krajach jak Czechy, Słowacja czy Węgry odpowiednie przepisy mieszczą się na kilku lub kilkunastu stronach, podczas gdy polska ustawa liczy ich ponad sto. Z drugiej strony w wielu krajach przepisy te są rozsiane po wielu różnych ustawach, co też jest problematyczne.
-Trzecim argumentem przemawiającym za wetem — według prezydenta — jest wysokość opłat nadzorczych, które zostały ustalone na poziomie uniemożliwiającym rozwój mniejszym przedsiębiorstwom i start-upom, a sprzyjającym dużym zagranicznym korporacjom oraz bankom.
-Ustawa o kryptoaktywach. Co przewidywała?
-Ustawa z 7 listopada miała służyć m.in. wdrożeniu unijnych regulacji, czyli rozporządzenia MiCA (The Markets in Crypto-Assets Regulation). Zgodnie z jej zapisami rynek kryptoaktywów miał podlegać nadzorowi Komisji Nadzoru Finansowego, wyposażonej w odpowiednie instrumenty kontrolne i nadzorcze. Przewidywano również doprecyzowanie części obowiązków emitentów tokenów powiązanych z aktywami oraz tokenów pełniących funkcję e-pieniądza, a także podmiotów świadczących usługi związane z kryptoaktywami.
-Na początku listopada Jurand Drop, wiceminister finansów, mówił w rozmowie z Business Insider Polska, że zadaniem nie jest ocenianie, czy kryptoaktywa są: dobre czy złe, tylko dostosowanie polskiego prawa do unijnego rozporządzenia MiCA, by firmy mogły rejestrować się w Polsce i świadczyć usługi w zakresie kryptoaktywów dla naszych obywateli na podstawie jasnych reguł. Za sprawą weta tak się nie stanie.
-Co do zarzutów o zbyt rozbudowane przepisy, wiceminister Jurand Drop tłumaczył, że opisują ona kompetencje organu nadzoru, by ograniczyć uznaniowość.
+Więcej zapłacisz za mieszkanie i dom w 2026 r. Zobacz, jak to wygląda w twoim mieście
+https://businessinsider.com.pl/prawo/podatki/wlasciciele-mieszkan-i-domow-zaplaca-wiecej-podwyzki-podatku-od-2026-roku/b33svly
+Więcej zapłacisz za mieszkanie i dom w 2026 r. Zobacz, jak to wygląda w twoim mieście
+Masz mieszkanie, dom, działkę lub nieruchomość związaną z prowadzoną działalnością gospodarczą? To najprawdopodobniej w 2026 r. zapłacisz wyższy podatek od nieruchomości. Sprawdziliśmy stawki, jakie będą obowiązywały w 16 największych miastach w Polsce. Jedynie w Kielcach nie będzie podwyżki.
+Właściciele mieszkań, domów, działek i nieruchomości firmowych muszą co roku płacić podatek od nieruchomości. W przypadku mieszkań i domów stawki są niskie, ale właściciele nieruchomości firmowych muszą płacić dużo wyższe podatki. O tym, jaka stawka obowiązuje w 2026 r. decyduje rada miasta lub gminy. Sprawdziliśmy uchwały podjęte w 16 największych miastach, czyli miastach wojewódzkich.
 
 --------------------------------------------------------------------------------
 
-Telewizja Polsat przegrała w sądzie. Chodzi o reklamy
-https://businessinsider.com.pl/prawo/polsat-przegral-spor-z-krajowa-rada-radiofonii-i-telewizji/kqpgzcc
-Telewizja Polsat przegrała w sądzie. Chodzi o reklamy
-Krajowa Rada Radiofonii i Telewizji ogłosiła sukces w sporze z Polsatem. Telewizja ma w związku z tym zapłacić karę finansową. Do naruszeń przepisów miało dojść ponad dwa lata temu. Dopiero teraz jest prawomocny wyrok.
-"Krajowa Rada Radiofonii i Telewizji (KRRiT) wygrała prawomocnie spór z Telewizją Polsat w sprawie interpretacji przepisów ustawy o radiofonii i telewizji dotyczących różnic między autopromocją a ogłoszeniem nadawcy oraz zasad emisji tego rodzaju przekazów w programie" — czytamy w komunikacie rady.
-Dalsza część artykułu znajduje się poniżej materiału wideo
-W nim czytamy, że sprawa dotyczyła naruszeń, do których doszło w kwietniu 2023 r. Telewizja Polsat przekroczyła wówczas dopuszczalny łączny czas nadawania reklam i telesprzedaży.
-Zobacz także: Kolejna odsłona sporu wokół Cyfrowego Polsatu. "Medialne tasiemcowe show"
-"Nadawca nie wliczył do ustawowego limitu przekazów, które zakwalifikował jako ogłoszenia nadawcy, a nie autopromocję. Jednocześnie uznał je za ogłoszenia dotyczące audycji i usług pochodzących od podmiotów z tej samej grupy kapitałowej, co skutkowało ich emisją w trakcie audycji, a nie — jak przewidują przepisy — pomiędzy audycjami. Przewodniczący KRRiT uznał takie działanie za naruszenie ustawy o radiofonii i telewizji (art. 16 ust. 5 w związku z art. 16 ust. 4 pkt 1 i 1a) i nałożył na Telewizję Polsat karę pieniężną w wysokości 20 tys. zł" — czytamy.
-Telewizja Polsat przegrała w sądzie
-W odwołaniu od decyzji spółka argumentowała, że sporne przekazy miały wyłącznie charakter informacyjny, a zatem stanowiły ogłoszenia, a nie reklamę. Zdaniem nadawcy jako ogłoszenia dotyczące audycji lub usług medialnych rozpowszechnianych przez podmioty z tej samej grupy kapitałowej, mogły być emitowane nie tylko pomiędzy audycjami, lecz także w trakcie ich trwania.
-Argumentacji tej nie podzieliły jednak sądy obu instancji, które w pełni potwierdziły wykładnię przepisów przyjętą przez Przewodniczącego KRRiT.
-Zobacz także: Zygmunt Solorz nie pogodził się z odwołaniem z Polsatu. Jego prawnik wskazuje, co dalej
-Rada przytacza opinię sądu apelacyjnego, który wskazał, że istotą informacji jest jej neutralny i obiektywny charakter, podczas gdy w przekazie reklamowym dominuje element zachęty do skorzystania z oferty, nawet jeśli zawiera on również elementy informacyjne. W ocenie sądu kwestionowane przekazy nie ograniczały się do neutralnego informowania o audycjach emitowanych w programie Polsat. W wyraźny sposób zachęcały do ich oglądania, co jest cechą charakterystyczną autopromocji.
-Krajowa Rada Radiofonii i Telewizji wskazuje wykładnię
-"Sądy zwróciły również uwagę na konieczność racjonalnej wykładni art. 16 ust. 4 pkt 1 i 1a ustawy, która wymaga wyraźnego rozróżnienia pomiędzy danym nadawcą a innymi spółkami wchodzącymi w skład tej samej grupy kapitałowej. Odmienne podejście prowadziłoby do kolizji przepisów i umożliwiałoby nadawcom obchodzenie ustawy w celu stworzenia sobie korzystniejszych warunków emisji reklam i ogłoszeń" — podkreśla rada.
+Rewolucja na rynku e-papierosów. Tego zakazu jednak nie będzie
+https://businessinsider.com.pl/prawo/firma/znikajacy-zakaz-dla-wielorazowek-jeszcze-w-czerwcu-byl-dzis-go-nie-ma/77d81gc
+Ministerstwo zdrowia planuje szerokie ograniczenia w handlu e-papierosami, woreczkami i innymi produktami z nikotyną. W projekcie zniknął jednak jeden ważny dla branży zakaz, z którym całkiem niedawno walczyła branża e-papierosów. Chodzi o smakowe płyny.
+- Ministerstwo Zdrowia finalizuje prace nad szerokimi zmianami na rynku tytoniowym
+- Najbardziej rewolucyjnej zmiany jednak nie będzie, choć z analizy dokumentów wynika, że była rozważana
+- Najnowszy projekt resortu to już kolejny element walki rządu z plagą e-papierosów
+- Wcześniej została podwyższona akcyza na jednorazówki, a od połowy stycznia z rynku znikną aromatyzowane wkłady tytoniowe do podgrzewaczy
+- Więcej informacji o biznesie znajdziesz na Businessinsider.com.pl
+Jak ustalił Business Insider Polska, projekt nowelizacji tzw. ustawy tytoniowej został już zaakceptowany przez Stały Komitet Rady Ministrów. Stało się to na posiedzeniu 11 grudnia 2025 r. Wciąż jednak nie został skierowany pod obrady rządu. Z naszych informacji wynika, że przed świętami nie trafi do porządku obrad. Zapytaliśmy Ministerstwo Zdrowia, kiedy rząd się nim zajmie, i czekamy na odpowiedź. To bardzo ważna nowelizacja, która wprowadza trzy istotne zmiany, choć jednej w nim zabrakło. Ze znikającego z uzasadnienia zdania można wnioskować, że była rozważana.
+Kuszący aromat zostaje w wielorazówkach
+Projekt MZ zawiera trzy zakazy: zakaz e-papierosów jednorazowych, zakaz woreczków nikotynowych oraz zakaz beztytoniowych i roślinnych wkładów do podgrzewaczy tytoniu. W pierwotnej wersji, regulacja miała zawierać też czwarty: zakaz stosowania aromatów w płynach do e-papierosów. Teraz jednak go nie ma.
+W uzasadnieniu do projektu UD213 doszło do wykreślenia jednego zdania: "Ponadto proponuje się by zakaz stosowania aromatów charakterystycznych w płynach do e-papierosów nikotynowych i beznikotynowych wszedł w życie z dniem 1.01.2026".
+Na stronach Rządowego Centrum Legislacji można odnaleźć ten fragment w starszej wersji dokumentu — z czerwca br. Zniknął jednak w późniejszych odsłonach — już w październikowym dokumencie zdania zabrakło.
+Fakt, że treść znalazła się w uzasadnieniu, lecz nie ma jej we właściwiej treści przepisów, może sugerować, że zniknęła jeszcze w trakcie prac resortu. Omyłkowo została jednak w uzasadnieniu, na co zwróciła uwagę branża nikotynowa.
+Czytaj też: E-papierosy podbijają polski rynek. Twórca popularnej marki budzi kontrowersje
+Branża walczyła o usunięcie zdania z uzasadnienia
+O tym, by nie podnosić zagadnienia z uzasadnienia, do przepisów, pisał do resortu zdrowia Związek Producentów Branży Vapingowej w oficjalnym piśmie. "Wskazany fragment uzasadnienia projektu ustawy nie znajduje swojego odzwierciedlenia w proponowanych przepisach. Przedstawiony projekt ustawy nie zawiera propozycji regulacji prawnych dot. zakazu wprowadzenia do obrotu aromatów w płynach do elektronicznych papierosów, nikotynowych i beznikotynowych" — napisał ZPBV w toku konsultacji publicznych projektu z czerwca.
+Dla branży to istotna sprawa — zakaz stosowania smakowych płynów mógłby zablokować wzrost sprzedaży wielorazowych e-papierosów, które właśnie zastąpiły jednorazówki z racji korzystniejszego opodatkowania.
+Ministerstwo ogranicza dostęp
+W ustawie nadal zachowano trzy inne ograniczenia. To zakaz sprzedaży e-papierosów jednorazowych, zarówno z nikotyną, jak i bez, zakaz sprzedaży aromatyzowanych woreczków nikotynowych oraz zakaz sprzedaży beztytoniowych i roślinnych wkładów do podgrzewaczy tytoniu.
+Pierwsze z nich jest już iluzoryczne — po obłożeniu akcyzą w wysokości 40 zł jednorazowych e-papierosów, produkty praktycznie zniknęły z rynku. Dwa pozostałe zakazy będą miały już realny wpływ na rynek.
+Po pierwsze mowa o woreczkach z nikotyną, które stały się m.in. tematem prezydenckiej kampanii wyborczej, gdy podczas debaty zażywał je Karol Nawrocki. Jeśli zakazane zostaną te smakowe, to legalne pozostaną tylko te o smaku tytoniu.
+Trzeci zakaz dotyczy wprowadzania do obrotu nowych wyrobów nikotynowych beztytoniowych, chyba że są produktami farmaceutycznymi (leczniczymi), wyrobami medycznymi lub środkiem spożywczym. "Tego rodzaju wyroby powinny być wprowadzane do sprzedaży wyłącznie w reżimie farmaceutycznym" — wskazuje ministerstwo zdrowia.
+To oznacza, że zakaz objąłby m.in. nikotynowe wkłady do podgrzewaczy, a wyjąłby spod regulacji np. sprzedawane w aptekach gumy z nikotyną wykorzystywane w tzw. nikotynowej terapii zastępczej (NTZ). W tym przypadku zmian nie będzie i nadal będą możliwe smakowe produkty.
+Projekt ministerstwa zdrowia to najszerzej zakrojona propozycja legislacyjna dotycząca branży nikotynowej, choć niejedyna.
+Jednocześnie resort finansów zapowiedział chęć "uszczelnienia" opodatkowania indukcyjnych podgrzewaczy, o czym pisaliśmy na łamach Business Insidera we wrześniu i na początku grudnia.
+Ważne zmiany dla palaczy e-papierosów już od stycznia
+W drugiej połowie stycznia 2026 w Polsce wchodzi w życie zakaz sprzedaży aromatyzowanych wkładów tytoniowych do podgrzewania. To efekt uchwalonej w lutym nowelizacji tzw. ustawy tytoniowej. Aromat charakterystyczny to wyraźnie wyczuwalny smak lub zapach inny niż tytoniowy. Odnosi się to do wkładów tytoniowych, które mają wyraźnie wyczuwalny smak lub zapach owocowy, przyprawowy, ziołowy, cukierkowy, mentolowy, waniliowy lub inny.
+Jeśli zakazy wynikające z UD213 obejmą też woreczki nikotynowe, to w legalnej sprzedaży na polskim rynku pozostaną tylko dwie grupy "smakowych" produktów z nikotyną: e-papierosy oraz wspomniane produkty NTZ.
 
 --------------------------------------------------------------------------------
 
-Bardzo ważny wyrok TSUE. Chodzi o Trybunał Konstytucyjny
-https://businessinsider.com.pl/prawo/wyrok-przeciwko-polsce-tsue-podwaza-niezaleznosc-trybunalu-konstytucyjnego/yy6ycp8
-Bardzo ważny wyrok TSUE. Chodzi o Trybunał Konstytucyjny
-Trybunał Sprawiedliwości Unii Europejskiej wydał przełomową decyzję. Chodzi o sprawę, w której Komisja Europejska pozwała Polskę za naruszenie kluczowych zasad unijnego porządku prawnego. Stawką są nie tylko relacje Warszawy z Brukselą, ale także pytanie o legalność polskiego Trybunału Konstytucyjnego z tzw. dublerami.
-W czwartek 18 grudnia 2025 r. Trybunał Sprawiedliwości Unii Europejskiej w pełni uwzględnił skargę Komisji Europejskiej przeciwko Polsce. Komisja zarzuciła polskiemu Trybunałowi Konstytucyjnemu, że w dwóch wyrokach naruszył zasadę pierwszeństwa prawa unijnego przed prawem krajowym.
-Co orzekł TSUE?
-TSUE w pełni uwzględnił skargę Komisji i stwierdził uchybienia Polski. Po pierwsze wskazał, że TK nie respektując orzecznictwa TSUE, naruszył kilka podstawowych zasad prawa Unii. Chodzi o dwa wyroki TK. Jeden 14 lipca 2021 r., w którym TK znał środki tymczasowe TSUE, odnoszące się do kształtu ustroju i funkcjonowania konstytucyjnych organów władzy sądowniczej Polski, za niezgodne z polską konstytucją. Drugi z 7 października 2021 r., w którym TK stwierdził, że na pierwszym miejscu w hierarchii prawa zawsze stoją krajowe konstytucje państw członkowskich UE.
-TSUE wyjaśnił, że wyrok TK z 7 października 2021 r. narusza zasadę skutecznej ochrony sądowej, ponieważ wbrew orzecznictwu Trybunału odrzuca kompetencje sądów krajowych do kontroli zgodności z prawem procedur powoływania sędziów, w tym poprzez kontrolę uchwał KRS rekomendujących kandydatów do tego powołania, oraz do orzekania o wadliwości tych procedur.
-Podobnie w wyroku z 14 lipca 2021 r. polski TK naruszył tę zasadę, gdyż odmówił uznania wiążącego skutku nałożonych przez Trybunał środków tymczasowych odnoszących się do ustroju i właściwości polskich sądów oraz trybu postępowania przed tymi sądami.
-Sporne wyroki podważają również zasadnicze cechy porządku prawnego Unii, ponieważ odrzucają zasady autonomii, pierwszeństwa, skuteczności i jednolitego stosowania prawa Unii, a także zasadę wiążącego skutku orzecznictwa Trybunału, przez co uniemożliwiają polskim organom publicznym stosowanie norm prawa pierwotnego Unii.
-Trybunał przypomniał, że Polska nie może powoływać się na swoją tożsamość konstytucyjną, aby uchylić się od respektowania wspólnych wartości zapisanych w art. 2 TUE, takich jak państwo prawne, skuteczna ochrona sądowa i niezależność wymiaru sprawiedliwości. Wartości te stanowią bowiem podstawę samej tożsamości Unii, do której Polska przystąpiła dobrowolnie. Po akcesji wartości te znajdują swój konkretny wyraz w prawnie wiążących zobowiązaniach, od których państwa członkowskie nie mogą się uchylić.
-Ponadto sądy krajowe nie mogą jednostronnie określać zakresu i granic kompetencji przyznanych Unii.
-TSUE podważył legalność Trybunału Konstytucyjnego
-TSUE uznał ponadto, że TK nie spełnia wymogów niezawisłego i bezstronnego sądu, ustanowionego uprzednio ustawą, z powodu nieprawidłowości w powołaniu trzech jego członków oraz prezesa.
-TSUE wskazał, że powołanie trzech sędziów polskiego Trybunału Konstytucyjnego w grudniu 2015 r. oraz jego Prezes w grudniu 2016 r. naruszało podstawowe reguły dotyczące procedur nominacyjnych w Polsce. Z tego powodu polski Trybunał Konstytucyjny nie spełnia wymogów nie.
-Przypomnijmy, że Sejm w 2015 r. tuż przed końcem kadencji, wybrał pięciu nowych sędziów TK — choć mógł tylko trzech. Sejm nowej kadencji, już z większością PiS, unieważnił wybór wszystkich pięciu sędziów. TK, którego prezesem był wówczas prof. Andrzej Rzepliński, uznał, że poprzedni Sejm mógł wybrać trzech sędziów, a nowy tylko dwóch. Prezydent jednak w nocy, tuż przed rozstrzygnięciem TK, powołał wszystkich nowowybranych sędziów. Nie odebrał zaś ślubowania od trzech prawidłowo wybranych sędziów przez Sejm poprzedniej kadencji. W efekcie w składzie TK pojawili się tzw. "dublerzy".
-Koalicja chwali, opozycja krytykuje TSUE
-Borys Budka, poseł Koalicji Obywatelskiej, były minister sprawiedliwości, napisał na portalu X, że TSUE potwierdza, że przejęty nielegalnie przez PiS-owskich aparatczyków "Trybunał Konstytucyjny" nie jest sądem w rozumieniu europejskich standardów.
-Adam Szłapka, rzecznik rządu, napisał na portalu X, że wyrok TSUE jest jednoznaczny: polski Trybunał Konstytucyjny naruszył kilka podstawowych zasad prawa UE i nie spełnia wymogów niezawisłego i bezstronnego sądu. — Odbudujemy państwo prawa. To nie wybór — to konieczność — dodał.
-Michał Wawrykiewicz, europoseł, nazwał na portalu X wyrok "bardzo ważnym". "Druzgocąca ocena prawna funkcjonowania Trybunału Konstytucyjnego Przyłębskiej i Święczkowskiego" — dodał.
-Inaczej na wyrok TSUE patrzy opozycja. Sebastian Kaleta, poseł PiS, były wiceminister sprawiedliwości, podkreślił na portalu X, że TSUE właśnie zakazał Polsce powoływania się na swoją Konstytucję.
-Krzysztof Szczucki, poseł PiS, były prezes Rządowego Centrum Legislacji, podkreśla na portalu X, że TSUE uzurpuje sobie prawo do wypowiadania się o statusie Trybunału Konstytucyjnego.
-TSUE orzekł zgodnie z wcześniejszą opinią rzecznika generalnego
-Wcześniej opinię w tej sprawie w marcu 2025 r. wydał rzecznik generalny Trybunału Sprawiedliwości UE Dean Spielmann. Uznał on skargę KE za zasadną i zaproponował TSUE, aby stwierdził, że Polska uchybiła zobowiązaniom ciążącym na niej na mocy prawa Unii Europejskiej.
-W ocenie rzecznika sporne wyroki TK znacząco odbiegają od orzecznictwa TSUE dotyczącego zagwarantowania skutecznej ochrony prawnej. W sprawie TK, rzecznik generalny uznał, że nie można uznać za niezawisły i bezstronny sąd, ponieważ powołanie trzech sędziów polskiego Trybunału Konstytucyjnego i jego prezesa w grudniu 2015 r. było "obarczone szeregiem nieprawidłowości". Zgodził się więc z KE, która w swojej skardze również podniosła tę kwestię.
-Historia sporu, którego dotyczy wyrok Trybunału Sprawiedliwości UE (TSUE), sięga 2021 r.
-Spór z Unią rozpoczął Trybunał Konstytucyjny cztery lata temu
-Spór Komisji Europejskiej przeciwko Polsce ciągnie się już kilka lat. Najpierw 14 lipca 2021 r. TK uznał środki tymczasowe TSUE, odnoszące się do kształtu ustroju i funkcjonowania konstytucyjnych organów władzy sądowniczej Polski, za niezgodne z polską konstytucją. Tego samego dnia TSUE w ramach takiego środka tymczasowego nakazał Polsce zawieszenie funkcjonowania Izby Dyscyplinarnej w Sądzie Najwyższym; potem na Polskę nałożył kary dzienne za jego niestosowanie.
-Potem 7 października 2021 r. TK stwierdził, że na pierwszym miejscu w hierarchii prawa zawsze stoją krajowe konstytucje państw członkowskich UE. Unijne traktaty — jako akty prawa międzynarodowego — mają pierwszeństwo przed prawem krajowym rangi ustawowej, nie mogą jednak wyprzedzać konstytucji — zaznaczył. W efekcie Komisja Europejska złożyła skargę na Polskę w lutym 2023 r.
-KE skrytykowała Polskę za osłabienie skutecznej ochrony sądowej w dziedzinach objętych prawem Unii Europejskiej. Szczególnie odnosiła się do wyroku z 7 października 2021 r., w którym TK krytykuje wykładnię art. 19 ust. 1 Traktatu o Unii Europejskiej dokonywaną przez TSUE. Wskazuje, że jest ona niezgodna z naszą Konstytucją. TK zakwestionował prawo TSUE do badania legalności procedur powoływania sędziów, oceny uchwał KRS i stwierdzenia, że niektóre nominacje są nieprawidłowe.
-Czwartkowy wyrok TSUE to właśnie efekt skargi Komisji przeciwko Polsce (sprawa C — 448/23).
-
---------------------------------------------------------------------------------
-
-KSeF. Rządowi eksperci tłumaczą największe wątpliwości podatkowej rewolucji [TYLKO U NAS]
-https://businessinsider.com.pl/prawo/podatki/ksef-i-bezpieczenstwo-faktur-eksperci-ministerstwa-finansow-rozwiewaja-watpliwosci/lm0fx4z
-Krajowy System e-Faktur budzi wiele pytań i obaw, a rusza już 1 lutego 2026 r. Podatnicy zastanawiają się co z wystawianiem faktur poza KSeF, kiedy będzie można posługiwać się wizualizacją faktury, a kiedy można skorzystać z potwierdzenia transakcji. Na te i wiele innych szczegółowych pytań odpowiadają eksperci Ministerstwa Finansów.
-KSeF to obecnie temat podatkowy nr 1. Już nawet górale na Krupówkach zastanawiają się, jak będzie wyglądać wystawienie i odbieranie faktur ustrukturyzowanych. Słowem, mówią o tym wszyscy, którzy dziś mają styczność z fakturami.
+Masz JDG i myślisz o spółce z o.o.? Zobacz, jakie będą skutki przekształcenia i koszty
+https://businessinsider.com.pl/prawo/podatki/przeksztalcenie-jdg-w-spolke-z-oo-kiedy-warto-i-ile-to-kosztuje/st1sxj4
+Biznes rośnie, a ty masz nadal jednoosobową działalność gospodarczą? Z różnych względów warto pomyśleć o przekształceniu JDG w spółkę z o.o. Nie jest to trudne, ale ma swoje konsekwencje podatkowe. Trzeba też za to zapłacić. Wyjaśniamy, ile.
+— Koniec roku to okres, w którym przedsiębiorcy szczególnie chętnie porządkują status prawny swojej działalności i planują jej dalszy rozwój. Jednym z częściej wybieranych działań jest przekształcenie jednoosobowej działalności gospodarczej w spółkę z ograniczoną odpowiedzialnością — mówi Jacek Dziuba, doradca podatkowy prowadzący własną kancelarię podatkowo-finansową.
+Przedsiębiorcy podejmują decyzje o przekształceniu w spółkę z o.o. z wielu powodów.
+— Chęć ochrony majątku prywatnego, budowanie wiarygodności, przygotowanie firmy do sukcesji czy łatwiejsze pozyskiwanie inwestorów — wymienia doradca podatkowy.
+Samo przekształcenie jest proste, ale skutki podatkowe w PIT, CIT i VAT są znacznie bardziej złożone. Wyjaśniamy skutki i tłumaczymy, ile za takie przekształcenie trzeba zapłacić.
 Zobacz także: Jak obniżyć podatek w JDG za 2025 r.? Oto co możesz jeszcze zrobić w grudniu
-Im bliżej do 1 lutego 2026 r., tym więcej pytań się pojawia. Dlatego o najważniejszych kwestiach związanych z KSeF rozmawiamy z Anną Mytyk, zastępcą dyrektora Departamentu VAT w Ministerstwie Finansów i Krzysztofem Rogowskim, dyrektorem Departamentu Analiz Krajowej Administracji Skarbowej.
 Czytaj także w BUSINESS INSIDER
-Łukasz Zalewski, Business Insider Polska: Czy będą jakieś konsekwencje, jeśli podatnik mimo obowiązku wystawi fakturę nabywcy poza KSeF? Z interpretacji indywidualnych dyrektora Krajowej Informacji Skarbowej (KIS) wynika, że wystawienie faktury poza KSeF nie pozbawi podatnika prawa do odliczenia VAT ani kosztów uzyskania przychodów.
-Anna Mytyk, zastępca dyrektora Departamentu Podatku od Towarów i Usług w Ministerstwie Finansów: Nie można przenosić odpowiedzialności na nabywcę, czy też pozbawiać go prawa do odliczenia VAT w zależności od tego, w jakiej formie otrzymał fakturę, szczególnie że w 2026 r. przewidziano okresy przejściowe we wdrożeniu KSeF. Na to zagadnienie należy zatem spojrzeć szerzej, systemowo.
-Pierwszy rok obowiązywania KSeF, czyli 2026 jest rokiem transformacji, co zostało wyraźnie wskazane w przepisach. Mówimy o tym również na szkoleniach i przy okazji spotkań z przedsiębiorcami.
-Po pierwsze mamy tzw. fazowania, czyli etapy wprowadzania obowiązkowego KSe. Od 1 lutego do systemu wchodzą najwięksi podatnicy, o wartości sprzedaży wraz z podatkiem od 200 mln zł, od 1 kwietnia pozostali podatnicy VAT.
-Trzeba też pamiętać o innych odroczeniach. W dotychczasowy sposób do końca 2026 r. mogą być wystawiane faktury przy użyciu kas fiskalnych. Z kolei podmioty, u których sprzedaż brutto udokumentowana fakturami nie przekroczy 10 tys. zł miesięcznie, do końca 2026 r. mogą wystawiać faktury w formie tradycyjnej, a więc poza KSeF.
-Nabywca, który otrzyma fakturę poza KSeF, będzie miał prawo do odliczenia VAT i zaliczenia wydatku do kosztów uzyskania przychodów.
-Anna Mytyk: Takie stanowisko wyraziliśmy już w odpowiedzi na interpelację poselską oraz przedstawił je dyrektor KIS w interpretacji indywidualnej.
-Rok 2026 będzie rokiem wprowadzenia obowiązkowego KSeF. Pragnę podkreślić, że przez cały rok nie będzie sankcji za błędy popełniane przy wystawianiu faktur. Dopóki wystawianie faktur w KSeF nie stanie się rutyną i przyzwyczajeniem, nikt nie poniesie kary za błędy.
-Ponadto przepisy dotyczące kar za niestosowanie KSeF-u (wejdą w życie 1 stycznia 2027 r. — red.) dotyczą wystawcy faktury, ponieważ to on ma tutaj decydujące znaczenie, jeśli chodzi o respektowanie zasad związanych z KSeF.
-Mamy nadzieję, że w przyszłym roku takie pytania będą pojawiały się coraz rzadziej. Przedsiębiorcy, gdy wdrożą system i już się go nauczą, dostrzegą korzyści płynące z KSeF.
-Co da podatnikom cyfryzacja, czy digitalizacja obiegu dokumentów?
-Anna Mytyk: Podatnik, który wdroży cyfrowy obieg dokumentów, będzie miał wszystkie dokumenty w jednym miejscu, będzie mógł automatycznie przetwarzać dane, wyciągać z nich wnioski, optymalizować pracę i działalność. Ułatwi to procesy, współpracę z firmami zewnętrznymi, w tym również z biurem rachunkowym, jeśli firma z niego korzysta.
-Jak nabywca będzie odbierał faktury w KSeF?
-Pierwszy termin obowiązkowego KSeF, czyli 1 lutego 2026 r., to również ważna data dla odbiorców faktur. Oni będą musieli odebrać faktury od największych podmiotów. System ich jednak nie powiadomi o tym, że faktura czeka w KSeF. Jak odbiorca faktury ma odebrać fakturę w KSeF?
-Krzysztof Rogowski, dyrektor Departamentu Analiz Krajowej Administracji Skarbowej w Ministerstwie Finansów: Nabywca powinien odbierać fakturę w KSeF. System wskazuje, kiedy faktura jest wystawiona i kiedy faktycznie jest otrzymana przez nabywcę. KSeF daje właśnie taką — jednoznaczną informację.
-Co do tego, skąd nabywca ma czerpać informację o tym, że otrzymał fakturę, to zależy od tego, na jakie narzędzia do obsługi KSeF się zdecyduje. Może skorzystać z narzędzi komercyjnych, a może skorzystać z narzędzi, które udostępnia Ministerstwo Finansów. Nasze narzędzia to Aplikacja Podatnika KSeF 2.0, Aplikacja Mobilna KSeF i aplikacja e-Mikrofirma. Pozwalają one nabywcy w prosty sposób sprawdzić, czy otrzymał faktury w KSeF.
-Nabywca, który zdecyduje się na aplikacje Ministerstwa Finansów, nie otrzyma więc powiadomienia o tym, że dostał fakturę. Jak rozumiem, będzie musiał, np. raz dziennie spojrzeć do KSeF, a więc uruchomić aplikację?
-Krzysztof Rogowski: Tak. Przy projektowaniu naszych narzędzi, głównym założeniem było, aby podatnik mógł uwierzytelnić się do KSeF, a następnie wystawiać i odbierać faktury. Są to narzędzia zbudowane z myślą o najmniejszych podatnikach, którzy wystawiają bądź otrzymują kilka faktur miesięcznie.
-Nasze aplikacje nie wysyłają powiadomień. Nie jest to jednak funkcja, o której zapomnieliśmy, ale celowe działanie wynikające ze względów bezpieczeństwa. Gdyby aplikacja wysyłała powiadomienia o fakturach, to mogłoby to zostać wykorzystane do potencjalnych wyłudzeń, a tego chcieliśmy uniknąć. Nie chcielibyśmy uchylać tej furtki z możliwością wysyłania fałszywych powiadomień do nabywcy, że czeka na niego faktura, którą trzeba opłacić. Na pierwszym miejscu stawiamy zawsze bezpieczeństwo podatników. Dlatego nasze aplikacje nie będą wysyłały żadnych powiadomień.
-Anna Mytyk: Podatnik, np. prowadzący jednoosobową działalność gospodarczą, który będzie chciał odbierać faktury z KSeF za pomocą naszych aplikacji, będzie mógł uwierzytelnić się w KSeF posługując się np. bezpłatnym profilem zaufanym. Dzięki temu będzie mógł uzyskać dostęp do aplikacji i sprawdzać, czy otrzymał faktury.
-Krzysztof Rogowski: Słowem uzupełnienia, jeśli przedsiębiorca będzie chciał otrzymywać powiadomienia o tym, że przyszła do niego faktura w KSeF, to będzie mógł skorzystać z programów komercyjnych, które przewidują takie funkcjonalności. Podatnicy będą mieli więc wybór: skorzystać z naszych narzędzi lub komercyjnych. Podatnik nigdy nie dostanie natomiast powiadomienia z Ministerstwa Finansów o tym, że otrzymał fakturę.
-Kiedy przekazać wizualizację faktury, a kiedy potwierdzenie transakcji?
-W KSeF faktury mają być zasadniczo wystawiane w formie ustrukturyzowanej (pliki XML, zgodne ze wzorem, czyli tzw. schemą FA(3) — red.). Ministerstwo w systemie KSeF przewidziało jednak jeszcze dwie możliwości. Sprzedawca będzie mógł przekazać tzw. wizualizację faktury, a przed jej wystawieniem w KSeF również "potwierdzenie transakcji". Jakie będą funkcje tych dokumentów i w jakich sytuacjach podatnicy będą mogli z nich skorzystać?
-Anna Mytyk: Wizualizacja faktury to odwzorowanie dokumentu, który jest w KSeF. Mówimy więc o sytuacji, gdy w transakcjach B2B sprzedawca wystawił fakturę w KSeF i ona jest już w systemie. Sprzedawca może więc wygenerować kod QR i przekazać dodatkowo wizualizację faktury, np. aby nabywca mógł ją pokazać w sądzie lub w urzędzie. Wizualizacja będzie więc wyglądała tak samo jak faktura. Będzie na niej numer, jeden kod QR i pod tym numer KSeF.
-A potwierdzenie transakcji?
-Anna Mytyk: Potwierdzenie transakcji będzie można wystawić wcześniej. Chodzi przykładowo o sytuację, gdy sprzedawca sprzeda towar, wystawi fakturę, ale jeszcze nie został jej nadany numer KSeF. W takim przypadku sprzedawca nie może wydać wizualizacji z odpowiednimi oznaczeniami (m.in. numerem KSeF — red.). Zastępczo będzie mógł więc wydać potwierdzenie transakcji, czyli dokument potwierdzający, że do danej sprzedaży została wystawiona faktura. Będzie na nim kod QR, który nabywca będzie mógł zeskanować i sprawdzić, czy faktura już jest w KSeF.
-Poprawnie wygenerowany kod QR (na wizualizacji lub potwierdzeniu transakcji) ma zatem przekierować użytkownika, posiadacza takiego dokumentu do systemu, do źródła, czyli do faktury w KSeF.
-Jak uchronić się przed oszustami, którzy będą podszywać się pod sprzedawców?
-Część przedsiębiorców ma obawy związane z kodami QR. Firmy boją się, czy nie zostaną one wykorzystywane przez oszustów. Chodzi na przykład o to, że po zeskanowaniu kodu zostaną przeniesieni na jakąś niewłaściwą stronę internetową. Co tu może być tą czerwoną flagą?
-Krzysztof Rogowski: Jeżeli podatnik po zeskanowaniu kodu QR zobaczy komunikat, aby opłacić fakturę, to powinien zachować czujność. Podkreślamy to i ciągle będziemy to powtarzać — kody weryfikujące QR dedykowane dla KSeF nie będą prowadziły do płatności za fakturę.
-Anna Mytyk: Wizualizacja nie jest w swoim założeniu dokumentem potwierdzającym wystawienie faktury. Jej głównym celem jest wykorzystanie w sytuacjach innych niż podatkowe, np. gdy przedsiębiorca musi przedstawić taki dokument instytucji zewnętrznej.
-Konsumenci chyba jednak nie będą dostawać wizualizacji, ale tzw. faktury konsumenckie, jeśli ich zażądają. Standardowo dostaną paragon.
-Anna Mytyk: Generalnie, jeśli konsument poprosi sprzedawcę o fakturę, to powinien dostać dokument taki jak dziś, czyli w formie papierowego wydruku lub np. jako PDF (na maila — red.). Natomiast konsument otrzyma wizualizację jedynie w przypadku, gdy zażąda, aby sprzedawca przekazał mu fakturę w KSeF. Tylko w takim, wyjątkowym przypadku, wydany nabywcy dokument będzie wizualizacją faktury w KSeF.
-Jak rozróżnić konsumenta od podatnika?
-Jak więc sprzedawca ma rozpoznać, kiedy towar lub usługę kupuje konsument i na jego żądanie trzeba mu wydać fakturę tradycyjną, a kiedy nie ma konsumenta i trzeba mu wydać wizualizację faktury?
-Anna Mytyk: Jeżeli nabywca podaje do faktury NIP krajowy, to musimy go potraktować jako podatnika VAT krajowego. Fakturę na jego żądanie wystawiamy więc w KSeF. A jeżeli to jest sprzedaż w handlu detalicznym i nabywca nie posługuje się NIP, zgłasza potrzebę wystawienia faktury tzw. imiennej na konsumenta, wystawca, wystawiając tę fakturę w KSeF musi pamiętać o uzgodnieniu sposobu jej wydania nabywcy — konsumentowi.
-Co z fakturami w przypadku wynajmujących nieruchomości?
-Czy wynajmujących prywatnie będą musieli odbierać faktury z KSeF? Są oni podatnikami VAT zwolnionymi, ale są też klientami dostawców mediów (prąd, gaz, ciepło — red.).
-Anna Mytyk: Zasada jest taka, że KSeF jest oparty o numery NIP. Jeśli wynajmujący (właściciel mieszkania — red.) "nie ujawni się" dostawcy mediów jako podatnik VAT, bo nie dysponuje numerem NIP, to dostanie fakturę w formie uzgodnionej ze sprzedawcą, czyli najpewniej tak, jak dziś, w tradycyjnej formie. Natomiast jeśli posiada NIP i poda go sprzedawcy mediów (prądu, gazu) to odbierze fakturę w KSeF.
-Krzysztof Rogowski: Ustawa o VAT daje w tym zakresie wystawcy faktury swobodę decydowania o tym, czy faktury konsumenckie będzie wystawiał w KSeF, czy poza KSeF.
-Kolejna sytuacja — jeśli firma wynajmuje nieruchomość firmie, to fakturę musi wystawić w KSeF?
-Anna Mytyk: Tak, jeśli jest to transakcja między krajowymi podatnikami VAT, czynnymi lub zwolnionymi.
-Jak dostać się do KSeF?
-Jak podatnicy będą mogli dostać się do KSeF, wystarczy pobrać jedną z aplikacji do KSeF?
-Krzysztof Rogowski: Niezależnie od tego, czy podatnik będzie korzystał z aplikacji ministerialnej, czy komercyjnej, to uwierzytelnienie do KSeF będzie wyglądało tak samo. Można wykorzystać profil zaufany, podpis kwalifikowany, pieczęć kwalifikowaną (w przypadku spółek — red.), a nawet token (w oprogramowaniu komercyjnym — red.). Pamiętajmy również o certyfikacie KSeF.
-Jeśli podatnik zaloguje się na swoje konto, ale będzie chciał, żeby jego pracownik wystawiał w jego imieniu faktury, to rozumiem, że wystarczy przyznać temu pracownikowi uprawnienia do KSeF i zdecydować o zakresie dostępu — do odbioru faktur, wystawiania faktur itp.?
-Krzysztof Rogowski: Tak. Już teraz w module certyfikatów i uprawnień udostępniliśmy możliwość generowania różnych uprawnień dla pracowników. Jeżeli podatnik ma pracowników i chce, aby konkretny pracownik w firmie wystawiał lub odbierał faktury, to trzeba nadać mu uprawnienie.
-Zachęcamy do skorzystania z modułu MCU (moduł certyfikatów i uprawnień - red.), już teraz. Im wcześniej, tym lepiej. Apelujemy, aby nie zostawiać przygotowań do KSeF na ostatnią chwilę. Warto już teraz przygotować się na luty.
-O zgodę na załączniki będzie można występować w styczniu 2026 r.
-Jeśli chodzi o akty prawne i narzędzia informatyczne do KSeF, to rozumiem, że zgodnie z zapowiedziami, w styczniu 2026 r. ruszy moduł zgłoszeń dotyczący faktury z załącznikiem? Czy czegoś jeszcze należy się spodziewać?
-Krzysztof Rogowski: Potwierdzam, w styczniu będzie można składać zgłoszenie o zamiarze wystawiania faktur z załącznikami. Zgłoszenie będzie rozpatrywane maksymalnie do trzech dni roboczych. Trzeba jednak pamiętać, że jeżeli podatnik będzie wykorzystywać załączniki niezgodnie z przeznaczeniem, to uprawnienie może zostać mu odebrane.
-Zasadniczo ta możliwość jest przewidziana dla podmiotów, które mają bardzo specyficzną sprzedaż i w samej treści faktury nie mogą zawrzeć na przykład 400 punktów odbioru energii elektrycznej. Do takich celów podatkowych zostało to przygotowane.
-Jak można sprawdzić KSeF?
-Gdzie podatnicy powinni szukać pomocy i informacji, jeśli chodzi o KSeF?
-Anna Mytyk: Przedsiębiorca z sektora MŚP, który chciałby się sam przygotować do KSeF-u, może skorzystać z wielu opcji pomocy. Przede wszystkim zachęcamy do udziału w "Środach z KSeF" w urzędach skarbowych. W każdą środę odbywają się szkolenia online lub stacjonarnie w temacie KSeF.
-Oprócz tego można korzystać z informacji i narzędzi, które są dostępne na stronie ksef.podatki.gov.pl. Można tam wejść i na przykład zapoznać się z aplikacją testową KSeF 2.0. i w niej przetestować sposób nadawania uprawnień, czy sposób wystawiania faktur. Na tej stronie znajdują się też materiały merytoryczne, filmy instruktażowe, przewodniki, a także Podręcznik KSeF 2.0.
-Podręcznik powstał dla podatników, którzy chcą zgłębić dane zagadnienie w KSeF. Zawiera on szczegółowe wyjaśnienia dotyczące systemu.
-Dodatkowo od stycznia br. działa infolinia KAS poświęcona KSeF, a od października br. weszła w życie możliwość umówienia wizyty w US w temacie KSeF. Można więc przyjść na indywidualne konsultacje.
-Każda osoba czy to podatnik, czy integrator może również skorzystać z formularza kontaktowego KSeF, gdzie eksperci KAS w formie mailowej odpowiadają na wszystkie pytania dotyczące KSeF.
-KSeF to obowiązek podatników, czy księgowych?
-Czyim obowiązkiem jest KSeF? Ostatnio skierowali państwo pismo do podatników, aby w razie potrzeby kierowali się również do swoich księgowych i biur rachunkowych. Część środowiska zaapelowała, aby nie przerzucać na księgowych obowiązku wdrożenia KSeF, bo jest to obowiązek przedsiębiorców.
-Krzysztof Rogowski: Wiem, do czego pan redaktor nawiązuje. No cóż, mogę tutaj jedynie powiedzieć, że chyba doszło do jakiegoś niezrozumienia sytuacji. Jako resort finansów bierzemy udział w spotkaniach przeznaczonych dla księgowych, biur rachunkowych, biegłych rewidentów, przedsiębiorców oraz wszystkich zainteresowanych praktycznym korzystaniem z KSeF. Nawiązaliśmy ścisłą współpracę z największymi polskimi organizacjami, które zrzeszają środowiska księgowych. Cały czas organizujemy wspólne webinaria, w których wspólnie z dyrektor Mytyk uczestniczymy. Dlatego z pewnym zaskoczeniem odebraliśmy informację, jakoby resort przerzucał na księgowych obowiązek wdrożenia systemu.
-KSeF i pomoc w przygotowaniu przedsiębiorców to oczywiście obowiązek administracji. Ale KSeF dotyczy wszystkich zainteresowanych grup. Wysyłając powiadomienie do przedsiębiorców, w którym jedną z informacji jest, żeby już teraz — odpowiednio wcześnie — weszli w kontakt na temat KSeF ze swoim księgowym lub biurem rachunkowym, nie przerzucamy jakichkolwiek obowiązków na księgowych w zakresie wystawiania faktur. Biura obsługujące podatników też będą jednak w tym procesie. Jestem zdziwiony taką narracją, że przerzucamy na kogoś jakiś obowiązek. Z badań, jakie przeprowadziliśmy w Ministerstwie Finansów, wynikało, że 50 proc. przedsiębiorców chciałoby, aby podstawowe informacje o KSeF-ie uzyskać właśnie od swojego księgowego.
-Docieramy swoimi źródłami do podatników, zwłaszcza tych najmniejszych. Do tej pory w 2025 r. prawie 400 tys. podmiotów uczestniczyło w spotkaniach w ramach akcji "Środy z KSeF" w urzędach skarbowych. Staramy się docierać z informacjami również do tych najmniejszych podmiotów, w mniejszych miejscowościach. Zainteresowanie spotkaniami jest bardzo duże.
-Anna Mytyk: Zawód księgowego cieszy się dużym zaufaniem społecznym. I jest to bardzo pozytywne. Trudno się więc dziwić, że podatnik, który korzysta z biura rachunkowego chciałby porozmawiać o KSeF z zaufanym księgowym.
-Jak będzie wyglądało raportowanie KSeF w JPK_VAT?
-Wątpliwości ekspertów budzą również nowe oznaczenia, jakie mają pojawić się w JPK_VAT od 1 lutego 2026 r. Czy rozporządzenie w sprawie oznaczeń zostało już podpisane przez ministra finansów?
-Anna Mytyk: Rozporządzenie zostało podpisane 12 grudnia i skierowane do Rządowego Centrum Legislacji celem publikacji w Dzienniku Ustaw. Analizowaliśmy zagadnienia zgłoszone przez przedsiębiorców w trakcie konsultacji tego projektu. W odpowiedzi wyjaśniliśmy, że wprowadzane rozwiązania w JPK_VAT nie wiążą się z nadmiernymi obciążeniami czy dodatkowymi obowiązkami dla przedsiębiorców. Przede wszystkim nie wiążą się z koniecznością korekt plików JPK_VAT, czego przedsiębiorcy obawiali się najbardziej. Część ewidencyjna JPK_VAT po zmianach, jakie niesie rozporządzenie, nie będzie też w zasadzie wymagała uzupełnienia o numery KSeF.
-Jeśli podatnik prześle plik JPK_VAT do urzędu skarbowego, a następnie zorientuje się, że plik wymaga uzupełnienia lub skorygowania, to w każdym momencie może taką korektę przesłać. Tak jest już dziś i to wynika z ustawy o VAT. Natomiast jeśli organ podatkowy zidentyfikuje błąd w pliku JPK_VAT podatnika, to w pierwszej kolejności dąży do wyjaśnienia nieprawidłowości czy nieścisłości z podatnikiem. A zatem podatnicy dostają informację z urzędu o ewentualnej potrzebie skorygowania pliku i na złożenie takiej korekty mają ustawowe 14 dni.
-Dodajmy, że plik JPK_VAT będzie zasilany danymi z KSeF. Nasze oprogramowanie zapewnia automatyczną możliwość uzupełniania danych z KSeF w JPK_VAT.
-
---------------------------------------------------------------------------------
-
-Jesteś na etacie lub zleceniu? To zrób w grudniu, jeśli chcesz obniżyć podatek za 2025 r.
-https://businessinsider.com.pl/prawo/podatki/obniz-podatek-za-2025-rok-te-dzialania-musisz-podjac-jeszcze-w-grudniu/6pm2ll2
-Podatnicy na etacie lub zleceniu mogą obniżyć swój podatek za 2025 r. Wystarczy skorzystać z wielu możliwości przewidzianych w przepisach. Ulg i preferencji jest cała lista, ale trzeba spełnić warunki. Tłumaczymy, co można zrobić i jakie warunki dopełnić.
-Jeśli chcesz obniżyć swój podatek za 2025 r., to jest to możliwe, jeśli podejmiesz działania jeszcze w grudniu. Po 1 stycznia 2026 r. będzie na to za późno. Chodzi o różnego rodzaju ulgi i preferencje podatkowe, a także darowizny.
-Doprecyzujmy od razu, że pomijamy w tym materiale m.in. ulgę na dzieci, wspólne rozliczenie małżonków czy jako osoba samotnie wychowująca dziecko. Te preferencje nie zależą bowiem od działań podatników podjętych w 2025 r.
-Czytaj też: Jak obniżyć podatek w JDG za 2025 r.? Oto co możesz jeszcze zrobić w grudniu
-Czytaj także w BUSINESS INSIDER
-Jakie darowizny pomniejszą dochód w PIT
-Standardowo podatnicy mogą obniżyć swój dochód, a w konsekwencji podatek, jeśli do końca 2025 r. przekażą darowizny. Można je bowiem w całości lub części odliczyć w PIT za 2025 r.
-Od dochodu można odliczyć przekazane darowizny na cele:
-— organizacji pożytku publicznego,
-— krwiodawstwa realizowanego przez honorowych dawców krwi (jest to tzw. ulga na krew),
-— kultu religijnego,
-— kształcenia zawodowego publicznym szkołom prowadzącym kształcenie zawodowe oraz publicznym placówkom i centrom,
-— odbudowy Pałacu Saskiego, Pałacu Brühla oraz kamienic przy ulicy Królewskiej w Warszawie (czyli cele wskazane w specjalnej ustawie, Dz.U. z 2024 r., poz. 578).
-Warunki dla wszystkich tych darowizn są zasadniczo dwa.
-Po pierwsze odliczyć można nie więcej niż 6 proc. dochodu podatnika. Jeśli przykładowo podatnik miał w obecnym roku 100 tys. zł dochodu, to odliczyć będzie mógł maksymalnie 6 tys. zł. Jeśli przykładowo przekaże na cele pożytku publicznego 10 tys. zł, to i tak do celów PIT od dochodu będzie mógł odjąć tylko 6 tys. zł.
-Po drugie wydatek trzeba odpowiednio udokumentować. Jeśli wpłacamy pieniądze, to tylko na rachunek płatniczy obdarowanego lub jego rachunek w banku, inny niż rachunek płatniczy. Jeśli przekażemy gotówkę, to nie odliczymy jej od dochodu.
-Przekazać można jednak również różnego rodzaju rzeczy, wtedy jednak również koniecznie trzeba darowiznę udokumentować. Niezbędne są dane identyfikujące darczyńcę oraz wartość przekazanej darowizny wraz z oświadczeniem obdarowanego o jej przyjęciu — w przypadku darowizny niepieniężnej.
-Szczegółowe wymogi zostały określone w art. 26 ust. 7 ustawy o PIT.
-Jakie darowizny na kościół można odliczyć i pomniejszyć dochód w PIT?
-Osoby, które chcą przekazać darowizny na kościół, muszą wiedzieć, że mamy ich dwa rodzaje:
-— darowizny na cele kultu religijnego, np. na budowę czy remont kościoła, jego wyposażenie, czy zakup przedmiotów liturgicznych — w PIT odjąć można maksymalnie 6 proc. dochodu podatnika oraz
-— darowizny na działalność charytatywno-opiekuńczą kościoła — tu limitu nie ma.
-W drugim przypadku chodzi zarówno o Kościół katolicki, jak i inne. Jeśli chodzi o darowizny na działalność Kościoła katolickiego, to wymogi wynikają z ustawy o stosunku państwa do Kościoła katolickiego w Rzeczpospolitej Polskiej (t.j. Dz.U. z 2019 r., poz. 1347 ze zm.). Przede wszystkim darowizny pieniężne muszą być przekazywane przelewem. Jeśli przekazujemy rzeczy, to też trzeba to udokumentować.
-W przypadku darowizny na działalność charytatywno-opiekuńczą w okresie dwóch lat trzeba uzyskać od kościelnej osoby prawnej, której podatnik przekazał darowiznę, sprawozdanie o przeznaczeniu kwoty darowizny na działalność charytatywno-opiekuńczą kościoła.
-Ile można odliczyć w PIT, jeśli oddasz krew?
-Krwiodawcy muszą z kolei wiedzieć o innych ograniczeniach. Odliczyć od dochodu można jedynie 130 zł za każdy litr pobranej krwi lub za każdy litr osocza. Przy czym istnieje również roczny limit krwi i osocza, które są objęte preferencją podatkową. Mężczyzna może w danym roku oddać maksymalnie 2,7 litra krwi, a kobieta 1,8 litra. Z kolei osocza można oddać maksymalnie 25 litrów.
-W przypadku mężczyzn oznacza to, że limit odliczenia ulgi wynosi 351 zł za krew, a w przypadku kobiet 234 zł za krew.
-Trzeba mieć też zaświadczenie od jednostki krwiodawstwa, że oddaliśmy krew.
-Jakie wydatki odliczysz w PIT dzięki uldze termomodernizacyjnej?
-Ulga termomodernizacyjna pozwala odliczyć duże kwoty.
-Skorzystać z niej mogą właściciele lub współwłaściciele domów jednorodzinnych (także bliźniaków czy domów w zabudowie szeregowej), którzy poniosą do końca 2025 r. wydatki na termomodernizację. Ulga nie dotyczy więc mieszkań.
-Maksymalnie można odliczyć 53 tys. zł od swojego dochodu lub przychodu, a w przypadku małżonków będących współwłaścicielami domu — 106 tys. zł.
-Faktycznie poniesioną kwotę (a nie maksymalną) na termomodernizację domu odliczamy w zeznaniu rocznym PIT.
-Pamiętać też trzeba o fakturach, bo tylko w ten sposób udokumentowane wydatki będzie można odliczyć.
-Co można odliczyć w ramach ulgi termomodernizacyjnej, określa rozporządzenie ministra inwestycji i rozwoju z 21 grudnia 2018 r. w sprawie określenia wykazu rodzajów materiałów budowlanych, urządzeń i usług związanych z realizacją przedsięwzięć termomodernizacyjnych (t.j. Dz.U. z 2025 r., poz. 1128).
-W praktyce chodzi o materiały budowlane wykorzystywane do docieplenia ścian, stropu, dachu, a więc o wydatki na zakup np. styropianu, wełny mineralnej itd.
-Chodzi również o zakup i montaż fotowoltaiki, pompy ciepła, wymianę okien, drzwi czy pieca na pompę (nie można już odliczać wydatków np. zakup pieca gazowego) itd.
-Dodajmy, że zasadniczo ulgą objęte są wydatki na budynki ukończone. Nie dotyczy ona domów w budowie.
-Ile odliczysz w PIT dzięki IKZE?
-Osoby, które oszczędzają na emeryturę w ramach IKZE (indywidualne konto zabezpieczenia emerytalnego), również mogą obniżyć swój PIT. Jeśli chcą odliczyć wpłaty na IKZE za 2025 r., to muszą je wykonać do końca 2025 r. W praktyce może to być jedna wpłata.
-Odliczamy ją od podstawy opodatkowania, czyli w uproszczeniu — od dochodu, w zeznaniu rocznym PIT. Obowiązują jednak limity odliczenia, które co roku się zmieniają. W tym roku limity wynoszą:
-— 10 tys. 407 zł 60 gr dla osób dla nieprowadzących działalności gospodarczej,
-— 15 tys. 611 zł 40 gr dla osób prowadzących pozarolniczą działalność gospodarczą.
-Oczywiście w PIT będzie można odliczyć kwotę faktycznie wpłaconą na IKZE, ale nie więcej niż limit. Pamiętać też trzeba o udokumentowaniu wydatku, np. przelewem.
-Jakie wydatki na remont zabytków można odliczyć w PIT?
-Podatnicy mogą skorzystać również z ulgi na zabytki (art. 26hb ustawy o PIT). Obecnie nie można już w ogóle odliczyć wydatków na zakup zabytku. Nadal można jednak odliczyć wydatki na remont i konserwację i to bez limitu. Podatnik może bowiem odliczyć wydatki:
-1) poniesione w roku podatkowym na wpłaty na fundusz remontowy wspólnoty mieszkaniowej lub spółdzielni mieszkaniowej utworzony, zgodnie z odrębnymi przepisami, dla zabytku nieruchomego wpisanego do rejestru zabytków lub znajdującego się w ewidencji zabytków,
-2) na prace konserwatorskie, restauratorskie lub roboty budowlane przy zabytku wpisanym do rejestru zabytków.
-Wydatki te trzeba ponieść w 2025 r., jeśli chcemy je rozliczyć w PIT za 2025 r.
-Jakie są warunki?
-Odliczenie wydatków na fundusz remontowy wspólnoty mieszkaniowej lub spółdzielni mieszkaniowej przysługuje podatnikowi, jeżeli w momencie poniesienia wydatku jest właścicielem lub współwłaścicielem zabytku nieruchomego.
-Aby skorzystać z odliczenia wydatków na prace konserwatorskie, restauratorskie lub roboty budowlane, podatnik musi w momencie poniesienia wydatku być właścicielem bądź współwłaścicielem zabytku nieruchomego oraz posiadać sporządzone na piśmie pozwolenie wojewódzkiego konserwatora zabytków na prowadzenie prac konserwatorskich, prac restauratorskich lub robót budowlanych przy tym zabytku. Po poniesieniu wydatku musi też uzyskać zaświadczenie wojewódzkiego konserwatora zabytków potwierdzające wykonanie odpowiednio tych prac lub robót.
-Nie wystarczy też wydać jakiejkolwiek sumy pieniędzy na remont, ale trzeba go zakończyć — dopiero wtedy przysługuje ulga.
-Ile można zyskać? W przypadku wpłat na fundusz remontowy oraz wydatków na konserwację, odnowienie czy remont zabytku, odliczyć od dochodu (przychodu) można połowę poniesionych wydatków. Przykładowo, jeśli podatnik wyda 300 tys. zł, to będzie mógł odliczyć 150 tys. zł od dochodu lub przychodu.
-Wydatki trzeba jednak udokumentować fakturami, wystawionymi przez czynnych podatników VAT.
+Czy warto przekształcić JDG w spółkę z o.o.?
+Przekształcenie JDG w spółkę z o.o. ma zalety, ale i wady.
+— Korzyścią spółki jest m.in. ochrona prywatnego majątku. Trzeba jednak pamiętać o kluczowym ograniczeniu: spółka powstała z przekształcenia nie może korzystać ze stawki 9 proc. CIT przez pierwsze dwa lata działalności. Dlatego warto przekształcenie zrobić jeszcze w grudniu — mówi Jacek Dziuba.
+Do zmiany trzeba się jednak odpowiednio przygotować.
+— Warto zrobić analizę majątku, określić wartości początkowe, ocenić obciążenia podatkowe i prognozy finansowe. To pozwoli przeprowadzić transformację w sposób bezpieczny, zgodny z prawem i korzystny dla przedsiębiorcy — przekonuje Jacek Dziuba.
+Jakie są skutki prawne przekształcenia JDG w spółkę z o.o
+Przekształcenie, o którym mowa w art. 551 par. 5 Kodeksu spółek handlowych, powoduje, że spółka z o.o. staje się następcą prawnym przedsiębiorcy. — Oznacza to spółka przejmuje wszystkie prawa i obowiązki po JDG, w tym podatkowe (z pewnymi wyjątkami). Nie powstaje więc nowy podmiot, to nie jest likwidacja JDG. Przekształcenie oznacza ciągłość organizacyjną, ekonomiczną i w wielu aspektach również podatkową — tłumaczy Jacek Dziuba. W praktyce dodaje ekspert, spółka kontynuuje więc dotychczasowe umowy, licencje i koncesje, przejmuje pracowników z mocy prawa oraz staje się stroną postępowań podatkowych dotyczących okresu prowadzenia JDG.
+Co z PIT w przypadku przekształcenia JDG w spółkę
+Przekształcenie JDG w spółkę z o.o. nie oznacza też likwidacji działalności z punktu widzenia podatków dochodowych. Mimo to osoba fizyczna prowadząca dotychczasową działalność ma obowiązek zamknięcia księgi przychodów i rozchodów (KPiR). — Musi też sporządzić spis z natury oraz rozliczyć różnice remanentowe. Nie powstaje jednak dochód z likwidacji działalności ani dochód z remanentu likwidacyjnego, który należałoby rozliczyć — zaznacza Jacek Dziuba.
+Środki trwałe (np. Samochód) dotychczas wykorzystywane w JDG przechodzą do spółki. Kontynuuje ona też amortyzację środków trwałych na dotychczasowych zasadach — z zachowaniem tych samych wartości początkowych, metod i stawek.
+— Nie ma więc możliwości zastosowania jednorazowej amortyzacji, jeżeli środek trwały był wcześniej amortyzowany przez przedsiębiorcę — dodaje Jacek Dziuba.
+Co z CIT po przekształceniu w spółkę z o.o.
+— Spółka z o.o. powstała z przekształcenia staje się podatnikiem CIT z dniem wpisu do KRS — mówi doradca podatkowy. Podkreśla też, że to właśnie w CIT pojawiają się najistotniejsze skutki.
+Niestety zastosowanie preferencyjnej stawki 9 proc. CIT jest zablokowane na maksymalnie dwa lata, choć okres ten można skrócić.
+— Podmioty powstałe w wyniku restrukturyzacji, w tym przekształcenia działalności w spółkę z o.o., nie mogą korzystać ze stawki 9 proc. w roku przekształcenia ani w roku następnym, niezależnie od poziomu przychodów — tłumaczy Jacek Dzuba. Jeśli jednak przekształcenie nastąpi w grudniu, to zakaz stosowania stawki 9 proc. skraca się do nieco ponad roku.
+Co więcej, jak mówi Jacek Dziuba, straty z JDG nie przechodzą na spółkę, co również może wpływać na optymalny moment przeprowadzenia przekształcenia.
+Jak już wspomnieliśmy, spółka kontynuuje amortyzację środków trwałych na dotychczasowych zasadach, przy czym stosuje reguły określone w ustawie o CIT.
+— Ponadto, jeżeli właściciel JDG udzieli spółce pożyczki, konieczne jest uwzględnienie ograniczeń wynikających z przepisów dotyczących finansowania dłużnego, w tym zasad cienkiej kapitalizacji i limitu EBITDA — dodaje ekspert.
+Po przekształceniu JDG w spółkę z o.o. możliwe jest też wybranie estońskiego CIT. — Trzeba jednak spełnić ustawowe warunki związane z estońskim CIT — zastrzega Jacek Dziuba.
+Czytaj też: Samozatrudnienie czy spółka z o.o.? Dobrze się zastanów, czy warto [ANALIZA]
+Co z VAT po przekształceniu
+Spółka przejmuje również prawa i obowiązki w zakresie VAT. — Nie trzeba ponownie rejestrować się do VAT, choć wymagane jest zaktualizowanie danych identyfikacyjnych, w tym złożenie formularza NIP-8. Spółka zachowuje status podatnika czynnego lub zwolnionego oraz prawo do odliczenia VAT zarówno od nabyć sprzed, jak i po przekształceniu, z pewnymi ustawowymi wyjątkami — tłumaczy Jacek Dziuba.
+Przejmuje też obowiązki ewidencyjne i rozliczeniowe. — Kasy fiskalne online są nadal przypisane do działalności, ale wymagają jedynie aktualizacji danych, czynności czysto technicznej, która nie wpływa na rozliczenia podatkowe — mówi ekspert.
+Spółka przejmuje też obowiązek dokonywania wieloletnich korekt VAT, zarówno dotyczących środków trwałych, jak i towarów handlowych, materiałów czy nieściągalnych wierzytelności.
+Jakie są korzyści podatkowe z przekształcenia JDG w spółkę z o.o.
+Korzyści podatkowe z przekształcenia to:
+- możliwość skorzystania ze stawki 9 proc. CIT po upływie maksymalnie dwóch lat (zakaz dotyczy roku przekształcenia i roku następnego),
+- dostęp do estońskiego CIT bez ograniczenia obowiązującego w klasycznym CIT,
+- brak remanentu likwidacyjnego w PIT czy
+- brak opodatkowania tzw. ukrytych zysków w klasycznym CIT.
+— Ograniczeniem jest obowiązek stosowania przez pierwsze dwa lata 19 proc. CIT, brak możliwości rozliczenia strat podatkowych z JDG, brak możliwości zastosowania jednorazowej amortyzacji w odniesieniu do środków trwałych wcześniej amortyzowanych. Ponadto spółka z o.o. musi prowadzić pełną księgowość — wymienia Jacek Dziuba.
+Ile kosztuje przekształcenie JDG w spółkę z o.o.
+Za przekształcenie JDG w spółkę z o.o. trzeba jednak zapłacić.
+Jacek Dziuba wskazuje, że kosztem przekształcenia będą:
+— opłaty sądowe w wysokości 900 zł,
+— koszt opinii biegłego rewidenta, który zwykle wynosi co najmniej kilka tysięcy złotych,
+— opłaty notarialne — ok. 2 tys. zł oraz
+— koszt obsługi prawnej — zwykle mieści się w przedziale od 4,5 tys. do 7 tys. zł.
+— W ramach obsługi prawnej przygotowuje się projekt planu przekształcenia wraz z załącznikami (poza dokumentacją rachunkową), a także wszelkie wnioski i zawiadomienia związane z procesem przekształcenia — tłumaczy doradca podatkowy.
+Dodajmy, że koszty związane z prowadzeniem spółki z o.o. są dużo wyższe niż w przypadku JDG. Według ekspertów koszty mogą wzrosnąć nawet trzykrotnie.
+Co z ZUSem w spółce z o.o.
+Wielu przedsiębiorców prowadzących jednoosobową działalność gospodarczą marzy m.in. o braku ZUSu, czy też dobrowolnym ZUS. Rozwiązaniem jest spółka z o.o., choć też nie zawsze.
+W spółce z o.o. nie trzeba opłacać składek na ubezpieczenia społeczne, pod warunkiem że jest co najmniej dwóch wspólników. Jeśli wspólnik jest jeden, to musi płacić składki na ZUS. Zgodnie bowiem z art. 8 ust. 6 pkt 4 ustawy o systemie ubezpieczeń społecznych (t.j. Dz.U. z 2023 r., poz. 1230 ze zm.), za osobę prowadzącą pozarolniczą działalność uważa się wspólnika jednoosobowej spółki z ograniczoną odpowiedzialnością oraz wspólników spółki jawnej, komandytowej lub partnerskiej.
+Drugiego wspólnika do spółki z o.o. zwykle nie jest trudno znaleźć, ale musi mieć on odpowiedni poziom udziałów w spółce (ZUS kwestionuje udział w wysokości 1 proc.). Ponadto trzeba postawić sobie pytanie, co z przyszłą emeryturą oraz przede wszystkim publiczną opieką zdrowotną (kto nie płaci składek, nie może z niej korzystać).
 Autor: Łukasz Zalewski, dziennikarz działu Prawo Business Insider Polska
 
 --------------------------------------------------------------------------------
 
-To ich państwo "dociska" najmocniej. Nie, nie chodzi o przedsiębiorców [DANE]
-https://businessinsider.com.pl/prawo/podatki/ile-pieniedzy-zabiera-ci-panstwo-sprawdzilismy-kto-ma-najgorzej-dane/v8zlgtn
-Różnica między dochodem brutto a netto waha się nie tylko w zależności od ich wysokości, ale też od źródła zarobku. Inne składki i podatki płacą pracownicy, inne przedsiębiorcy, a jeszcze inne funkcjonariusze służb mundurowych czy emeryci. Sprawdziliśmy, kto oddaje państwu najwięcej.
-Na pierwszy rzut oka może wydawać się, że to przedsiębiorcy są grupą społeczną najmocniej poszkodowaną przez państwo.
-Zobacz także: Wyjechali pracować do Skandynawii 20-30 lat temu. Dziś mają takie emerytury [KWOTY]
-Przedsiębiorcy są oczywiście ważnym ogniwem gospodarki. To tu powstaje wiele innowacji, praca trwa często 24 godziny na dobę, świadczenia są ograniczone do minimum, a ryzyko jest stosunkowo największe.
-Jednak wbrew pozorom to wcale nie oni muszą oddawać państwu najwięcej pieniędzy. A przynajmniej nie wszyscy. Sprawdziliśmy, dla którego źródła dochodu klin podatkowo-składkowy jest największy.
-Zobacz także: Oto zarobki 1 proc. najbogatszych. Skarbówka pokazała twarde dane z PIT [KWOTY]
-Czytaj także w BUSINESS INSIDER
-Od kilku lat słyszymy narodową dyskusję o składce zdrowotnej, żeby tylko ulżyć właścicielom małych i średnich firm. Politycy przekonują, że to właśnie zmiany w jej rozliczaniu, czyli tzw. Polski Ład, mogły w 2023 r. doprowadzić do utraty władzy przez Prawo i Sprawiedliwość.
-Z najnowszego raportu, który kilka tygodni temu opublikowało Ministerstwo Finansów, możemy dowiedzieć się, jak wygląda obciążenie podatkowo-składkowe według poszczególnych źródeł dochodu.
-Dalsza część artykułu pod wideo
-Opracowanie autorstwa ministerialnego analityka Pawła Chrostka pokazuje, ile procent przychodu Polacy muszą oddawać państwu w formie składek na ubezpieczenia społeczne, zdrowotne oraz podatku dochodowego.
-Dane pochodzą z 2022 r., a więc już po reformie Polskiego Ładu. Od tego czasu zmiany są stosunkowo niewielkie. Rządząca koalicja zmieniła nieco zasady obliczania składki zdrowotnej dla przedsiębiorców, ale zawetowana przez Andrzeja Dudę wiosną 2025 r. ustawa sprawia, że od 2026 r. wszystko wróci do "starych" zasad.
-W skondensowanej formie widać to na poniższym wykresie. Wśród czterech zbadanych źródeł dochodu wyróżniają się przede wszystkim dwa. Pierwszy to wynagrodzenia służb mundurowych.
-Zobacz także: Tak się zarabia w mundurówce. Na etacie możesz o tym pomarzyć [KWOTY]
-W Business Insider Polska opisywaliśmy już, że właśnie funkcjonariusze mogą liczyć na spore preferencje w porównaniu z innymi profesjami. Chodzi o składki na ubezpieczenia społeczne, czyli m.in. emerytalne i rentowe.
-W przypadku służb obowiązkowa jest jedynie składka zdrowotna oraz oczywiście zaliczka na podatek dochodowy. Efekt? Mediana obciążenia w ich przypadku wynosi jedynie 13,6 proc. Oczywiście waha się w zależności od wielkości dochodu, ale średnia jest wyraźnie niższa niż w przypadku wielu innych obywateli. Połowa przedstawicieli służb oddaje państwu nie więcej niż 13,6 proc. dochodu brutto.
-Mundurówce pod tym względem zdecydowanie najbliżej do emerytów, którzy również nie muszą opłacać składek społecznych. Z danych resortu finansów wynika, że świadczenia dla seniorów z ZUS obciążone były w 2022 r. na poziomie od 9,1 do 14,4 proc. w zależności od dochodu.
-Przedsiębiorcy "ciemiężeni" najmocniej? Dane temu przeczą
-Dane resortu finansów pokazują, że wbrew pozorom przedsiębiorcy również nie mają w Polsce najgorzej. Państwo zabiera im w różnej formie 27,6 proc. dochodu brutto. To mediana obciążenia, co oznacza, że połowa osób prowadzących działalność realnie oddaje państwu jeszcze mniej, a druga połowa — więcej.
-Warto jednak podkreślić, że w przypadku przedsiębiorców kluczowa jest wysokość dochodów. Bo ci najmniejsi, którzy zarabiają najmniej, rzeczywiście mają najgorzej. Bardziej szczegółowe dane resortu finansów pokazują bowiem, że w tej grupie efektywne obciążenie podatkowo-składkowe może sięgać 60 proc.
-Wszystko za sprawą składek społecznych, które w Polsce płacone są ryczałtowo, a minimalne stawki określone są kwotowo i w 2026 r. wyniosą już blisko 2 tys. zł (nie licząc zdrowotnej). Im mniej zarabia taki przedsiębiorca, tym większe obciążenie te 2 tys. zł stanowią. Doskonale widać to na powyższym wykresie.
-Im wyższe dochody, tym procentowe obciążenie spada, by dla całej grupy przedsiębiorców sięgnąć wspomniane wyżej 27,6 proc.
-Dość niespodziewanie więc okazuje się, że mocniej od działalności gospodarczej obciążone są nawet umowy cywilnoprawne, czyli np. zlecenia.
-Mimo wieloletniej dyskusji wciąż nie wszystkie tego typu umowy są ozusowane (tak obowiązek istnieje tylko do wysokości płacy minimalnej), a i tak mediana obciążenia podatkowo-składkowego w tym przypadku wynosiła w 2022 r. 31,2 proc.
-Etatowcy mają najgorzej
-Z opracowania Ministerstwa Finansów dość jasno wyłania się obraz tego, kto w Polsce jest najmocniej obciążony składkami i podatkami. To osoby pracujące na etacie, czyli grupa kilkunastu milionów Polaków.
-Według wyliczeń resortu mediana obciążenia w ich przypadku to aż 34,1 proc. To oznacza, że z każdego 1 tys. zł brutto muszą oni w formie różnych opłat, składek i podatków oddać państwu 341 zł.
-Tu, w przeciwieństwie do przedsiębiorców, obciążenie jest stosunkowo jednakowe niezależnie od dochodu. Wiadomo jednak, że im wyższa pensja, tym wyższa stawka PIT. Niedawno pisała o tym Małgorzata Samborska z Grant Thorntona.
-"Pracownik na umowę o pracę, który zarabia 13 tys. zł brutto, dostanie za pracę w grudniu przelew na niecałe 7 tys. zł. Jego pracodawca musi na ten cel przeznaczyć 15,7 tys. zł. Z kosztu pracodawcy »zniknie« ponad 55 proc. na różnego rodzaju podatki i składki" — napisała ekspertka podatkowa.
-To oczywiście dotyczy tylko grudnia i w skali roku obciążenie aż tak wysokie nie jest. Niemniej jednak to właśnie etatowcy muszą procentowo oddawać państwu najwięcej.
-Z drugiej strony należy pamiętać o limicie 30-krotności. W dużym uproszczeniu oznacza on, że powyżej 30-krotności średniej pensji (w 2025 r. to ok. 260 tys. zł, czyli ponad 21 tys. zł miesięcznie), składki społeczne już nie narastają. To co "tracimy" w PIT niejako równoważą więc stosunkowo niższe składki. Ta kwestia dotyczy jednak tylko tych najlepiej zarabiających pracowników.
+Zmiany w prawie na pełnych obrotach. Sejm goni, prezydent hamuje [LISTA]
+https://businessinsider.com.pl/prawo/ustawowy-rollercoaster-sejm-przyspiesza-prezydent-wetuje-i-podpisuje-najwazniejsze/5bqvej8
+To był legislacyjny maraton. Z jednej strony posłowie znowu przyspieszyli pracę i przyjęli kilka ważnych ustaw. Wiele z nich trafi już na biurko prezydenta. Podobnie jak te, do których Senat nie wniósł uwag. Znowu jednak nie ma pewności, czy zostaną podpisane. Ostatnio Karol Nawrocki zawetował trzy ustawy, ale z drugiej strony 15 podpisał. Oto podsumowanie 30 najważniejszych zmian, które wkrótce odczują Polacy.
+To był wyjątkowy tydzień, jeśli chodzi o zmiany w prawie.
+Warto przypomnieć, że w skrócie proces legislacyjny wygląda tak: rząd, prezydent, grupa posłów lub senatorów kieruje swój projekt do Sejmu. Sejm go proceduje w drodze trzech czytań. Trzecie czytanie oznacza uchwalenie ustawy, która następnie trafia do Senatu. Ten może wprowadzić poprawki, wtedy ustawa wraca do Sejmu. Ten odrzuca lub popiera poprawki kolegów z tzw. izby mądrości. Wtedy ustawa, ale także, gdy Senat nie zgłosi uwag, trafia do podpisu prezydenta. Za czasów Karola Nawrockiego nigdy nie wiadomo, jaki czeka ją los.
+Od 6 sierpnia br. prezydent zawetował już 17 ustaw, niemal tyle ile Andrzej Duda przez obie kadencje (w sumie 19). Ważniejsze jednak są te ustawy, które prezydent podpisał, i pod którymi może złożyć podpis. Wśród nich znowu ważne przepisy dla właścicieli działek, inwestorów, podatników, nauczycieli, pracowników, przedsiębiorców.
+Prezydent zdecydował. Trzy ustawy do kosza
+W czwartek późnym wieczorem Kancelaria Prezydenta poinformowała o decyzjach Karola Nawrockiego. Prezydent zawetował trzy ustawy, które nazwał złymi. To ustawy podwyższające podatek cukrowy i akcyzowy oraz ustawa reformująca oświatę. - Każde weto ma jeden cel. Zatrzymać złe prawo i zobowiązać rząd do lepszego stanowienia ustaw — podkreślił Nawrocki na nagraniu opublikowanym w portalu X.
+Zawetowane nowe prawo oświatowe miało wprowadzić reformę w podstawie programowej, ale nie tylko. Nowelizacja zakładała też powrót do kwietniowego terminu przeprowadzania egzaminu ósmoklasisty. Po wecie jednak nie ma szans na szybszy egzamin, a w efekcie wcześniejsze poznanie jego wyników.
+Te ustawy prezydent podpisał [LISTA]
+Jednocześnie jednak prezydent podpisał 15 ustaw, które wkrótce zaczną obowiązywać. Oto lista:
+1. Ustawa z 7 listopada 2025 r. o szczególnych rozwiązaniach służących realizacji ustawy budżetowej na rok 2026 (nr druku sejmowego 1750);
+2. Ustawa z 21 listopada 2025 r. zmieniająca ustawę o zmianie ustawy – Prawo oświatowe (nr druku sejmowego 1805). Za jej sprawą od 1 stycznia 2027 r. uczelnie będą miały obowiązek wydawania e-dyplomów ukończenia studiów.
+3. Ustawa z 1 listopada 2025 r. o zmianie ustawy o systemie zarządzania emisjami gazów cieplarnianych i innych substancji oraz niektórych innych ustaw (nr druku sejmowego 1855). Ustawa wdraża CBAM, czyli graniczny podatek węglowy. Od 1 stycznia 2026 r., aby przywieźć towary objęte mechanizmem CBAM na obszar celny UE, importer lub pośredni przedstawiciel celny tego importera będzie musiał mieć status tzw. upoważnionego zgłaszającego.
+4. Ustawa z 21 listopada 2025 r. o zmianie ustawy – Karta Nauczyciela (nr druku sejmowego 1945). Ustawa ma przywrócić wypłaty za niezrealizowane godziny ponadwymiarowe.
+5. Ustawa z 21 listopada 2025 r. o zmianie ustawy o Służbie Więziennej oraz niektórych innych ustaw (nr druku sejmowego 1951). Ustawa wprowadza świadczenie mieszkaniowe dla służby więziennej, wypłacane z wyrównaniem od 1 lipca 2025 r. Miesięczna kwota wyniesie od 900 zł w mniejszych miejscowościach do 1800 zł w Warszawie.
+6. Ustawa z 21 listopada 2025 r. o zmianie ustawy – Prawo o ruchu drogowym oraz niektórych innych ustaw (nr druku sejmowego 1985). Ustawa ułatwi testowanie aut autonomicznych i wprowadzi zasady odpowiedzialności za szkody wyrządzone w związku z testami. Ponadto za sprawą ustawy zezwolenia na wykonywanie regularnych przewozów w krajowym transporcie drogowym, których termin ważności upływa 31 grudnia 2025 r. zostaną z automatu wydłużone do 31 marca 2026 r. Z kolei od 1 stycznia 2026 r. będą funkcjonować wielokrotne zezwolenia EKMT na międzynarodowe przewozy drogowe rzeczy w postaci elektronicznej.
+7. Ustawa z 4 grudnia 2025 r. o zmianie ustawy – Prawo budowlane (nr druku sejmowego 1379). Nowelizacja porządkuje definicje, zmienia procedury administracyjne, rozszerza katalog inwestycji niewymagających pozwolenia na budowę, wprowadza szczegółowe regulacje dotyczące magazynów energii oraz doprecyzowuje obowiązki inwestora i organów nadzoru budowlanego na etapie realizacji oraz zakończenia budowy. Ustawa przede wszystkim wprowadza tzw. mechanizm „żółtej kartki”. Organ będzie mógł wezwać inwestora do usunięcia stwierdzonych uchybień w sytuacji, gdy roboty prowadzone są niezgodnie z pozwoleniem, projektem lub przepisami, ale skala naruszeń nie uzasadnia jeszcze wstrzymania prac. Ustawa co do zasady wejdzie w życie po 14 dniach od ogłoszenia
+8. Ustawa z 4 grudnia 2025 r. o zmianie ustawy o doradztwie podatkowym (nr druku sejmowego 1729). Ustawa z jednej strony precyzuje, a z drugiej rozszerza uprawnienia doradców podatkowych, zmienia zasada egzaminów na doradcę oraz podwyższa kary z 50 tys. zł do 100 tys. zł za posługiwanie się tytułem doradcy bez uprawnień.
+9. Ustawa z 4 grudnia 2025 r. zmieniająca ustawę Kodeks karny (nr druku sejmowego 1863). Nazwa tej ustawy wprowadza błąd, bo wcale nie dotyczy przestępstw, a Centralnego Rejestru Umów Jednostek Sektora Finansów Publicznych. Zielone światło ma dostać już od stycznia 2026 r. W rejestrze będą publikowane dane o wszystkich umowach, bez względu na ich wartość.
+10. Ustawa z 21 listopada 2025 r. o zmianie ustawy o PIT (nr druku sejmowego 1835);. Za jej sprawą osoby, które kupiły akcje lub obligacje, które potem zostały przymusowo umorzone decyzją Bankowego Funduszu Gwarancyjnego (BFG), będą mogły stratę (czyli wydatki na objęcie lub nabycie akcji, lub obligacji) odliczyć podatkowo od innych przychodów z kapitałów pieniężnych.
+11. Ustawa z dnia 21 listopada 2025 r. o zmianie ustawy o PIT (nr druku sejmowego 1838). Ustawa przewiduje podwyższenie limitu przychodów w kasowym PIT z 1 mln zł do 2 mln zł.
+12. Ustawa z dnia 4 grudnia 2025 r. o zmianie ustawy o dokumentach publicznych (nr druku sejmowego 1996). Na jej podstawie Polska Wytwórnia Papierów Wartościowych będzie jako jedyna drukowała niektóre dokumenty.
+13. Ustawa z 21 listopada 2025 r. o ratyfikacji Porozumienia wykonawczego między Polską a USA do umowy o wzmocnionej współpracy obronnej w sprawie zatrudniania lokalnych pracowników cywilnych (nr druku sejmowego 1796). Umowa umożliwi zatrudniania lokalnych pracowników cywilnych na terytorium Polski przez siły zbrojne USA.
+14. Ustawa z 21 listopada 2025 r. o zmianie ustawy o podatku od spadków i darowizn (nr druku sejmowego 1837). Chodzi o przywrócenie terminu zgłoszenia nabycia spadku w sytuacjach losowych, niezawinionych przez podatnika. Dzięki temu podatnicy będą mogli skorzystać ze zwolnienia z podatku.
+15. Ustawa z 4 grudnia 2025 r. o szczególnych zasadach realizacji zadań związanych z inwestycją w zakresie bezpieczeństwa i obronności realizowaną w ramach KPO i Zwiększania Odporności (nr druku sejmowego 1885). Za jej sprawą będzie mógł zostać uruchomiony Fundusz Bezpieczeństwa i Obronności (FBiO), który ma wykorzystywać pieniądze z KPO na realizację celów związanych ze wzmacnianiem infrastruktury cywilnej, przemysłu obronnego i cyberbezpieczeństwa Polski. Fundusz ma operować środkami w łącznej kwocie ok. 4,65 mld euro, czyli 20 mld zł z KPO. Fundusz będzie wdrażany przez spółkę celową SPV, której jedynym akcjonariuszem jest Bank Gospodarstwa Krajowego.
+Te ustawy trafią do podpisu prezydenta
+Na ostatnim posiedzeniu Sejm rozpatrzył poprawki Senatu do pięciu ustaw. One trafią już do podpisu prezydenta. Ponadto Senat, który też obradował w tym tygodniu, nie wniósł poprawek do kilku ustaw, i one też trafią już do prezydenta.
+1. Ustawa 21 listopada 2025 r. z w sprawie ustawy o zmianie ustawy o świadczeniu usług drogą elektroniczną (nr druku sejmowego 1757). Ustawa przewiduje, że osoby niesłusznie zablokowane przez platformy internetowe będą mogły odwołać się od decyzji o blokadzie do prezesa Urzędu Komunikacji Elektronicznej (albo Prezesa Krajowej Rady Radiofonii i Telewizji w przypadku platform wideo). Sejm przyjął poprawki Senatu, które zniosły rygor natychmiastowej wykonalności decyzji. To oznacza, że decyzje o blokowaniu treści będą zawsze podlegać pełnej kontroli sądowej. Czytaj więcej: Czy będzie automatyczna cenzura w internecie? Sejm już zagłosował. Teraz nowe prawoi w rękach prezydenta
+2. Ustawa z 21 listopada 2025 r. o zmianie ustawy o systemie ubezpieczeń społecznych oraz niektórych innych ustaw (nr druku sejmowego 2070). Sejm poparł poprawki Senaty, głównie redakcyjna. Tylko jedna była merytoryczna. Za jej sprawą funkcjonować będą nowe zasady kontroli zwolnień lekarskich i zmienią się zasady wydawania orzeczeń przez ZUS. Co do zasady orzekać będzie jeden lekarz. Zgodnie z przyjętą poprawką w sprawach szczególnie skomplikowanych sprawę będzie można skierować do ponownego rozpatrzenia przez orzekających łącznie trzech lekarzy orzeczników.
+3. Ustawa z 21 listopada o zmianie ustawy o Narodowym Centrum Badań i Rozwoju (nr druku sejmowego 1807). Ustawa wprowadza zmiany w funkcjonowaniu instytucji naukowych: NCBiR, ale też Sieci BAdawczej Łukasiewicz czy Fundacji Zakłady Kórnickie. Zgodnie z nią dyrektora i zastępców dyrektora NCBR powoływać i odwoływać będzie minister. Obecnie robił to dyrektor NCBR. Maksymalna liczba zastępców dyrektora NCBR ma wzrosnąć z dwóch do trzech. Minister ma zyskać też możliwość bezpośredniego wyboru połowy członków r Rady NCBIR spośród osób reprezentujących środowiska naukowe, gospodarcze i finansowe. W ustawie o Sieci Badawczej Łukasiewicz wprowadza się zakaz działalności konkurencyjnej dla prezesa, wiceprezesów oraz dyrektorów instytutów sieci.
+4. Ustawa z 5 grudnia 2025 r. o zmianie ustaw w celu usprawnienia mechanizmów wsparcia odbiorców energii elektrycznej i ciepła (nr druku sejmowego 2067). Ustawa przedłużała do 30 czerwca 2026 r. termin na przekazanie przez przedsiębiorców sprzedawcom energii informacji o wartości udzielonej im pomocy publicznej. Blisko 50 tys. firm nie złożyło tej informacji w terminie do 30 czerwca 2025 r., co grozi im utratą wsparcia.
+5. Ustawa z 21 listopada 2025 r. o zmianie niektórych ustaw w celu usprawnienia działań Sił Zbrojnych Rzeczypospolitej Polskiej na wypadek zagrożenia bezpieczeństwa państwa na polskich obszarach morskich oraz zapewnienia bezpieczeństwa na Morzu Bałtyckim (nr druku sejmowego 1862). Pod tą długą nazwą kryją się przepisy, które przede wszystkim pozwolą użyć broni w obronie infrastruktury krytycznej, w samoobronie lub w obronie innego ważnego mienia. Ustawa za sprawą poprawek Senatu przenosi też na Ministerstwo Obrony Narodowej odpowiedzialność za szkody podczas operacji wojsk polskich i sojuszniczych w Polsce. Te przepisy budzą wątpliwości konstytucyjne.
+6. Ustawa z 4 grudnia 2025 r. o zmianie ustawy o spółdzielniach mieszkaniowych (nr druku sejmowego 1938). Nowelizacja, do której Senat nie wniósł poprawek, ogranicza krąg osób, które mogą być pełnomocnikiem członka spółdzielni. Pełnomocnikiem na walnym będzie mogła być osoba bliska członka, adwokat, radca prawny, inny członek tej samej spółdzielni mieszkaniowej.
+7. Ustawa z 4 grudnia 2025 r. o zmianie ustawy o ochronie praw nabywcy lokalu mieszkalnego lub domu jednorodzinnego oraz Deweloperskim Funduszu Gwarancyjnym (nr druku sejmowego 1767). Senatorowie nie mieli uwag do ustawy, która ustala jednolity mechanizm ustalania ceny lokalu i metrażu. Deweloperzy mają stosować Polską Normę, która mówi jak liczyć metraż pod skosami, ściankami działowymi itp.
+8. Ustawa z 4 grudnia 2025 r. o zmianie ustawy – Kodeks cywilny, ustawy o ubezpieczeniach obowiązkowych (nr druku sejmowego 1797). Senat nie wprowadził poprawek, do ustawy, która pozwala komunikować się z ubezpieczonymi w formie elektronicznej.
+9. Ustawa z 4 grudnia 2025 r. o zmianie ustawy o planowaniu i zagospodarowaniu przestrzennym (nr druku sejmowego 1608). Za jej sprawą gminy będą w formie uchwały określać zasad określania postanowień umów urbanistycznych. To element zintegrowanego planu inwestycyjnego (ZPI), w której strony zobowiązują się do wykonania czynności m.in. z zakresu realizacji inwestycji uzupełniającej, np. drogi, szkoły, itd.
+10. Ustawa z 4 grudnia 2025 r. o zmianie Kodeksu pracy (nr druku sejmowego 1601). Senatorowie nie mieli wątpliwości co do przepisów, które wiążą termin wypłaty ekwiwalentu za urlop z terminem wypłaty wynagrodzenia za pracę oraz pozwalają przesyłać pewne dokumenty pracownikom drogą mailową.
+Ustawy, którymi zajmie się jeszcze Senat
+Ponadto posłowie zakończyli prace nad kilkoma ustawami, którymi teraz zajmą się senatorowie. Wśród nich jest ta najważniejsza ostatnio, czyli o rynku kryptokatywów.
+1. Nowelizacja ustawy o rzeczach znalezionych (nr druku sejmowego 1629). Ustawa porządkuje zasady postępowania z rzeczami znalezionymi. Postępowania będą prowadzone przez starostę właściwego według miejsca znalezienia rzeczy. Dziś można też je prowadzić według miejsca zamieszkania znalazcy. Znalezione dokumenty z danymi osobowymi będzie trzeba przekazać do starosty. Limit wartości znalezionych rzeczy drobnych, których nie trzeba oddać staroście, ma być podniesiony do ok. 230 zł. W przypadku znalezienia broni, amunicji, chemikaliów zawsze będzie trzeba poinformować policję. Nie będzie już też obowiązku publikacji w prasie ogłoszeń o znalezionych rzeczach.
+2. Ustawa o rynku kryptoaktywów (nr druku sejmowego 2064). To tzw. wersja 2.0 ustawy przygotowana przez rząd po zawetowaniu przez prezydenta wersji 1.0. Problem w tym, że obie wersje są niemal identyczne. W wersji 2.0. posłowie poparli jedną drobną poprawka dotycząca opłaty za nadzór nad emisją tokenów. To cokolwiek pomoże startupom, ale nie zmienia całościowego obrazu ustawy. Trudno się więc spodziewać, że prezydent ją podpisze. Poprzednią wersję zawetował, bo jego zdaniem wprowadzała nadmiarowe, zbyt rygorystyczne przepisy. Czytaj więcej: Czy prezydent podpisze ustawę o krypto 2.0? Sejm przyjął poprawkę.
+4. Nowelizacja Kodeksu wyborczego (nr druku sejmowego 556). Nowela zakłada utworzenie "Portalu zgłaszania kandydatów lub list kandydatów w wyborach powszechnych", prowadzonego i utrzymywanego przez Krajowe Biuro Wyborcze. Za pośrednictwem portalu wyborcy będą mogli składać elektroniczne deklaracje poparcia, uwierzytelnione m.in. podpisem zaufanym, podpisem osobistym czy kwalifikowanym podpisem elektronicznym. Czytaj więcej: Wybory po nowemu? Sejm zdecydował w sprawie podpisów
+3. Nowelizacja ustawy o finansowaniu zadań oświatowych (nr druku sejmowego 2005). To projekt poselski, który utrzymuje dotacje dla niepublicznych placówek w 2026 r. na poziomie tych z roku 2025 r.
 
 --------------------------------------------------------------------------------
 
-Ustawa łańcuchowa znowu w Sejmie. Głosowanie nad odrzuceniem weta prezydenta
-https://businessinsider.com.pl/prawo/sejm-nie-odrzucil-weta-prezydenta-wobec-tzw-ustawy-lancuchowej/2jyenlb
-Ustawa łańcuchowa znowu w Sejmie. Głosowanie nad odrzuceniem weta prezydenta
-W środę Sejm nie zdołał odrzucić weta prezydenta Karola Nawrockiego wobec nowelizacji ustawy o ochronie zwierząt, tzw. ustawy łańcuchowej, która wprowadzała zakaz trzymania psów na uwięzi. W głosowaniu nie wziął udziału m.in. prezes PiS Jarosław Kaczyński.
-Zgodnie z przepisami, aby ponownie uchwalić ustawę i zarazem odrzucić weto prezydenta, potrzebna była większość 3/5 głosów — w tym przypadku 263 głosów.
-Dalsza część artykułu pod materiałem wideo
-Za odrzuceniem zagłosowało 246 posłów, 192 było przeciw, żaden nie wstrzymał się od głosu.
-W głosowaniu nie wzięło udział 22 posłów, w tym prezes PiS Jarosław Kaczyński.
-Za odrzuceniem weta zagłosowało 155 posłów z KO, 31 z PSL, 31 z Polski 2050, 21 z Lewicy, czterech z Razem oraz czterech niezrzeszonych. Przeciw głosowało 175 posłów z PiS, 10 z Konfederacji, czterech z Republikanów, dwóch z Konfederacji Korony Polskiej oraz jeden niezrzeszony.
-Ustawa łańcuchowa. Co wprowadzały nowe przepisy?
-Zawetowane przepisy wprowadzały definicję kojca — miejsca, gdzie utrzymuje się psa na ograniczonej przestrzeni poza lokalem mieszkalnym i z którego nieuwiązany pies nie może samodzielnie wyjść, znajdującego się na ogrodzonym lub nieogrodzonym terenie.
-Właściciel utrzymujący psa w kojcu musiałby zapewnić mu kojec utwardzony i zadaszony w większej części, o powierzchni nie mniejszej niż 10 mkw. w przypadku psa o masie ciała poniżej 20 kg, 15 mkw. dla psa o masie ciała od 20 do 30 kg i 20 mkw. dla psa o masie ciała powyżej 30 kg. Ponadto kojec miał być powiększany wraz z liczbą przebywających w nim psów.
-Regulacje zakładały, że kojce miały mieć wysokość nie mniejszą niż 1,7 m oraz wprowadzały wymogi, dotyczące ich konstrukcji.
-Czytaj także: Przyspieszą pracę nad "ustawą łańcuchową". KO obiecuje
-Nowelizacja zakładała również wyłączenia od zakazu trzymania psów na uwięzi — jedynie poza miejscem stałego bytowania psa. Możliwe byłoby m.in. prowadzenie na smyczy lub uwiązanie psa na czas spaceru, transportu czy też krótkotrwale w określonych warunkach wskazanych przez właściciela — w sposób niepowodujący naruszenia dobrostanu zwierzęcia (np. na czas zakupów).
+Prezes NBP napisał list i skrytykował zmiany proponowane przez rząd
+https://businessinsider.com.pl/prawo/nbp-bedzie-dalej-mial-straty-jest-list-prezesa-adama-glapinskiego/vkhqb54
+Prezes NBP napisał list i skrytykował zmiany proponowane przez rząd
+Narodowy Bank Polski w ostatnim czasie nie mógł się pochwalić zyskami i tym samym nie mógł wesprzeć finansowo budżetu państwa. Prezes NBP nie wyklucza, że tak będzie też w kolejnych latach. Wskazuje, od czego to zależy i krytykuje pomysły na zmiany dotyczące m.in. tego aspektu działalności banku.
+W piątek na stronie Rządowego Centrum Legislacji został opublikowany list prezesa NBP Adama Glapińskiego do sekretarza Stałego Komitetu Rady Ministrów Mariusza Skowrońskiego, dotyczący projektu nowelizacji ustawy o NBP. Krytycznie ocenił projektowane zmiany.
+Dalsza część artykułu znajduje się poniżej materiału wideo
+Adam Glapiński krytykuje propozycje zmian w ustawie o NBP
+"NBP (…) wskazał, że projekt ustawy nie wprowadza np. możliwości zabezpieczania się przez NBP przed pełnym spektrum ryzyka finansowego, na jakie bank jest narażony, a nie tylko ryzykiem kursowym oraz możliwości pokrywania skumulowanych strat NBP zyskami wypracowanymi w kolejnych latach, co byłoby zgodne z przeważającą praktyką innych banków centralnych Europejskiego Systemu Banków Centralnych (ESBC)" — napisał szef NBP.
+Zobacz także: Adam Glapiński doceni "swojego" człowieka? Nieoficjalne przecieki
+"Wskazujemy jednocześnie, że NBP poniósł stratę za 2024 r. oraz wysoce prawdopodobny jest ujemny wynik finansowy NBP w 2025 r. Nie można również wykluczyć straty NBP w kolejnych latach, w sytuacji, gdy utrzymają się obecnie dominujące tendencje aprecjacyjne kursu złotego do walut obcych. Z tego względu, wskazanie szerszych niż obecnie istniejące możliwości pokrywania przez NBP strat bilansowych, które na koniec 2024 r. przekroczyły już 60 mld zł, a na koniec 2025 r. prawdopodobnie zbliżą się do 100 mld zł, jest sprawą niezwykle pilną i ważną" — podkreślił Glapiński.
+Ustawa o NBP do zmiany. Co zakładają?
+Projekt nowelizacji ustawy o NBP zakłada m.in., że zarząd NBP będzie musiał uchwalać obok planu finansowego na dany rok również prognozę planu finansowego banku centralnego na kolejne trzy lata, a także co miesiąc uchwalać przewidywanie wykonanie planu finansowego NBP.
+Te dokumenty — zatwierdzane przez Radę Polityki Pieniężnej — miałyby trafiać do Ministerstwa Finansów, podobnie jak informacja o "wstępnym wykonaniu planu finansowego NBP oraz informacji o ostatecznym wykonaniu planu finansowego NBP za rok poprzedni, w terminie do 15 marca".
+Zobacz także: Dane NBP przebiły najśmielsze prognozy ekonomistów. Co mówią o gospodarce?
+"Samo arbitralne wprowadzenie obowiązku sporządzania prognoz trzyletnich, bez przyjmowania uzasadnionych argumentów prezentowanych przez NBP — jest przykładem ingerencji rządu w funkcjonowanie NBP, która jednocześnie wykracza poza zakres uchwały Rady Ministrów (…), postulującej ustanowienie prawnego mechanizmu komunikacji pomiędzy NBP i MF w procesie opracowywania projektu budżetu państwa (…). To nie przypadek, że NBP nie sporządzał dotąd trzyletnich prognoz wyniku finansowego nawet na użytek własny — wartość informacyjna takich prognoz byłaby po prostu na tyle nikła, że nie uzasadniałaby kosztów realizacji dodatkowego procesu prognostycznego przez NBP" — dodał prezes NBP.
 
 --------------------------------------------------------------------------------
 
-Frankowicze walczą w Sejmie o odsetki. "To nie są bagatelne kwoty"
-https://businessinsider.com.pl/prawo/frankowicze-kontra-banki-poprawki-do-ustawy-frankowej-wywolaly-burze/wrcft39
-Projekt ustawy frankowej, zamiast usprawnić system może otworzyć nowy front konfliktu. Po dwóch miesiącach sejmowej ciszy projekt wywołał burzliwe dyskusje na sejmowej komisji. Spór dotyczy fundamentalnej kwestii, bo rozliczeń między kredytobiorcami a bankami. Im głębiej w szczegóły, tym więcej pytań o to, kto na tych zmianach naprawdę zyska, a kto może stracić najwięcej. Ministerstwo Sprawiedliwości jest jednak otwarte na zmiany. Posłowie zgłosili cztery poprawki. Będzie więcej?
-- Najbardziej burzliwe dyskusje budzi sprawa potrącenia, czyli wzajemnego rozliczenia się między kredytobiorcą i bankiem
-- Zaproponowane przez Ministerstwo Sprawiedliwości rozwiązanie popiera Związek Banków Polskich. Przeciwko protestują przedstawiciele kredytobiorców
-- Arkadiusz Myrcha, wiceminister sprawiedliwości, deklaruje, że projekt ustawy frankowej będzie podlegał w Sejmie kolejnym modyfikacjom
-- Na razie w grze są cztery poprawki Koalicji Obywatelskiej. Czy mogą się pojawić kolejne?
+Kryptoaktywa 2.0. Co zmienia poprawka przyjęta przez Sejm?
+https://businessinsider.com.pl/prawo/sejm-przyjal-ustawe-o-kryptoaktywach-20-jej-los-w-rekach-prezydenta/0ywzet6
+Kryptoaktywa 2.0. Co zmienia poprawka przyjęta przez Sejm?
+Sejm uchwalił ustawę o kryptoaktywach 2.0. Większość głosowała za. Posłowie przyjęli też jedną poprawkę do ustawy, zgłoszoną przez posłów Polski 2050. Chcieli oni jednak dużo dalej idących zmian, które nie powodowałyby nadregulacji.
+Rząd nie ustaje w wysiłkach, żeby przyjąć ustawę o kryptoaktywach. W czwartek wieczorem ustawę ponownie uchwalił Sejm. Trafi ona teraz do Senatu.
+Problem w tym, że ustawa jest niemal identyczna z tą, którą już wcześniej zawetował prezydent Karol Nawrocki. Posłowie przyjęli tylko jedną poprawkę, zgłoszoną przez posłów Polski 2050. Zmniejsza ona maksymalną opłatę za nadzór nad emisją tokenów, którą emitenci mają płacić co roku Komisji Nadzoru Finansowego. Przepadły natomiast inne poprawki, które zmierzały do usunięcia nadregulacji w ustawie.
+Zobacz także: Jak obniżyć podatek w JDG za 2025 r.? Oto co możesz jeszcze zrobić w grudniu
+Jaką poprawkę w ustawie o kryptoaktywach przyjęli posłowie
+Poprawka przyjęta przez posłów ma zasadniczo zmniejszyć koszty dla emitentów tokenów kryptowalutowych. Ma ona znaczenie głównie dla tzw. startupów, które chciałyby tworzyć tokeny i w ten sposób finansować swoją działalność.
+Zgodnie z poprawką (w art. 79 w ust. 1 ustawy) maksymalna opłata za nadzór nad emisją tokenów ma wynieść 0,1 proc., a nie 0,5 proc. Chodzi o kwotę maksymalną. Ustawa przewiduje, że będzie ona uzależniona od zobowiązań finansowych emitenta z tytułu wyemitowanych tokenów. Nie może być jednak mniejsza niż 500 euro.
+Poprawka zakłada więc zmniejszenie bariery (opłaty) związanej z wejściem na rynek kryptoaktywów dla małych podmiotów (startupów).
+Pozostałe wnioski zgłoszone przez Polskę 2050 r. nie uzyskały większości w Sejmie. Choć ich celem było złagodzenie regulacji. Prezydent Karol Nawrocki, wetując pierwszą ustawę argumentował bowiem m.in., że to nadregulacja.
+Czy przyjęta przez Sejm ustawa 2.0 może zmienić ocenę prezydenta? Jedna poprawka do ustawy wydaje się słabym argumentem. Ustawa w wersji 2.0 jest bowiem niemal identyczna jak wersja 1.0. Nie usuwa więc wad, na jakie zwrócił uwagę prezydent, wetując ustawę 1.0 (przypominamy je w dalszej części artykułu). Najpierw jednak ustawę 2.0 musi jeszcze przyjąć Senat.
+Dlaczego musimy uchwalić ustawę o kryptoaktywach?
+Przypomnijmy, że w zamieszaniu o kryptoaktywach chodzi o wdrożenie regulacji, jakie narzuca państwom członkowskim unijne rozporządzenie o kryptoaktywach (MiCA od ang. Markets in Crypto Assets). Określa ono zasady regulacji i nadzoru emisji, handlu i świadczenia usług związanych z kryptoaktywami w całej UE.
+Jak tłumaczył nam Tomasz Konarzewski, adwokat, doradca podatkowy w kancelarii Tomczykowski Tomczykowska, rozporządzenie MiCA już obowiązuje, a Polska musi jedynie dostosować polskie przepisy w niewielkim zakresie:
+— wyznaczyć właściwy organ nadzoru w zakresie kryptoaktywów (docelowo ma to być KNF) oraz
+— określić wewnętrzne wymogi regulacyjne i nadzorcze, a także stosowne zabezpieczenie interesów konsumentów.
+Dodajmy, że na wdrożenie tych wymogów narzuconych przez unijne rozporządzenie MiCA mieliśmy dwa lata (rozporządzenie unijne weszło w życie 30 grudnia 2024 r.). Czas na dostosowanie naszych krajowych przepisów kończy się 30 czerwca 2026 r.
+Dlaczego Karol Nawrocki zawetował pierwszą ustawę o kryptoaktywach?
+Prezydent Karol Nawrocki 1 grudnia zawetował pierwszą ustawę o kryptoaktywach z kilku powodów. Przede wszystkim prezydent uznał, że była to nadregulacja. Z taką oceną zasadniczo zgadzają się prawnicy, o czym informowaliśmy w artykule: Inwestujesz w kryptowaluty? Prawnicy ocenili pomysły polityków
+Prezydent zwrócił też uwagę, że rozwiązania dotyczące blokowania domen są niejasne i stwarzają pole do nadużyć. Nie zgodził się też na to, żeby KNF mógł wyłączać strony internetowe podmiotów działających w branży kryptoaktywów.
+Podkreślił również, że w większości krajów Unii Europejskiej stosuje się proste listy ostrzeżeń, które zabezpieczają interes konsumentów, nie wymagając blokowania całych serwisów i odcinania użytkowników od ich kont.
+Ponadto, opłaty za nadzór KNF są zbyt wysokie.
+Autor: Łukasz Zalewski, dziennikarz działu Prawo Business Insider Polska
+
+--------------------------------------------------------------------------------
+
+Podatek od spadków i darowizn. Karol Nawrocki dał zielone światło
+https://businessinsider.com.pl/prawo/karol-nawrocki-oglasza-zmiany-nowe-zasady-spadkow-i-darowizn-od-2026-r/p1l3js4
+Podatek od spadków i darowizn. Karol Nawrocki dał zielone światło
+Karol Nawrocki podpisał nowelizację ustawy o podatku od spadków i darowizn — poinformowała kancelaria prezydenta. Zmiany Co to oznacza dla podatników?
+- Dotychczas obowiązek podatkowy pojawiał się z chwilą nabycia spadku, czyli już w momencie śmierci spadkodawcy
+- Teraz zmienia się moment powstania obowiązku podatkowego
+- Po zmianach podatnik będzie mógł złożyć wniosek o przywrócenie terminu
+- Więcej informacji o biznesie znajdziesz na stronie Businessinsider.com.pl
+Prezydent Karol Nawrocki podpisał nowelizację ustawy o podatku od spadków i darowizn — poinformowała w czwartek kancelaria prezydenta. Nowe przepisy zmieniają kluczowy moment powstania obowiązku podatkowego przy dziedziczeniu majątku.
+Podatek od spadków. Karol Nawrocki dał zielone światło
+Dalsza część artykułu pod materiałem wideo:
+Dotychczas obowiązek podatkowy pojawiał się z chwilą nabycia spadku, czyli już w momencie śmierci spadkodawcy. W praktyce oznaczało to, że spadkobierca, nawet jeśli nie był świadomy dziedziczenia, automatycznie podlegał opodatkowaniu. Brak złożenia oświadczenia o przyjęciu lub odrzuceniu spadku w ciągu 6 miesięcy skutkował jego przyjęciem i koniecznością rozliczenia podatku.
+Nowelizacja przesuwa ten moment. Zgodnie z nowymi przepisami, obowiązek podatkowy pojawi się dopiero w chwili uzyskania dokumentów potwierdzających przyjęcie spadku. Chodzi o uprawomocnienie się orzeczenia sądu o stwierdzeniu nabycia spadku, zarejestrowanie aktu poświadczenia dziedziczenia lub wydanie europejskiego poświadczenia spadkowego.
+Przywrócenie terminu zgłoszenia spadku
+Nowe regulacje wprowadzają także możliwość przywrócenia terminu do zgłoszenia nabycia własności rzeczy lub praw majątkowych. Dotychczas niedotrzymanie tego terminu skutkowało utratą zwolnienia podatkowego, co dotykało zwłaszcza członków najbliższej rodziny, którzy nie zgłosili nabycia majątku w określonym czasie.
+Po zmianach podatnik będzie mógł złożyć wniosek o przywrócenie terminu, jeśli uprawdopodobni, że niedotrzymanie terminu nie nastąpiło z jego winy. Podobne rozwiązanie obejmuje przypadki nabycia przedsiębiorstwa lub udziału w nim w drodze dziedziczenia lub zapisu windykacyjnego.
+Możliwość wzruszenia decyzji organu podatkowego
+W ustawie znalazły się również przepisy pozwalające na wzruszenie decyzji organu podatkowego, jeśli ten odmówi przywrócenia terminu. Jeżeli sąd administracyjny przywróci termin na skutek skargi podatnika, możliwe będzie uchylenie decyzji odmownej i umorzenie postępowania podatkowego.
+Nowelizacja ustawy o podatku od spadków i darowizn wejdzie w życie po 14 dniach od jej ogłoszenia w Dzienniku Ustaw.
+
+--------------------------------------------------------------------------------
+
+Walka z nielegalnymi treściami w internecie. Nowe prawo w rękach prezydenta
+https://businessinsider.com.pl/prawo/blokowanie-tresci-w-internecie-pod-pelna-kontrola-sadu-prezydent-zdecyduje-o-wejsciu/y53xfnw
+Walka z nielegalnymi treściami w internecie. Nowe prawo w rękach prezydenta
+Decyzje o blokowaniu nielegalnych treści w internecie nie będą miały rygoru natychmiastowej wykonalności. Tak zdecydował Sejm, popierając poprawki Senatu do ustawy wdrażającej unijny akt o usługach cyfrowych. By nowe prawo weszło w życie, musi je jeszcze podpisać prezydent Karol Nawrocki.
+- Dzięki tej ustawie będzie można skutecznie walczyć z treściami wypełniającymi znamiona przestępstw
+- Użytkownicy internetu zyskają narzędzia do odwołań od decyzji platform i odpowiednich urzędów
+- Sprawy jednak będą musiały być załawiane szybko
 - Więcej informacji o biznesie znajdziesz na Businessinsider.com.pl
-W środę odbyło się posiedzenie połączonych sejmowych komisji: gospodarki i rozwoju oraz sprawiedliwości i praw człowieka w sprawie tzw. ustawy frankowej. To pierwsze merytoryczne posiedzenie po pierwszym czytaniu, które odbyło się dwa miesiące temu, 16 października. Posiedzenie trwało blisko trzy godziny i pokazało, że wokół ustawy toczy się gorący spór. Przyznał to wiceminister sprawiedliwości Arkadiusz Myrcha, który jednak liczy, że wiosną proces legislacyjny się zakończy, a ustawa przyjmie optymalny kształt.
-Burzliwe posiedzenie komisji sejmowej w sprawie ustawy frankowej
-Rafał Komarewicz, poseł Polski 2050, przewodniczący sejmowej Komisji Gospodarki i Rozwoju, rozpoczynając posiedzenie, podkreślił, że sprawa jest bardzo ważna, bo dotyczy kilkuset tysięcy kredytobiorców. Zaznaczył, że trzeba wszystko dobrze wyważyć, jeśli chodzi o szybkość postępowań przed sądami, ale pamiętając, że kredytobiorcy, którzy wzięli kredyt we frankach i nie zostali zbyt uczciwie potraktowani przez banki, muszą mieć pełne prawa do dochodzenia swoich roszczeń.
-Arkadiusz Myrcha, wiceminister sprawiedliwości, który prezentował projekt, podkreślił, że jego celem jest rozładowanie zatorów w sądach, zwłaszcza apelacyjnych, ale bez wpływania na kształt wyroku.
-— Mówimy o liczbie spraw, która jest około pięć, siedem razy większa niż liczba spraw rozwodowych. W sądach apelacyjnych sprawy frankowe bardzo często stanowią ponad połowę całego wolumenu postępowań w wydziałach cywilnych. Dlatego wręcz miażdżąca większość przepisów, o których dziś mówimy, dotyczy wyłącznie rozwiązań procesowych i proceduralnych. Nie jest naszym zadaniem wchodzenie w rolę sądu ani opowiadanie się po którejkolwiek ze stron sporu. Naszym celem jest usprawnienie tych elementów procesu, które dziś stanowią największą barierę — podkreślał Myrcha.
-Zgłoszone poprawki i gorąca dyskusja podczas posiedzenia wskazuje jednak na coś innego. Pierwsze cztery poprawki zgłosił Dominik Jaśkowiec, poseł Koalicji Obywatelskiej. Wyjaśniamy, co proponuje rząd, co posłowie, a jakie są oczekiwania stron.
-Czytaj też: Ten wyrok TSUE wpłynie na polskich sędziów. Czy zmusi banki do zmiany strategii?
-Kluczowa poprawka numer trzy
-Pierwsza poprawka jest czysto redakcyjna. Chodzi o doprecyzowanie przepisów o automatycznym zawieszeniu rat na czas postępowania.
-Druga poprawka mówi, że jeżeli okoliczności sprawy nie stoją temu na przeszkodzie, uzasadnienie wyroku sądu pierwszej instancji może ograniczać się do powołania się na pozew, odpowiedź na pozew lub dalsze pisma przygotowawcze, doręczone stronie przeciwnej przed zamknięciem rozprawy oraz powołania przepisów prawa, na których sąd się oparł. Ma to pozwolić sądom szybciej przygotować uzasadnienie, co nie budzi dużych wątpliwości.
-Czwarta poprawka odnosi się do spraw w Sądzie Najwyższym. Chodzi o to, aby SN mógł, ale nie był zobligowany do odmówienia przyjęcia skargi kasacyjnej, o ile nie występuje w niej istotne zagadnienie prawne.
-Kluczowa jest jednak poprawka nr 3, dająca możliwość dochodzenia odsetek od roszczeń, mimo zgłoszenia potrącenia w specjalnym trybie przewidzianym w projekcie ustawy.
-Zobacz: Banki nie mogą już zastraszać konsumentów. TSUE zmienia zasady
-Ma ona naprawić art. 5 projektu. Zgodnie z nim zarzut potrącenia może zostać podniesiony aż do zamknięcia rozprawy przed sądem drugiej instancji. Takie prawo zyskają też strony, które w toczących się sprawach nie złożyły zarzutu w terminie. Obecnie co do zasady są na to dwa tygodnie od dnia, gdy wierzytelność stała się wymagalna, czyli minął termin wyznaczony na jej zapłacenie. Gdy bank zgłosi dzięki nowym przepisom potrącenie swojej wierzytelności później, a sąd je uzna, to frankowicz może zostać pozbawiony odsetek za czas od wezwania kredytodawcy do rozliczenia się z nieważnej umowy. Bywa, że chodzi o miliony złotych, choć częściej tysiące.
-Zgłoszona poprawka dodaje art. 5a ma temu przeciwdziałać. W skrócie mówi ona, że jeśli konsument spłacił kredyt, to może żądać zwrotu wpłaconej kwoty z powodu stwierdzenie nieważności umowy wraz z odsetkami liczonymi od dnia, w którym jego roszczenie stało się wymagalne.
-Rafał Komarewicz uważa, że zgłoszone poprawki, w tym ta nr 3, idą w dobrym kierunku. — Sprawa potrącenia budzi najwięcej wątpliwości i mam nadzieję, że tą poprawką te wszystkie wątpliwości zostaną rozwiane — podkreślił Rafał Komarewicz.
-Arkadiusz Szcześniak, prezes Stowarzyszenia Stop Bankowemu Bezprawiu, zaapelował o bardzo dokładną analizę artykułu piątego. — W naszej ocenie idziemy tutaj zdecydowanie za daleko — podkreślił. Dlaczego, wyjaśnili prawnicy.
-Poprawka numer trzy rozwiązuje tylko jeden problem
-Radca prawny Dominik Gluza, reprezentujący konsumentów, który jako pierwszy uzyskał prawomocne orzeczenie w sprawie frankowej, powiedział podczas posiedzenia komisji, że poprawka numer trzy rozwiązuje tylko jeden problem, problem odsetek. — Poprawka ta nie rozwiązuje problemu przewlekłości, bo zarzut potrącenia będzie wykorzystywany do przedłużenia postępowań, o ile ustawa wejdzie w życie.
-— Obecnie w sądach apelacyjnych na termin rozprawy czeka się od półtora roku do nawet dwóch i pół roku. Jeżeli więc w dniu rozprawy sędzia zostanie skonfrontowany z nowym zarzutem, jedynym możliwym rozwiązaniem będzie jej odroczenie. To oznacza dalsze, wielomiesięczne wydłużenie postępowania — mówił mec. Gluza. Jego zdaniem pełnomocnicy banków będą formułować zarzut potrącenia niejednoznacznie, co ułatwi przedłużanie postępowania.
-Przedstawiciele frankowiczów protestują
-Adwokat Karolina Pilarska, która od dziewięciu lat reprezentuje frankowiczów i prowadzi blisko 3,5 tysiąca spraw, uważa, że w tym momencie ustawa frankowa nie jest w ogóle potrzebna.
-— Jeżeli ma to być ustawa dla frankowiczów, to musimy wsłuchać się w głos tego środowiska. A to środowisko ma wobec tej ustawy ogromne obawy. Co wydarzyło się w praktyce po tym, jak projekt ujrzał światło dzienne? Większość banków, które dotychczas rezygnowały z apelacji, bo bankom nie przysługuje ani wynagrodzenie za korzystanie z kapitału, ani waloryzacja, ani jakiekolwiek inne świadczenie poza zwrotem czystego kapitału — nagle zaczęła składać apelacje. Skutek jest taki, że wydłużyły się postępowania w sprawach, które dotychczas kończyły się w pierwszej instancji, ponieważ bank rezygnował z apelacji. Obecnie banki czekają na wejście w życie ustawy i na możliwość podniesienia zarzutu potrącenia dopiero w drugiej instancji, aby "skasować" odsetki. Mówimy tu o osobach, które czekają na wyrok pięć–sześć lat. To nie są bagatelne kwoty — mówiła mec. Pilawska.
-I podkreśliła, że to nie frankowicze zapchali wymiar sprawiedliwości, lecz fakt, że wymiar sprawiedliwości nie jest przygotowany do sprawnego rozpoznawania spraw obywateli. — Polacy mają prawo do uczciwego i rzetelnego procesu — dodała.
-Związek Banków Polskich broni teoria salda i krytykuje wysokie odsetki
-Na projektowany art. 5 i zgłoszoną poprawkę inaczej patrzy Katarzyna Urbańska, dyrektor Zespołu Prawno-Legislacyjnego Związek Banków Polskich.
-— Jeżeli usuniemy z projektu instytucję potrącenia, to istocie projekt traci sens. Bez potrącenia nie da się skutecznie rozliczyć umowy w jednym postępowaniu. Można powiedzieć, że projekt traci swoje "serce" i podstawową funkcję. Zamiast przyspieszenia postępowań otrzymamy jeszcze większy chaos procesowy, który nie pozwoli na usprawnienie, uproszczenia i zakończenia spraw frankowych — podkreślała Urbańska. I dodała, że odsetki "po prostu klientom w takiej kwocie się nie należą".
-Ponadto Katarzyna Urbańska wskazała, że aby przyspieszyć postępowania, najlepszym rozwiązaniem byłoby przyjęcie jednoznacznej podstawy prawnej sankcjonującej teorię salda.
-Rafał Komarewicz, ale także jego partyjny kolega poseł Paweł Śliz, przewodniczący sejmowej Komisji sprawiedliwości i praw człowieka, chcieli wiedzieć, dlaczego banki nie zgłaszają w terminie zarzutu potrącenia, dlaczego nie proponują ugód, zamiast spierać się w sądach. Nie otrzymali jednak jednoznacznej i klarownej odpowiedzi od reprezentantów ZBP.
-Odpowiedzi udzielił adwokat Jakub Bojarczuk z kancelarii KKG Legal, ekspert Związku Banków Polskich. Wskazał, że obecnie obowiązuje art. 203 [1] Kodeksu postępowania cywilnego, który mówi, że podstawą potrącenia może być tylko wierzytelność z tego samego stosunku prawnego, co wierzytelność dochodzona przez powoda. — Jeśli w 98 proc. przypadków dochodzimy do konkluzji, że nie istnieje umowa kredytu, to nie istnieje również ten sam stosunek prawny. Gdyby więc bank podniósł zarzut potrącenia w sprawie z powództwa przedsiębiorcy, to sąd by go nie uwzględnił, zasądzając całą kwotę na rzecz konsumenta. Bank pozbawiłby się całości roszczenia, które mu przysługuje — wyjaśniał mec. Bojarczuk. I dodał, skoro projektowana ustawa wyłączy art. 203 [1], to umożliwi dokonanie potrącenia w jednym postępowaniu.
-Mec. Bojarczuk podkreślił też, że banki oferują ugody. Zawarto ich już 167 tys.
-Odpowiedzi udzielił też radca prawny Wojciech Bochenek, broniący frankowiczów. — Bank potrącając swoje roszczenie, przyznałby rację, że konsument ma rację, a umowa ma wady prawne. A tylko wtedy mógłby się prosto rozliczyć. Banki jednak cały czas przyjmują w pismach procesowych strategię, że umowy są ważne — powiedział Wojciech Bochenek.
-Ministerstwo Sprawiedliwości otwarte na zmiany
-Arkadiusz Myrcha, wiceminister sprawiedliwości, na koniec posiedzenia, zaznaczył, że najistotniejsze jest, aby projekt miał taki kształt, który w sposób optymalny zadowoli wszystkie strony. — Cieszę się z tych wszystkich argumentów, które tu padły. Projekt był już modyfikowany, ale zakładam, że będzie podlegał kolejnym modyfikacjom. Rozładowanie sądów to jest nasz priorytet. Musimy się z problemem uporać jak najszybciej, ale nie krzywdząc uczestników. Będziemy nad tym projektem pracować, mam nadzieję, że w styczniu, tak aby na przełomie zimy i wiosny można było zakończyć cały proces legislacyjny. To byłoby bardzo wskazane — podkreślił wiceminister Myrcha.
+Sejm zakończył pracę nad nowelizacją ustawy o świadczeniu usług drogą elektroniczną (druk sejmowy nr 1757). Pod tą trudną nazwą kryją się przepisy, która wdrażają do polskiego prawa unijny Akt o usługach cyfrowych (DSA), który ma skuteczniej chronić użytkowników internetu i wzmacniać ich prawa wobec decyzji podejmowanych przez platformy internetowe. Teraz ustawa trafi do podpisu prezydenta.
+Pozostała część artykułu pod materiałem wideo
+Decyzja będzie kontrolował sąd
+Ustawa przewiduje, że osoby niesłusznie zablokowane przez platformy internetowe będą mogły odwołać się od decyzji o blokadzie do prezesa Urzędu Komunikacji Elektronicznej (albo Prezesa Krajowej Rady Radiofonii i Telewizji w przypadku platform wideo). Sejm przyjął poprawki Senatu, które zniosły rygor natychmiastowej wykonalności decyzji. To oznacza, że decyzje o blokowaniu treści będą zawsze podlegać pełnej kontroli sądowej. Treści będą blokowane dopiero po upływie terminu na złożenie sprzeciwu do sądu.
+— Przyjmując poprawki Senatu, wzmacniamy gwarancje praw obywateli. Zniesienie rygoru natychmiastowej wykonalności oznacza, że decyzje o blokowaniu treści będą zawsze podlegać pełnej kontroli sądowej. Dzięki tej ustawie będziemy mogli skutecznie walczyć z treściami wypełniającymi znamiona przestępstw, a użytkownicy uzyskają realną ochronę przed błędnymi decyzjami platform, także tymi podejmowanymi automatycznie. To dobre prawo, które sprawi, że internet będzie bezpieczniejszym miejscem, a wolność słowa będzie gwarantowana — powiedział wiceminister cyfryzacji Dariusz Standerski.
+Poprawki Senatu — najważniejsze zmiany
+Przyjęte poprawki:
+- zwiększają kontrolę sądową nad procedurą blokowania treści poprzez ograniczenie automatycznego nadawania rygoru natychmiastowej wykonalności decyzjom, wobec których wniesiono sprzeciw. Wniesienie sprzeciwu co do zasady wstrzymuje wykonanie decyzji — ma to zmniejszyć ryzyko nieodwracalnych skutków dla legalnych treści.
+- rozszerzają katalog podmiotów, które będą mogły wystąpić z wnioskiem o wydanie nakazu podjęcia działań przeciwko nielegalnym treściom. Z instrumentów przewidzianych w ustawie będą mogły korzystać nie tylko osoby, które bezpośrednio korzystają z usługi, ale również właściciele praw autorskich i praw pokrewnych, nawet jeśli nie są użytkownikami danej platformy.
+- przesądzają, że wniosek o wydanie nakazu podjęcia działań przeciwko nielegalnym treściom, a tym samym wydana później decyzja, nie będą mogły dotyczyć treści pochwalających popełnienie czynów zabronionych. Usunięcie tej przesłanki ma ograniczyć ryzyko zbyt szerokiej interpretacji przepisów.
+- doprecyzowują, że nakaz odblokowania treści dotyczy sytuacji, w której dostawca podjął błędną decyzję — często przy wykorzystaniu zautomatyzowanych narzędzi moderacyjnych. Nie dotyczy to sytuacji, gdy zastosowano zwykłe warunki korzystania z usług.
+- uszczegóławiają przepisy dotyczące rejestru domen internetowych wykorzystywanych do rozpowszechniania nielegalnych treści.
+- zapewniają możliwość doręczania pism dostawcom usług pośrednich na adres doręczeń elektronicznych.
+Kluczowe rozwiązania ustawy
+Procedura wydawania nakazów blokowania treści ma dotyczyć ściśle określonych przestępstw. Obejmie m.in.:
+- handel ludźmi,
+- wykorzystywanie seksualne małoletnich,
+- oszustwa internetowe,
+- kradzież tożsamości,
+- zlecenie zabójstwa
+- czy namawianie do samobójstwa.
+Długość postępowania administracyjne dotyczące blokowania treści, będzie zależało od tego, kto składa wniosek. Postępowanie będzie trwało:
+- 2 dni — gdy wniosek składa policja lub prokurator,
+- 7 dni — gdy wniosek składa użytkownik,
+- 21 dni — w sprawach szczególnie skomplikowanych.
+Skargi można będzie kierować do prezesa Urzędu Komunikacji Elektronicznej, a teraz także do Krajowej Rady Radiofonii i Telewizji — w zakresie treści publikowanych na platformach wideo oraz Urzędu Ochrony Konkurencji i Konsumentów (UOKiK) — w zakresie platform e-commerce. Autor treści będzie stroną postępowania z pełnym prawem do wyjaśnień i odwołania.
+Nowe przepisy wzmocnią też ochronę użytkowników. Zyskają oni możliwość odwołania się od decyzji platform o usunięciu ich materiałów, a także prawo do składania skarg do właściwych instytucji, jeśli uznają, że platforma naruszyła ich prawa. Wprowadzony zostanie tryb przywracania treści, które zostały usunięte błędnie lub bez wystarczających podstaw.
+
+--------------------------------------------------------------------------------
+
+Budować będzie łatwiej. Karol Nawrocki podpisał ważną nowelizację ustawy
+https://businessinsider.com.pl/prawo/wazne-zmiany-zasad-w-prawie-budowlanym-prezydent-karol-nawrocki-podjal-decyzje/hvlsyqg
+Budować będzie łatwiej. Karol Nawrocki podpisał ważną nowelizację ustawy
+Prezydent Karol Nawrocki podpisał nowelizację Prawa budowlanego, która znacząco rozszerza katalog inwestycji niewymagających uzyskania pozwolenia na budowę. O decyzji głowy państwa poinformowała w czwartek Kancelaria Prezydenta. Zmiany przewidują, że w przypadku wielu obiektów wystarczające będzie jedynie zgłoszenie projektu, co ma uprościć procedury i skrócić czas realizacji inwestycji.
+Nowelizacja ustawy o zmianie ustawy — Prawo budowlane oraz niektórych innych ustaw stanowi element rządowego pakietu deregulacyjnego. Jej autorzy wskazują, że dotychczasowe przepisy nadmiernie komplikowały proces inwestycyjno-budowlany, co spowalniało rozwój infrastruktury i generowało dodatkowe koszty. Rozszerzenie listy obiektów zwolnionych z obowiązku uzyskania pozwolenia ma temu przeciwdziałać.
+Czytaj też: Klimat konsumpcyjny w Niemczech na dnie. Przygotowania do "czarnej godziny"
+Dalsza część tekstu pod materiałem wideo
+Nowe obiekty na liście uproszczeń
+Wśród inwestycji, które będzie można realizować po zgłoszeniu, znalazły się m.in. wolnostojące budynki użyteczności publicznej o maksymalnie dwóch kondygnacjach i powierzchni użytkowej do 200 mkw. Warunkiem jest, by ich obszar oddziaływania mieścił się w całości na działce lub działkach, na których zostały zaprojektowane.
+Choć pozwolenie nie będzie wymagane, inwestorzy nadal będą musieli dopełnić szeregu formalności. Zgłoszenie budowy takiego obiektu będzie wiązało się z przygotowaniem projektu zagospodarowania terenu oraz projektu architektoniczno-budowlanego. Konieczne będzie także ustanowienie kierownika budowy i prowadzenie dziennika budowy, a po zakończeniu prac — zawiadomienie odpowiedniego organu administracyjnego. Budowa zostanie objęta okresowymi kontrolami, a właściciel będzie zobowiązany do prowadzenia książki obiektu budowlanego.
+Czytaj też: Pożyczka dla Ukrainy zamiast rosyjskich aktywów. Unia wybrała ostrożność
+Zgodnie z uzasadnieniem nowych przepisów, uproszczenia mają szczególne znaczenie dla inwestycji związanych z realizacją zadań publicznych i społecznych. Chodzi m.in. o budynki przeznaczone na cele kultu religijnego, edukacji, działalności leczniczej, społecznej i socjalnej, a także obiekty służące obsłudze pocztowej. Dzięki zmianom ich realizacja ma być szybsza i mniej obciążona biurokracją.
+Schrony, kontenery i infrastruktura rolnicza
+Nowelizacja rozszerza również katalog obiektów, które można budować w trybie zgłoszenia, o wolnostojące przydomowe schrony o powierzchni użytkowej do 35 mkw., przeznaczone do ochrony mieszkańców domów jednorodzinnych. W ten sam sposób możliwa będzie budowa wolno stojących kontenerów telekomunikacyjnych o powierzchni zabudowy do 35 mkw.
+Ułatwienia obejmą także rolników. Bez pozwolenia na budowę, a jedynie po zgłoszeniu, będzie można realizować bezodpływowe zbiorniki na wody opadowe lub roztopowe o pojemności do 30 metrów sześciennych, pod warunkiem że są one związane z produkcją rolną.
+Energetyka z nowymi zasadami
+Zmiany dotyczą również odnawialnych źródeł energii. Zakres robót niewymagających ani pozwolenia, ani zgłoszenia — który dotychczas obejmował m.in. montaż pomp ciepła, wolnostojących kolektorów słonecznych i instalacji fotowoltaicznych — został poszerzony o instalowanie magazynów energii elektrycznej o pojemności nominalnej do 20 kWh.
+
+--------------------------------------------------------------------------------
+
+Frankowiczu, uważaj na rozliczenie. Twoje odsetki mogą być zagrożone [OPINIA]
+https://businessinsider.com.pl/prawo/odsetki-frankowiczow-moga-byc-zagrozone-czy-tsue-przyjdzie-z-odsiecza/jx6f9p4
+Tysiące Polaków walczących z bankami wciąż nie mogą być pewni, jak ostatecznie zostaną rozliczone ich unieważnione umowy. Niektóre stosowane obecnie przez sądy metody mogą sprawić, że portfel przeciętnego kredytobiorcy będzie znacznie chudszy, niż zakładano. Choć sądy często stają po stronie klientów, sposób wyliczania należnych pieniędzy budzi ogromne emocje i kontrowersje prawne. W tle toczy się ważna bitwa przed Trybunałem Sprawiedliwości UE, która może na nowo zdefiniować zasady gry.
+Stosowanie teorii salda w rozliczeniach stron nieważnej umowy kredytowej oraz ograniczanie konsumentom prawa do odsetek nie mają żadnych podstaw prawnych. Sądy, które stosują teorię salda lub na jakiejkolwiek innej podstawie ograniczają konsumentom prawo do odsetek, naruszają prawo UE — pisze w opinii dla Business Insidera radca prawny Radosław Górski, reprezentujący konsumentów w sporach prawnych z bankami.
+Zobacz także: Frankowicze dostają wezwania. Być może będą musieli zapłacić bankom wysokie odsetki
+1. Co dzieje się w polskim orzecznictwie w zakresie rozliczenia nieważnej umowy kredytowej
+Czytaj także w BUSINESS INSIDER
+W polskich sprawach o ustalenie nieważności umowy kredytu (w szczególności w sprawach "frankowych") trwa spór, który z punktu widzenia zwykłego kredytobiorcy można streścić w następujący sposób: czy po stwierdzeniu nieważności umowy konsument ma prawo uzyskać zwrot wszystkich zapłaconych bankowi kwot wraz z odsetkami liczonymi od dnia wezwania banku do zapłaty (teoria dwóch kondykcji), czy też jakiekolwiek pieniądze należą mu się dopiero po "rozliczeniu" wypłaconego przez bank kapitału (teoria salda).
+Teoria dwóch kondykcji oznacza, że po stwierdzeniu nieważności umowy każda strona ma swoje odrębne roszczenie o zwrot tego, co świadczyła — niezależnie od tego, że jednocześnie może być dłużnikiem drugiej strony. Konsument może żądać zwrotu wszystkich wpłat, a bank — jeżeli chce — może żądać zwrotu wypłaconego kapitału.
+Teoria salda z perspektywy konsumenta oznacza natomiast, że świadczenia konsumenta stają się "nienależne" dopiero wtedy, gdy łączna suma wpłat przekroczy kapitał. I co najważniejsze: teoria salda zakłada automatyczną kompensację z urzędu, bez oświadczenia o potrąceniu.
+Nietrudno zauważyć, że na poziomie praktyki orzeczniczej w Polsce uformowała się duża grupa wyroków, które stosują tzw. teorię salda lub ograniczają konsumentom prawo do odsetek (np. zasądzając je dopiero od prawomocności wyroku i tylko od "nadpłaty" ponad kapitał). Takie negatywne dla konsumentów praktyki sądów są stosowane w całym kraju — i pojawiają się także w orzecznictwie Sądu Najwyższego.
+Problem polega na tym, że stosowanie teorii salda i pozbawianie konsumentów prawa do odsetek nie znajdują podstaw prawnych. Takie praktyki są z pewnością na rękę bankom, chroniąc je przed ekonomicznymi skutkami sankcji za stosowanie nieuczciwych postanowień umownych.
+2. Jestem pełnomocnikiem konsumentów w sprawie C-510/25. O co pyta polski sąd?
+Jestem pełnomocnikiem konsumentów w sprawie prejudycjalnej C-510/25 (tzw. Adazik), skierowanej do TSUE przez Sąd Okręgowy w Warszawie. Sprawa dotyczy skutków stwierdzenia nieważności umowy kredytowej zawartej z konsumentami, zawierającej nieuczciwe postanowienia umowne.
+O co warszawski sąd pyta TSUE (w uproszczeniu)?
+Czy art. 6 ust. 1 w związku z art. 7 ust. 1 dyrektywy 93/13/EWG sprzeciwiają się rozliczeniu w modelu "teorii salda", w którym sąd z urzędu kompensuje roszczenie konsumenta o zwrot świadczeń z roszczeniem banku o zwrot kapitału, a w rezultacie konsument "nabywa" roszczenie dopiero po przekroczeniu wypłaconego kapitału?
+Czy te same przepisy sprzeciwiają się ograniczaniu prawa konsumenta do odsetek za opóźnienie od wszystkich świadczeń spełnionych na rzecz banku w wykonaniu nieważnej umowy kredytowej?
+Sąd w Warszawie, który skierował do TSUE pytania prejudycjalne, ma poważne wątpliwości co do zgodności z prawem stosowania teorii salda oraz co do pozbawiania konsumentów prawa do odsetek, czemu wyraz dał w uzasadnieniu postanowienia o skierowaniu sprawy do Trybunału.
+Odpowiedź TSUE na tak postawione pytania ostatecznie wyjaśni, czy znaczna grupa sędziów w Polsce orzeka sprzecznie z prawem Unii Europejskiej.
+W mojej ocenie argumenty przemawiają za tym, że pozbawianie konsumentów odsetek i stosowanie teorii salda (rozumianej jako automatyczna kompensacja z urzędu) narusza prawo UE. Podzielam więc wątpliwości Sędziego Tomasza Niewiadomskiego, który skierował do Trybunału pytania prejudycjalne.
+3. Aktualny etap postępowania przed TSUE: pisma złożone, czekamy na dalsze decyzje proceduralne
+W opisanej wyżej sprawie prejudycjalnej strony przedstawiły już stanowiska na piśmie (ja również złożyłem do TSUE pisemne uwagi).
+Teraz — jak w każdej sprawie prejudycjalnej — przed Trybunałem pozostaje decyzja, czy zostanie wyznaczona rozprawa (nie zawsze jest wyznaczana), a następnie kiedy zapadnie rozstrzygnięcie.
+4. Dlaczego teoria salda jest nie do obrony ze względu na jej sprzeczność z prawem
+W mojej ocenie teoria salda to konstrukcja, która osłabia ochronę konsumenta i jest sprzeczna z celami dyrektywy 93/13: zamiast usuwać skutki nieuczciwych warunków i przywracać równowagę — chroni interes nieuczciwego przedsiębiorcy i premiuje banki, które na takim rozliczeniu wychodzą bardzo korzystnie.
+Najważniejsze, praktyczne skutki teorii salda:
+- Konsument z reguły traci samodzielne roszczenie o zwrot większości wpłat i traci przy tym podstawę do naliczania odsetek za okres od wezwania, dopóki sam nie "nadpłaci" kapitału
+- Rozliczenie na podstawie teorii salda jest szczególnie niekorzystne dla tych konsumentów, którzy spłacali swoje kredyty w walutach obcych. Tracą oni bowiem możliwość odzyskania od banku wpłaconych rat w CHF, które mogliby następnie sprzedać po aktualnym kursie — często nawet znacząco wyższym niż kurs obowiązujący w dniu spłaty poszczególnych rat.
+- Dla zobrazowania, jak dalece niekorzystne dla konsumenta jest stosowanie teorii salda, można posłużyć się następującym przykładem. Jeżeli konsument przekazał bankowi łącznie 100 000 CHF, to w ramach teorii dwóch kondykcji odzyskiwałby całą tę kwotę w walucie obcej, tj. 100 000 CHF (co przy aktualnym kursie ok. 4,50 zł/CHF odpowiada kwocie ok. 450 000 zł), powiększoną ewentualnie o należne odsetki. Z kolei teoria salda zaliczyłaby wpłacone przez konsumenta 100.000 CHF na poczet kapitału kredytu według kursu CHF z dnia dokonania poszczególnych wpłat. Przyjmując dla uproszczenia, że średni kurs CHF w czasie spłaty kredytu wynosił 2,50–3,00 zł, świadczenie konsumenta zostaje rozliczone według historycznego kursu nabycia waluty, a jego wartość wyniosłaby jedynie około 250 000–300 000 z (a więc 150 000 — 200 000 zł mniej)
+- Bank nie ponosi negatywnych konsekwencji przewlekania postępowań, bo dopóki kapitał kredytu nie jest spłacony, bank nic nie oddaje konsumentowi i nie płaci mu odsetek.
+- Bank jest faktycznie premiowany w sporach o przedawnienie, bo automatyczne "zbilansowanie" może mu pozwalać odzyskać kapitał nawet przy wieloletniej bierności.
+- Ryzyko kosztów procesu przesuwa się na konsumenta: gdy konsument pozywa o całość swoich świadczeń, przy zastosowaniu teorii salda może zostać uznany za przegrywającego spór i obciążony kosztami.
+To jest — w mojej ocenie — lista najważniejszych negatywnych dla konsumentów skutków, których dyrektywa 93/13 właśnie ma nie dopuszczać.
+5. Dla równowagi: teoria salda bywa przedstawiana jako ochrona przed pozwami banków o kapitał. Tyle że nie trzeba stosować działań sprzecznych z prawem UE, aby chronić konsumenta przed pozwem banku.
+Zwolennicy teorii salda stoją na stanowisku, że teoria salda chroni konsumentów przed pozwami banków o zwrot kapitału, argumentując, że zasadę rozliczeń w oparciu o teorię salda rzekomo wprowadził Trybunał Sprawiedliwości UE w wyroku C-396/24.
+Koszt takiej "ochrony" konsumenta jest jednak bardzo wysoki — konsument uzyskuje bowiem znacznie mniejszą kwotę (i mam tutaj na myśli nie tylko utracone odsetki, ale również utracone prawo do zwrotu wszystkich wpłat w walucie obcej z korzyściami na różnicy kursowej).
+Przede wszystkim jednak taka ochrona konsumenta przed nieuzasadnionym wzbogaceniem banku jest już wbudowana w standard unijny — bez potrzeby automatycznej kompensacji z urzędu i konieczności stosowania sprzecznej z prawem teorii salda.
+W moich uwagach w sprawie prejudycjalnej wskazywałem, że wyrok TSUE z 19 czerwca 2025 r. w sprawie C-396/24 stał się w Polsce źródłem rozbieżnych (i — moim zdaniem — błędnych) interpretacji. Część sądów i część rynku bankowego uznała, że TSUE we wskazanym wyroku zakwestionował zasadę dwóch kondykcji i dopuścił saldo.
+Moje stanowisko dotyczące tego wyroku jest inne: TSUE we wskazanym wyroku nie wprowadził teorii salda i nie nakazał kompensowania roszczeń z urzędu.
+Trybunał powiedział jedynie, że jeśli to bank dochodzi zwrotu kapitału, odmawiając konsumentowi zwrotu jego należności, sąd krajowy ma uwzględnić kwoty już spłacone przez konsumenta tak, żeby bank nie odzyskał więcej, niż rzeczywiście świadczył, i nie naraził w ten sposób konsumenta na dodatkowe koszty oraz trudności z rozliczeniem. Takie rozliczenie może jednak następować w ramach instrumentów przewidzianych w prawie krajowym (np. po skutecznym zgłoszeniu potrącenia), a nie w drodze automatycznej kompensacji z urzędu.
+Ochrona konsumenta nie wymaga więc uciekania się do stosowania sprzecznej z prawem teorii salda. Wystarczy uczciwie zastosować to, co TSUE wskazał w C-396/24 — bez tworzenia w polskich wyrokach mechanizmu, który "przy okazji" obcina konsumentowi odsetki i ogranicza jego roszczenia.
+6. Odsetki od wezwania to warunek realnej ochrony konsumenta i hamulec dla przewlekania sporów
+W Polsce wciąż spotykam uzasadnienia, w których sąd mówi mniej więcej tak: "odsetki od wezwania to uprzywilejowanie konsumenta" i "bank nie powinien płacić, dopóki nie ma prawomocnego wyroku". Tego rodzaju orzeczenia również zostały przeze mnie przedstawione Trybunałowi jako przykład praktyki, która — w mojej ocenie — jest w sposób rażący sprzeczna z prawem UE.
+Jeżeli bank zatrzymuje pieniądze konsumenta mimo wezwania do zapłaty i odmawia ich zwrotu, to tym samym korzysta z cudzych środków, a odsetki są zwykłą konsekwencją opóźnienia w rozliczeniach.
+W moim stanowisku odwoływałem się do tego, że w wyroku z 15 czerwca 2023 r. w sprawie C-520/21 TSUE wskazał przecież, iż strony nieważnej umowy mogą — zgodnie z prawem krajowym —dochodzić m.in. ustawowych odsetek za opóźnienie liczonych od dnia wezwania do zapłaty.
+Odsetki mają także funkcję prewencyjną: mają zniechęcać przedsiębiorców do przewlekania postępowań i "przetrzymywania" pieniędzy konsumentów.
+Co więcej, TSUE we wcześniejszych orzeczeniach sprzeciwiał się wykładni, zgodnie z którą konsument miałby prawo do odsetek dopiero od chwili złożenia dodatkowego oświadczenia (np. o świadomości skutków nieważności), jeśli wcześniej już wezwał do zapłaty.
+Jeśli więc polski sąd mówi konsumentowi: "odsetki dopiero od prawomocności", to skutek będzie następujący: bank może procesować się latami, składać apelacje i skargi kasacyjne — i robić to praktycznie bez kosztu korzystania z pieniędzy konsumenta i bez żadnych konsekwencji. W mojej ocenie taka interpretacja przepisów zachęca do przewlekania sporów i jest sprzeczna z celami dyrektywy 93/13/EWG.
+Podsumowanie
+W sprawie C-510/25 polski sąd zadał pytania, które — moim zdaniem — są dziś kluczowe dla jednolitości orzecznictwa, efektywności ochrony konsumenta i odstraszającej funkcji dyrektywy 93/13, i dotyczą zarówno frankowiczów, jak i złotówkowiczów (którzy w ciągu kilku lat w wielu sprawach również będą wygrywać z bankami).
+Moja opinia jest jednoznaczna:
+- dyrektywa 93/13 sprzeciwia się teorii salda, jeśli ma ona działać jako automatyczna kompensacja z urzędu, pozbawiająca konsumenta roszczenia i odsetek;
+- prawo do odsetek od dnia wezwania do zapłaty jest elementem skutecznej ochrony;
+- każde rozwiązanie — sądowe albo legislacyjne — które będzie prowadziło do "salda" lub do ograniczania prawa do odsetek, będzie w sprzeczności z prawem UE, bo osłabi efekt odstraszający dyrektywy 93/13 i utrwali przewagę ekonomiczną przedsiębiorcy nad konsumentem.
+Dotyczy to również skutków potrącenia wzajemnych świadczeń: niektóre sądy w Polsce — moim zdaniem bezpodstawnie — pozbawiają bowiem konsumentów prawa do odsetek na tej podstawie, że banki zgłosiły zarzuty potrącenia, które rzekomo mają "kasować" prawo do odsetek od potrąconych kwot.
+Mam więc nadzieję, że ustawodawca przemyśli każdą swoją decyzję w tej kwestii i zdoła oprzeć się lobby bankowemu.
+Apeluję również do sędziów, którzy stosują już opisane wyżej praktyki, aby powstrzymali się ze stosowaniem teorii salda i pozbawianiem konsumentów odsetek do czasu wydania wyroku w sprawie C-510/25. Unikniemy w ten sposób konieczności uchylania lub zmiany sprzecznych z prawem wyroków.
+Autor: Radosław Górski, radca prawny, prowadzi własną kancelarię

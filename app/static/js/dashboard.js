@@ -150,6 +150,18 @@
   const multiSmsRefreshBtn = document.getElementById('multi-sms-refresh-btn');
   const multiSmsBatchCount = document.getElementById('multi-sms-batch-count');
 
+  // Listeners tab
+  const listenersList = document.getElementById('listeners-list');
+  const listenersEmpty = document.getElementById('listeners-empty');
+  const listenerTestForm = document.getElementById('listener-test-form');
+  const listenerTestQuery = document.getElementById('listener-test-query');
+  const listenerTestBtn = document.getElementById('listener-test-btn');
+  const listenerTestSpinner = listenerTestBtn?.querySelector('.spinner-border');
+  const listenerTestResultContainer = document.getElementById('listener-test-result-container');
+  const listenerTestStatus = document.getElementById('listener-test-status');
+  const listenerTestMeta = document.getElementById('listener-test-meta');
+  const listenerTestAnswer = document.getElementById('listener-test-answer');
+
   const dashboardTabs = document.getElementById('dashboard-tabs');
   const sidebarNavLinks = document.querySelectorAll('[data-dashboard-nav]');
   const quickScrollLinks = document.querySelectorAll('[data-dashboard-scroll]');
@@ -2170,6 +2182,248 @@
     }
   };
 
+  // ===================== LISTENERS TAB =====================
+
+  /**
+   * Ładuje konfigurację nasłuchiwaczy z API i renderuje karty w UI.
+   * Każda karta zawiera przełącznik do włączania/wyłączania listenera.
+   * @async
+   * @returns {Promise<void>}
+   */
+  const loadListeners = async () => {
+    if (!listenersList) return;
+
+    try {
+      const data = await fetchJSON('/api/listeners');
+      const listeners = data.listeners || [];
+
+      if (listeners.length === 0) {
+        listenersList.innerHTML = `
+          <div class="text-center text-muted py-4" id="listeners-empty">
+            <i class="bi bi-ear-fill fs-1 d-block mb-2 opacity-50"></i>
+            Brak skonfigurowanych nasłuchiwaczy.
+          </div>`;
+        return;
+      }
+
+      listenersList.innerHTML = listeners.map(listener => `
+        <div class="listener-card" data-listener-id="${listener.id}">
+          <div class="d-flex align-items-start gap-3">
+            <div class="listener-icon ${listener.enabled ? 'active' : 'inactive'}">
+              <i class="bi ${getListenerIcon(listener.command)}"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-1">
+                <div>
+                  <h6 class="fw-semibold mb-0">
+                    <code>${escapeHtml(listener.command)}</code>
+                  </h6>
+                  <p class="text-muted small mb-0">${escapeHtml(listener.description || '')}</p>
+                </div>
+                <div class="form-check form-switch">
+                  <input class="form-check-input" type="checkbox" role="switch"
+                         id="listener-toggle-${listener.id}"
+                         data-listener-toggle="${listener.id}"
+                         ${listener.enabled ? 'checked' : ''}>
+                  <label class="form-check-label visually-hidden" 
+                         for="listener-toggle-${listener.id}">
+                    Włącz/wyłącz
+                  </label>
+                </div>
+              </div>
+              <div class="d-flex flex-wrap gap-2 mt-2">
+                <span class="badge ${listener.enabled ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'}">
+                  ${listener.enabled ? '<i class="bi bi-check-circle me-1"></i> Aktywny' : '<i class="bi bi-pause-circle me-1"></i> Wyłączony'}
+                </span>
+                <span class="badge bg-light text-muted">
+                  <i class="bi bi-clock me-1"></i>
+                  Aktualizacja: ${formatDateTime(listener.updated_at) || '—'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Dodaj handlery do przełączników
+      listenersList.querySelectorAll('[data-listener-toggle]').forEach(toggle => {
+        toggle.addEventListener('change', handleListenerToggle);
+      });
+    } catch (error) {
+      console.error('Błąd ładowania listeners:', error);
+      listenersList.innerHTML = `
+        <div class="text-center text-danger py-4">
+          <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
+          Nie udało się załadować nasłuchiwaczy: ${escapeHtml(error.message)}
+        </div>`;
+    }
+  };
+
+  /**
+   * Zwraca odpowiednią ikonę Bootstrap dla danej komendy listenera.
+   * @param {string} command - Komenda listenera (np. "/news")
+   * @returns {string} Klasa ikony Bootstrap
+   */
+  const getListenerIcon = (command) => {
+    const iconMap = {
+      '/news': 'bi-newspaper',
+      '/help': 'bi-question-circle',
+      '/status': 'bi-info-circle'
+    };
+    return iconMap[command] || 'bi-terminal';
+  };
+
+  /**
+   * Obsługuje zmianę stanu przełącznika listenera.
+   * Wysyła żądanie do API i aktualizuje UI.
+   * @async
+   * @param {Event} event - Zdarzenie zmiany
+   */
+  const handleListenerToggle = async (event) => {
+    const toggle = event.target;
+    const listenerId = toggle.dataset.listenerToggle;
+    const enabled = toggle.checked;
+
+    // Wyłącz przełącznik podczas zapytania
+    toggle.disabled = true;
+
+    try {
+      await fetchJSON(`/api/listeners/${listenerId}`, {
+        method: 'POST',
+        body: JSON.stringify({ enabled })
+      });
+
+      showToast({
+        title: enabled ? 'Listener aktywowany' : 'Listener wyłączony',
+        message: `Nasłuchiwacz został ${enabled ? 'włączony' : 'wyłączony'}.`,
+        type: 'success'
+      });
+
+      // Odśwież listę dla aktualnego stanu UI
+      await loadListeners();
+    } catch (error) {
+      console.error('Błąd aktualizacji listenera:', error);
+      // Przywróć poprzedni stan
+      toggle.checked = !enabled;
+      showToast({
+        title: 'Błąd',
+        message: error.message || 'Nie udało się zaktualizować listenera.',
+        type: 'error'
+      });
+    } finally {
+      toggle.disabled = false;
+    }
+  };
+
+  /**
+   * Ustawia stan ładowania dla testu listenera.
+   * @param {boolean} loading - Czy test jest w toku
+   */
+  const setListenerTestLoading = (loading) => {
+    if (!listenerTestBtn) return;
+
+    if (loading) {
+      listenerTestBtn.disabled = true;
+      listenerTestSpinner?.classList.remove('d-none');
+    } else {
+      listenerTestBtn.disabled = false;
+      listenerTestSpinner?.classList.add('d-none');
+    }
+  };
+
+  /**
+   * Testuje zapytanie /news bez wysyłania SMS-a.
+   * Wyświetla odpowiedź FAISS w UI.
+   * @async
+   * @param {Event} event - Zdarzenie submit formularza
+   */
+  const testListenerQuery = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const query = listenerTestQuery?.value.trim() || 'Jakie są najnowsze wiadomości?';
+
+    setListenerTestLoading(true);
+    if (listenerTestResultContainer) {
+      listenerTestResultContainer.style.display = 'none';
+    }
+
+    try {
+      const startTime = performance.now();
+      const data = await fetchJSON('/api/listeners/test', {
+        method: 'POST',
+        body: JSON.stringify({ query })
+      });
+      const elapsed = Math.round(performance.now() - startTime);
+
+      if (listenerTestResultContainer) {
+        listenerTestResultContainer.style.display = 'block';
+      }
+
+      if (data.success) {
+        if (listenerTestStatus) {
+          listenerTestStatus.className = 'badge bg-success-subtle text-success-emphasis';
+          listenerTestStatus.innerHTML = '<i class="bi bi-check-circle"></i> Sukces';
+        }
+        if (listenerTestMeta) {
+          listenerTestMeta.textContent = `Czas odpowiedzi: ${elapsed}ms`;
+        }
+        if (listenerTestAnswer) {
+          listenerTestAnswer.innerHTML = formatListenerAnswer(data.answer || 'Brak odpowiedzi.');
+        }
+      } else {
+        if (listenerTestStatus) {
+          listenerTestStatus.className = 'badge bg-warning-subtle text-warning-emphasis';
+          listenerTestStatus.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Brak wyników';
+        }
+        if (listenerTestMeta) {
+          listenerTestMeta.textContent = `Czas: ${elapsed}ms`;
+        }
+        if (listenerTestAnswer) {
+          listenerTestAnswer.innerHTML = `<p class="text-muted mb-0">${escapeHtml(data.error || 'Nie znaleziono pasujących artykułów.')}</p>`;
+        }
+      }
+    } catch (error) {
+      console.error('Błąd testu listenera:', error);
+
+      if (listenerTestResultContainer) {
+        listenerTestResultContainer.style.display = 'block';
+      }
+      if (listenerTestStatus) {
+        listenerTestStatus.className = 'badge bg-danger-subtle text-danger-emphasis';
+        listenerTestStatus.innerHTML = '<i class="bi bi-x-circle"></i> Błąd';
+      }
+      if (listenerTestMeta) {
+        listenerTestMeta.textContent = '';
+      }
+      if (listenerTestAnswer) {
+        listenerTestAnswer.innerHTML = `<p class="text-danger mb-0">${escapeHtml(error.message || 'Wystąpił błąd podczas testu.')}</p>`;
+      }
+    } finally {
+      setListenerTestLoading(false);
+    }
+  };
+
+  /**
+   * Formatuje odpowiedź FAISS do wyświetlenia w UI.
+   * Konwertuje nowe linie i dodaje formatowanie.
+   * @param {string} answer - Surowa odpowiedź FAISS
+   * @returns {string} Sformatowany HTML
+   */
+  const formatListenerAnswer = (answer) => {
+    if (!answer) return '<p class="text-muted mb-0">Brak odpowiedzi.</p>';
+
+    // Podziel na paragrafy i sformatuj
+    return answer
+      .split('\n\n')
+      .map(para => para.trim())
+      .filter(para => para)
+      .map(para => `<p class="mb-2">${escapeHtml(para).replace(/\n/g, '<br>')}</p>`)
+      .join('');
+  };
+
+  // ===================== END LISTENERS TAB =====================
+
   const buildNewsIndex = async () => {
     if (!newsBuildIndexBtn) return;
     if (newsBuildIndexBtn.hasAttribute('disabled')) return;
@@ -3219,6 +3473,15 @@
       multiSmsRefreshBtn?.addEventListener('click', loadMultiSmsBatches);
       multiSmsHistory?.addEventListener('click', handleMultiSmsToggleClick);
       loadMultiSmsBatches();
+    }
+
+    // Listeners tab initialization
+    if (listenersList) {
+      loadListeners();
+    }
+
+    if (listenerTestForm) {
+      listenerTestForm.addEventListener('submit', testListenerQuery);
     }
   };
 

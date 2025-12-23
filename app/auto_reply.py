@@ -9,7 +9,7 @@ from typing import Optional, Dict, Any
 
 from flask import Flask
 
-from .database import get_auto_reply_config, insert_message, get_ai_config
+from .database import get_auto_reply_config, insert_message, get_ai_config, get_listener_by_command
 from .twilio_client import TwilioService
 from .ai_service import AIResponder, AIReplyError, send_ai_generated_sms
 
@@ -67,6 +67,100 @@ def start_auto_reply_worker(app: Flask) -> None:
 
                     app.logger.info("Reactive reply worker received payload: %s", payload)
 
+                    # ─────────────────────────────────────────────────────────
+                    # LISTENERS: Check for command-based triggers first
+                    # Listeners take priority over AI/auto-reply as they are
+                    # explicit user commands (e.g., /news <query>)
+                    # ─────────────────────────────────────────────────────────
+                    body: str = payload.get("body", "") or ""
+                    from_number: Optional[str] = (payload.get("from_number") or "").strip()
+                    to_number: Optional[str] = (payload.get("to_number") or "").strip()
+                    sid = payload.get("sid") or None
+                    
+                    # Check /news listener
+                    if body.strip().lower().startswith("/news"):
+                        news_listener = get_listener_by_command("/news")
+                        if news_listener and news_listener.get("enabled"):
+                            app.logger.info(
+                                "Processing /news command from %s: %s",
+                                from_number,
+                                body[:100]
+                            )
+                            try:
+                                from .faiss_service import FAISSService
+                                faiss_service = FAISSService()
+                                
+                                # Extract query after /news prefix
+                                query = body.strip()[5:].strip()
+                                if not query:
+                                    query = "Jakie są najnowsze wiadomości?"
+                                
+                                response = faiss_service.answer_query(query, top_k=5)
+                                
+                                if response.get("success") and response.get("answer"):
+                                    reply_text = f"📰 News:\n\n{response['answer']}"
+                                else:
+                                    reply_text = "❌ Nie udało się znaleźć odpowiedzi w bazie newsów."
+                                
+                                origin_number = to_number or twilio_client.settings.default_from
+                                if not origin_number:
+                                    app.logger.error("/news: No origin number configured")
+                                    continue
+                                
+                                message = twilio_client.send_chunked_sms(
+                                    from_=origin_number,
+                                    to=from_number,
+                                    body=reply_text,
+                                )
+                                
+                                if message.get("success"):
+                                    if sid:
+                                        processed_sids.append(sid)
+                                    for msg_sid in message.get("sids", []):
+                                        insert_message(
+                                            direction="outbound",
+                                            sid=msg_sid,
+                                            to_number=from_number,
+                                            from_number=origin_number,
+                                            body=reply_text,
+                                            status="news-reply",
+                                        )
+                                    app.logger.info(
+                                        "/news reply sent to %s (query: %s)",
+                                        from_number,
+                                        query[:50]
+                                    )
+                                else:
+                                    app.logger.error("/news send failed: %s", message.get("error"))
+                                    insert_message(
+                                        direction="outbound",
+                                        sid=None,
+                                        to_number=from_number,
+                                        from_number=origin_number,
+                                        body=reply_text,
+                                        status="failed",
+                                        error=message.get("error"),
+                                    )
+                            except Exception as exc:
+                                app.logger.exception("/news handler error: %s", exc)
+                                insert_message(
+                                    direction="outbound",
+                                    sid=None,
+                                    to_number=from_number,
+                                    from_number=to_number or twilio_client.settings.default_from,
+                                    body="",
+                                    status="failed",
+                                    error=str(exc),
+                                )
+                            continue  # Skip normal AI/auto-reply processing
+                        else:
+                            app.logger.debug(
+                                "/news command received but listener is disabled"
+                            )
+
+                    # ─────────────────────────────────────────────────────────
+                    # Standard AI/Auto-reply processing
+                    # ─────────────────────────────────────────────────────────
                     ai_enabled = bool(ai_cfg.get("enabled"))
                     auto_enabled = bool(auto_cfg.get("enabled"))
 

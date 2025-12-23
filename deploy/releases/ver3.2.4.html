@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Release Notes: ver3.2.4 | Twilio Chat App</title>
+  <style>
+    :root{--bg:#f7f9fb;--card:#ffffff;--muted:#6c757d;--accent:#7c40ff;--accent-2:#f22f46;--text:#172042;--success:#10b981;--warning:#f59e0b}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.65;color:var(--text);background:var(--bg)}
+    .container{max-width:900px;margin:0 auto;padding:32px 24px}
+    header{text-align:center;margin-bottom:32px}
+    .badge{display:inline-block;padding:6px 16px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:0.85rem;margin-bottom:12px}
+    h1{margin:0 0 8px;font-size:2rem}
+    .subtitle{color:var(--muted);font-size:1.1rem}
+    .date{color:var(--muted);font-size:0.9rem;margin-top:8px}
+    .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 24px rgba(20,30,60,0.06)}
+    h2{margin:0 0 16px;font-size:1.4rem;display:flex;align-items:center;gap:10px}
+    h2 .icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem}
+    h3{margin:16px 0 8px;font-size:1.1rem;color:var(--accent)}
+    p{margin:8px 0}
+    ul{margin:8px 0;padding-left:24px}
+    li{margin:4px 0}
+    table{width:100%;border-collapse:collapse;margin:16px 0}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #eef2fb}
+    th{background:#f8fafc;font-weight:600}
+    code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.9em;font-family:monospace}
+    .code{background:#1e293b;color:#f1f5f9;padding:16px;border-radius:10px;font-family:monospace;font-size:0.9rem;overflow-x:auto;white-space:pre}
+    .highlight{background:linear-gradient(135deg,rgba(124,64,255,0.08),rgba(242,47,70,0.06));border-radius:12px;padding:20px;margin:16px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0}
+    .grid-item{background:#f8fafc;padding:16px;border-radius:10px;border:1px solid #eef2fb}
+    .grid-item strong{display:block;margin-bottom:4px;color:var(--accent)}
+    .feature-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:16px 0}
+    .feature{background:#f8fafc;padding:14px;border-radius:10px;border-left:4px solid var(--accent)}
+    .feature strong{display:block;margin-bottom:4px}
+    .ascii-art{background:#0f172a;color:#94a3b8;padding:20px;border-radius:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;overflow-x:auto;white-space:pre}
+    .flow-diagram{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;padding:20px;border-radius:12px;margin:16px 0}
+    .flow-step{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
+    .flow-step:last-child{border-bottom:none}
+    .flow-icon{background:var(--accent);color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+    .flow-arrow{color:#64748b;font-size:1.2rem;margin-left:48px}
+    footer{text-align:center;color:var(--muted);font-size:0.9rem;margin-top:40px;padding-top:24px;border-top:1px solid #eef2fb}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:16px 0}
+    .stat-item{text-align:center;padding:20px;background:#f8fafc;border-radius:12px}
+    .stat-item .value{font-size:1.8rem;font-weight:700;color:var(--accent)}
+    .stat-item .label{color:var(--muted);font-size:0.85rem;margin-top:4px}
+    .bugfix{background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.05));border-left:4px solid var(--success);padding:16px;border-radius:0 12px 12px 0;margin:16px 0}
+    .bugfix-title{color:var(--success);font-weight:600;margin-bottom:8px}
+    .sms-example{background:#0f172a;border-radius:12px;padding:20px;margin:16px 0}
+    .sms-bubble{background:#1e40af;color:#fff;padding:12px 16px;border-radius:18px 18px 18px 4px;max-width:80%;margin-bottom:12px}
+    .sms-bubble.reply{background:#059669;border-radius:18px 18px 4px 18px;margin-left:auto}
+    .sms-label{color:#64748b;font-size:0.8rem;margin-bottom:4px}
+    @media(max-width:600px){.container{padding:16px}.card{padding:16px}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">🚀 NEW RELEASE</span>
+      <h1>ver3.2.4</h1>
+      <p class="subtitle">Listeners: SMS Command Processing with FAISS Integration</p>
+      <p class="date">📅 Data wydania: 2025-12-23</p>
+    </header>
+
+    <div class="card">
+      <h2><span class="icon">📋</span> Podsumowanie</h2>
+      <p>
+        Release 3.2.4 wprowadza nową zakładkę <strong>Listeners</strong> w panelu Dashboard, 
+        umożliwiającą dynamiczne zarządzanie komendami SMS. Odbiorcy mogą wysyłać wiadomości 
+        zaczynające się od prefiksu <code>/news</code>, a system automatycznie odpowiada 
+        na ich zapytania wykorzystując bazę wiedzy FAISS.
+      </p>
+      <div class="grid">
+        <div class="grid-item"><strong>🎧 Listeners Tab</strong>Nowa zakładka w Dashboard</div>
+        <div class="grid-item"><strong>📰 /news Command</strong>Zapytania do bazy newsów</div>
+        <div class="grid-item"><strong>🔄 Sync Response</strong>Natychmiastowa odpowiedź</div>
+        <div class="grid-item"><strong>🧪 Test Panel</strong>Testowanie bez SMS</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🎧</span> Nowa zakładka Listeners</h2>
+      <p>Dedykowana zakładka do zarządzania nasłuchiwaczami komend SMS:</p>
+      <div class="ascii-art">
+┌─────────────────────────────────────────────────────────┐
+│ 📱 Listeners                                            │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 📰  /news                              [●──○]       │ │
+│ │     Odpowiada na pytania o aktualności              │ │
+│ │     wykorzystując bazę FAISS                        │ │
+│ │                                        Włączony ✓   │ │
+│ └─────────────────────────────────────────────────────┘ │
+│                                                         │
+│ 🧪 Przetestuj /news                                    │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Wpisz pytanie...                         [Testuj]   │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘</div>
+      <div class="feature-list">
+        <div class="feature"><strong>Karty listenerów</strong>Przełącznik ON/OFF z wizualnym statusem</div>
+        <div class="feature"><strong>Panel testowy</strong>Symulacja zapytań bez wysyłania SMS</div>
+        <div class="feature"><strong>Instrukcja</strong>Krok po kroku dla odbiorców</div>
+        <div class="feature"><strong>Real-time</strong>Zmiany bez restartu aplikacji</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📰</span> Komenda /news</h2>
+      <p>Odbiorcy SMS mogą zadawać pytania do bazy newsów:</p>
+      <table>
+        <tr><th>Przykład wiadomości</th><th>Rezultat</th></tr>
+        <tr><td><code>/news co nowego w gospodarce?</code></td><td>Odpowiedź z FAISS o gospodarce</td></tr>
+        <tr><td><code>/news podsumowanie rynku</code></td><td>Analiza rynkowa z artykułów</td></tr>
+        <tr><td><code>/news</code> (samo)</td><td>Domyślne pytanie o nowości</td></tr>
+      </table>
+      
+      <h3>Przykład konwersacji SMS</h3>
+      <div class="sms-example">
+        <div class="sms-label">📱 Odbiorca wysyła:</div>
+        <div class="sms-bubble">/news Jakie są prognozy dla złotówki?</div>
+        <div class="sms-label" style="text-align:right">📨 System odpowiada:</div>
+        <div class="sms-bubble reply">📰 News:<br><br>Według najnowszych analiz, kurs złotówki względem euro utrzymuje się na stabilnym poziomie. Eksperci przewidują możliwe umocnienie PLN w Q1 2026...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🔄</span> Architektura obsługi</h2>
+      <p>Odpowiedzi są wysyłane <strong>natychmiast</strong> przy odbiorze SMS:</p>
+      <div class="flow-diagram">
+        <div class="flow-step"><span class="flow-icon">📱</span><span>SMS przychodzi do Twilio</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-icon">🔍</span><span>Wykrycie prefiksu /news</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-icon">📊</span><span>FAISS wyszukuje w bazie artykułów</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-icon">🤖</span><span>OpenAI generuje odpowiedź</span></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step"><span class="flow-icon">📨</span><span>SMS z odpowiedzią do nadawcy</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🔌</span> API Endpoints</h2>
+      <table>
+        <tr><th>Metoda</th><th>Endpoint</th><th>Opis</th></tr>
+        <tr><td><code>GET</code></td><td><code>/api/listeners</code></td><td>Lista wszystkich listenerów</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/listeners/&lt;id&gt;</code></td><td>Aktualizacja listenera</td></tr>
+        <tr><td><code>POST</code></td><td><code>/api/listeners/test</code></td><td>Test zapytania /news</td></tr>
+      </table>
+      
+      <h3>Przykład odpowiedzi GET /api/listeners</h3>
+      <div class="code">{
+  "listeners": [
+    {
+      "id": 1,
+      "command": "/news",
+      "enabled": true,
+      "description": "Odpowiada na pytania o aktualności..."
+    }
+  ]
+}</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🐛</span> Poprawki błędów</h2>
+      <div class="bugfix">
+        <div class="bugfix-title">✅ Listener nie odpowiadał na SMS</div>
+        <p><strong>Problem:</strong> Wiadomości /news były kolejkowane do workera, ale odpowiedzi nie były wysyłane.</p>
+        <p><strong>Przyczyna:</strong> Worker nie przetwarzał wiadomości gdy AI i auto-reply były wyłączone.</p>
+        <p><strong>Rozwiązanie:</strong> Dodano synchroniczną obsługę <code>_handle_news_listener_sync()</code> z deduplikacją.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📊</span> Statystyki wydania</h2>
+      <div class="stats-grid">
+        <div class="stat-item"><div class="value">6</div><div class="label">Pliki zmienione</div></div>
+        <div class="stat-item"><div class="value">+550</div><div class="label">Linie dodane</div></div>
+        <div class="stat-item"><div class="value">3</div><div class="label">Nowe endpointy</div></div>
+        <div class="stat-item"><div class="value">v9</div><div class="label">Schema version</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📦</span> Upgrade Guide</h2>
+      <h3>Wymagania</h3>
+      <ul>
+        <li>Python 3.10+</li>
+        <li>Flask 2.0+</li>
+        <li>OpenAI API key (dla generowania odpowiedzi)</li>
+        <li>Zbudowany indeks FAISS (zakładka News)</li>
+      </ul>
+      <h3>Kroki aktualizacji</h3>
+      <ol>
+        <li>Pull zmian z repozytorium</li>
+        <li>Restart aplikacji (automatyczna migracja bazy v8 → v9)</li>
+        <li>Przejdź do zakładki <strong>Listeners</strong></li>
+        <li>Włącz listener <code>/news</code></li>
+        <li>Przetestuj w panelu testowym</li>
+      </ol>
+    </div>
+
+    <footer>
+      <p>
+        <strong>Full Changelog:</strong> 
+        <a href="https://github.com/19paoletto10-hub/twilio/compare/v3.2.3...v3.2.4">v3.2.3...v3.2.4</a>
+      </p>
+      <p>Twilio Chat App © 2025</p>
+    </footer>
+  </div>
+</body>
+</html>

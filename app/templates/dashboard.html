@@ -30,6 +30,10 @@
           <i class="bi bi-newspaper"></i>
           <span class="app-sidebar__label">News</span>
         </a>
+        <a class="app-sidebar__link" href="#tab-listeners" data-dashboard-nav="tab-listeners">
+          <i class="bi bi-ear"></i>
+          <span class="app-sidebar__label">Listeners</span>
+        </a>
         <a class="app-sidebar__link" href="#tab-multi-sms" data-dashboard-nav="tab-multi-sms">
           <i class="bi bi-people"></i>
           <span class="app-sidebar__label">Multi-SMS</span>
@@ -101,6 +105,11 @@
       <li class="nav-item" role="presentation">
         <button class="nav-link d-flex align-items-center gap-2" id="tab-news-btn" data-bs-toggle="tab" data-bs-target="#tab-news" type="button" role="tab" aria-controls="tab-news" aria-selected="false">
           <i class="bi bi-newspaper"></i> News
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link d-flex align-items-center gap-2" id="tab-listeners-btn" data-bs-toggle="tab" data-bs-target="#tab-listeners" type="button" role="tab" aria-controls="tab-listeners" aria-selected="false">
+          <i class="bi bi-ear"></i> Listeners
         </button>
       </li>
       <li class="nav-item" role="presentation">
@@ -755,6 +764,137 @@
                       </tr>
                     </tbody>
                   </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== LISTENERS TAB ===================== -->
+      <div class="tab-pane fade" id="tab-listeners" role="tabpanel" aria-labelledby="tab-listeners-btn" tabindex="0">
+        <div class="row g-4">
+          <!-- Konfiguracja Listeners -->
+          <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Konfiguracja</p>
+                <h2 class="h5 mb-0">Aktywne nasłuchiwacze</h2>
+              </div>
+              <div class="card-body">
+                <p class="text-muted small mb-4">
+                  Listeners to specjalne komendy, które mogą być wysłane przez odbiorców SMS.
+                  Gdy wiadomość zaczyna się od określonego prefiksu (np. <code>/news</code>), system automatycznie 
+                  przetwarza zapytanie i odsyła odpowiedź na podstawie bazy wiedzy FAISS.
+                </p>
+                <div id="listeners-list" class="d-flex flex-column gap-3">
+                  <div class="text-center text-muted py-4" id="listeners-empty">
+                    <i class="bi bi-ear-fill fs-1 d-block mb-2 opacity-50"></i>
+                    Ładowanie listy nasłuchiwaczy...
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Test Listener -->
+          <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Testowanie</p>
+                <h2 class="h5 mb-0">Przetestuj /news</h2>
+              </div>
+              <div class="card-body">
+                <p class="text-muted small mb-3">
+                  Symuluj zapytanie /news, aby sprawdzić odpowiedź systemu bez wysyłania SMS-a.
+                </p>
+                <form id="listener-test-form" novalidate>
+                  <div class="mb-3">
+                    <label for="listener-test-query" class="form-label">Zapytanie</label>
+                    <div class="input-group">
+                      <span class="input-group-text">/news</span>
+                      <input type="text" class="form-control" id="listener-test-query" 
+                             placeholder="np. Jakie są najnowsze wiadomości o rynku?">
+                    </div>
+                    <div class="form-text">Wprowadź pytanie, które zostanie przekazane do bazy FAISS.</div>
+                  </div>
+                  <button type="submit" class="btn btn-outline-primary w-100" id="listener-test-btn">
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    <i class="bi bi-play-fill me-1"></i> Testuj zapytanie
+                  </button>
+                </form>
+
+                <div class="mt-4" id="listener-test-result-container" style="display: none;">
+                  <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge bg-success-subtle text-success-emphasis" id="listener-test-status">
+                      <i class="bi bi-check-circle"></i> Sukces
+                    </span>
+                    <small class="text-muted" id="listener-test-meta"></small>
+                  </div>
+                  <div class="card bg-light border-0">
+                    <div class="card-body">
+                      <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="bi bi-newspaper me-1"></i> Odpowiedź FAISS
+                      </h6>
+                      <div id="listener-test-answer" class="listener-answer-content"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Informacje o użyciu -->
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
+              <div class="card-header bg-white border-0 pb-0">
+                <p class="text-uppercase text-muted fs-6 mb-1">Jak używać</p>
+                <h2 class="h5 mb-0">Instrukcja dla odbiorców SMS</h2>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-4">
+                    <div class="d-flex gap-3">
+                      <div class="listener-step-icon">
+                        <i class="bi bi-1-circle-fill"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-semibold">Wyślij komendę</h6>
+                        <p class="text-muted small mb-0">
+                          Rozpocznij wiadomość SMS od <code>/news</code> i dodaj swoje pytanie,
+                          np. <code>/news Jakie są najnowsze wiadomości?</code>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="d-flex gap-3">
+                      <div class="listener-step-icon">
+                        <i class="bi bi-2-circle-fill"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-semibold">System przetwarza</h6>
+                        <p class="text-muted small mb-0">
+                          Zapytanie jest analizowane przez bazę wiedzy FAISS, 
+                          która wyszukuje najlepiej pasujące artykuły.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-4">
+                    <div class="d-flex gap-3">
+                      <div class="listener-step-icon">
+                        <i class="bi bi-3-circle-fill"></i>
+                      </div>
+                      <div>
+                        <h6 class="fw-semibold">Otrzymaj odpowiedź</h6>
+                        <p class="text-muted small mb-0">
+                          System generuje odpowiedź na podstawie znalezionych 
+                          artykułów i wysyła ją jako SMS.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

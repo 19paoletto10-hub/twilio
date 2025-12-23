@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 from flask import current_app, g
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 _NORMALIZE_PREFIXES = ("whatsapp:", "sms:", "mms:", "client:", "sip:")
 _NORMALIZE_STRIP_CHARS = (" ", "-", "(", ")", ".", "_")
@@ -323,6 +323,37 @@ def _migration_add_app_settings(conn: sqlite3.Connection) -> None:
     )
 
 
+def _migration_add_listeners_config(conn: sqlite3.Connection) -> None:
+    """Add listeners_config table for command-based auto-replies (v9).
+    
+    Listeners allow the system to respond to messages that start with specific
+    prefixes (e.g., /news). When a listener is enabled and a user sends a message
+    starting with that prefix, the system processes the request accordingly.
+    
+    The /news listener integrates with FAISS to answer questions based on
+    scraped news articles.
+    """
+    if _table_exists(conn, "listeners_config"):
+        return
+    
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS listeners_config (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            command TEXT NOT NULL UNIQUE,
+            enabled INTEGER NOT NULL DEFAULT 0,
+            description TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        );
+        
+        INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
+        VALUES ('/news', 0, 'Odpowiada na pytania z bazy newsów (FAISS RAG)', datetime('now'), datetime('now'));
+        """
+    )
+    conn.commit()
+
+
 def _ensure_app_settings_table(conn: sqlite3.Connection) -> None:
     """Ensure app_settings/settings_audit tables exist (idempotent)."""
     if not _table_exists(conn, "app_settings") or not _table_exists(conn, "settings_audit"):
@@ -386,6 +417,10 @@ def _ensure_schema() -> None:
             if current_version < 8:
                 _migration_add_app_settings(conn)
                 current_version = 8
+
+            if current_version < 9:
+                _migration_add_listeners_config(conn)
+                current_version = 9
 
         _ensure_multi_sms_tables(conn)
 
@@ -1574,3 +1609,159 @@ def apply_ai_env_defaults(app) -> None:
                 updated_cfg.get("model"),
                 updated_cfg.get("target_number"),
             )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Listeners Configuration Helpers
+# ─────────────────────────────────────────────────────────────────────────────
+# Listeners are command-based triggers that respond to messages starting with
+# specific prefixes (e.g., /news). This enables users to query the system
+# directly via SMS using structured commands.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def get_listeners_config() -> List[Dict[str, Any]]:
+    """Return all listener configurations.
+    
+    Returns:
+        List of listener config dictionaries with keys:
+        id, command, enabled, description, created_at, updated_at
+    """
+    conn = _get_connection()
+    rows = conn.execute(
+        """
+        SELECT id, command, enabled, description, created_at, updated_at 
+        FROM listeners_config 
+        ORDER BY id
+        """
+    ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def get_listener_by_command(command: str) -> Optional[Dict[str, Any]]:
+    """Return listener config by command prefix.
+    
+    Args:
+        command: The command prefix to look up (e.g., '/news')
+        
+    Returns:
+        Listener config dict if found, None otherwise
+    """
+    conn = _get_connection()
+    row = conn.execute(
+        """
+        SELECT id, command, enabled, description, created_at, updated_at 
+        FROM listeners_config 
+        WHERE command = ?
+        """,
+        (command.lower().strip(),)
+    ).fetchone()
+    return dict(row) if row else None
+
+
+def update_listener_config(
+    listener_id: int,
+    *,
+    enabled: Optional[bool] = None,
+    description: Optional[str] = None
+) -> Dict[str, Any]:
+    """Update listener configuration.
+    
+    Args:
+        listener_id: ID of the listener to update
+        enabled: New enabled state (optional)
+        description: New description (optional)
+        
+    Returns:
+        Updated listener config dict
+    """
+    conn = _get_connection()
+    now = datetime.utcnow().strftime(_TIMESTAMP_FORMAT)
+    
+    updates = ["updated_at = ?"]
+    params: List[Any] = [now]
+    
+    if enabled is not None:
+        updates.append("enabled = ?")
+        params.append(1 if enabled else 0)
+    
+    if description is not None:
+        updates.append("description = ?")
+        params.append(description)
+    
+    params.append(listener_id)
+    
+    conn.execute(
+        f"UPDATE listeners_config SET {', '.join(updates)} WHERE id = ?",
+        params
+    )
+    conn.commit()
+    
+    row = conn.execute(
+        """
+        SELECT id, command, enabled, description, created_at, updated_at 
+        FROM listeners_config 
+        WHERE id = ?
+        """,
+        (listener_id,)
+    ).fetchone()
+    return dict(row) if row else {}
+
+
+def create_listener(
+    command: str,
+    enabled: bool = True,
+    description: str = ""
+) -> Dict[str, Any]:
+    """Create a new listener configuration.
+    
+    Args:
+        command: Command prefix (e.g., '/weather')
+        enabled: Whether listener is active
+        description: Human-readable description
+        
+    Returns:
+        Created listener config dict
+        
+    Raises:
+        sqlite3.IntegrityError: If command already exists
+    """
+    conn = _get_connection()
+    now = datetime.utcnow().strftime(_TIMESTAMP_FORMAT)
+    
+    cursor = conn.execute(
+        """
+        INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (command.lower().strip(), 1 if enabled else 0, description, now, now)
+    )
+    conn.commit()
+    
+    row = conn.execute(
+        """
+        SELECT id, command, enabled, description, created_at, updated_at 
+        FROM listeners_config 
+        WHERE id = ?
+        """,
+        (cursor.lastrowid,)
+    ).fetchone()
+    return dict(row) if row else {}
+
+
+def delete_listener(listener_id: int) -> bool:
+    """Delete a listener configuration.
+    
+    Args:
+        listener_id: ID of the listener to delete
+        
+    Returns:
+        True if deleted, False if not found
+    """
+    conn = _get_connection()
+    cursor = conn.execute(
+        "DELETE FROM listeners_config WHERE id = ?",
+        (listener_id,)
+    )
+    conn.commit()
+    return cursor.rowcount > 0

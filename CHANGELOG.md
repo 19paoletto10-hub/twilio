@@ -1,5 +1,102 @@
 # Changelog
 
+## ver3.2.4 (Listeners: SMS Command Processing with FAISS Integration)
+
+📅 Data wydania: 2025-12-23
+
+### Podsumowanie
+
+Release 3.2.4 wprowadza nową zakładkę **Listeners** umożliwiającą dynamiczne zarządzanie
+komendami SMS. Odbiorcy mogą wysyłać wiadomości zaczynające się od prefiksu `/news`,
+a system automatycznie odpowiada na ich zapytania wykorzystując bazę wiedzy FAISS.
+
+### Najważniejsze zmiany
+
+#### 🎧 Nowa zakładka Listeners
+- **Konfiguracja nasłuchiwaczy** – włączanie/wyłączanie komend SMS w czasie rzeczywistym
+- **Wizualne karty listenerów** z przełącznikiem, opisem i statusem
+- **Panel testowy** – symulacja zapytania `/news` bez wysyłania SMS-a
+- **Instrukcja dla odbiorców** – krok po kroku jak używać komendy
+
+#### 📰 Komenda /news
+- Odbiorcy SMS mogą wysłać `/news [pytanie]` aby otrzymać odpowiedź z bazy newsów
+- **Integracja z FAISS** – wyszukiwanie w zindeksowanych artykułach
+- **Synchroniczna obsługa** – odpowiedź wysyłana natychmiast przy odbiorze SMS
+- **Deduplikacja** – mechanizm zapobiegający wielokrotnemu przetwarzaniu tej samej wiadomości
+- **Domyślne zapytanie** – gdy brak pytania, system pyta o najnowsze wiadomości
+
+#### 🗄️ Nowa tabela bazy danych
+- `listeners_config` – przechowuje konfigurację nasłuchiwaczy
+- **Automatyczna migracja** – SCHEMA_VERSION = 9
+- Domyślny wpis `/news` tworzony przy pierwszym uruchomieniu
+
+#### 🔌 Nowe API Endpoints
+
+| Endpoint | Metoda | Opis |
+|----------|--------|------|
+| `/api/listeners` | GET | Lista wszystkich nasłuchiwaczy |
+| `/api/listeners/<id>` | POST | Aktualizacja konfiguracji (enabled, description) |
+| `/api/listeners/test` | POST | Test zapytania /news z FAISS |
+
+#### 🎨 Nowe style CSS
+- `.listener-card` – karta z efektem hover i cieniem
+- `.listener-icon` – ikona z kolorowym tłem (zielone = aktywny)
+- `.listener-step-icon` – ikony numerowanych kroków w instrukcji
+- `.listener-answer-content` – formatowanie odpowiedzi FAISS
+
+### Zaktualizowane pliki
+
+```
+app/database.py                  # SCHEMA_VERSION=9, migracja, CRUD listeners
+app/auto_reply.py                # Obsługa komendy /news w workerze
+app/webhooks.py                  # Nowe endpointy + synchroniczna obsługa /news
+app/templates/dashboard.html     # Zakładka Listeners z UI
+app/static/js/dashboard.js       # Funkcje loadListeners, testListenerQuery
+app/static/css/app.css           # Style Listeners
+```
+
+### Architektura obsługi /news
+
+```
+SMS przychodzi ──► Twilio Webhook ──► _handle_news_listener_sync()
+                          │                    │
+                          ▼                    ▼
+                   GET /api/messages    ►  FAISSService.answer_query()
+                   (polling)                   │
+                          │                    ▼
+                          ▼              Twilio send_reply_to_inbound()
+            _maybe_enqueue_auto_reply()        │
+                          │                    ▼
+                          ▼               SMS odpowiedź
+            _handle_news_listener_sync()
+```
+
+### Workflow użytkownika (odbiorca SMS)
+
+1. Odbiorca wysyła SMS: `/news Jakie są najnowsze wiadomości o rynku?`
+2. System wykrywa prefiks `/news` i sprawdza czy listener jest włączony
+3. Zapytanie trafia do FAISSService (wyszukiwanie w bazie)
+4. OpenAI generuje odpowiedź na podstawie znalezionych artykułów
+5. Odpowiedź jest wysyłana jako SMS do nadawcy
+
+### Poprawki błędów
+
+#### 🐛 Listener nie odpowiadał na SMS
+**Problem:** Wiadomości `/news` były kolejkowane ale worker ich nie przetwarzał.
+
+**Rozwiązanie:** 
+- Dodano synchroniczną obsługę `_handle_news_listener_sync()` w webhooks.py
+- Listener jest teraz obsługiwany bezpośrednio przy odbiorze SMS
+- Dodano deduplikację `_LISTENER_PROCESSED_SIDS` zapobiegającą wielokrotnej odpowiedzi
+
+### Kompatybilność
+
+- **Brak zmian łamiących** – istniejące funkcje pozostają niezmienione
+- Migracja bazy danych jest automatyczna (v8 → v9)
+- Listener `/news` jest domyślnie wyłączony – wymaga ręcznego włączenia
+
+---
+
 ## ver3.2.3 (News Scraping UX: Live Progress & Professional Content Display)
 
 ### Podsumowanie
