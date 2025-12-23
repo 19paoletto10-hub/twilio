@@ -1845,21 +1845,39 @@
 
   const formatNewsContent = (content) => {
     if (!content || content === '(pusty plik)') {
-      return '<div class="text-center text-muted py-4">(pusty plik)</div>';
+      return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Brak treści</div>';
     }
 
     // Podziel treść na artykuły (rozdzielone podwójną nową linią)
-    const articles = content.split(/\n{2,}/).filter(a => a.trim());
+    const rawArticles = content.split(/\n{2,}/).filter(a => a.trim());
     
-    if (articles.length <= 1) {
-      // Pojedynczy blok tekstu - sformatuj jako jeden artykuł
-      return `<div class="news-article-single">${escapeHtml(content)}</div>`;
+    // Filtruj separatory i puste elementy
+    const articles = rawArticles.filter(article => {
+      const trimmed = article.trim();
+      // Odrzuć jeśli to tylko kreski (separator)
+      if (/^[-─—_=]+$/.test(trimmed)) return false;
+      // Odrzuć jeśli zawiera głównie kreski (np. "---...---")
+      if (trimmed.replace(/[-─—_=\s]/g, '').length < 5) return false;
+      // Odrzuć bardzo krótkie teksty
+      if (trimmed.length < 10) return false;
+      return true;
+    });
+    
+    if (articles.length === 0) {
+      return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Brak treści</div>';
+    }
+    
+    if (articles.length === 1) {
+      // Pojedynczy blok tekstu
+      return `<div class="news-article-single">${escapeHtml(articles[0])}</div>`;
     }
 
     // Wiele artykułów - każdy jako osobna karta
     let html = '<div class="news-articles-list">';
     articles.forEach((article, index) => {
-      const lines = article.trim().split('\n');
+      const lines = article.trim().split('\n').filter(l => l.trim() && !/^[-─—_=]+$/.test(l.trim()));
+      if (lines.length === 0) return;
+      
       const title = lines[0] || '';
       const body = lines.slice(1).join('\n').trim();
       
