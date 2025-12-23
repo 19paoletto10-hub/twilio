@@ -1853,6 +1853,37 @@ def api_news_file_delete(filename: str):
         return jsonify({"error": f"Nie udało się usunąć pliku: {exc}"}), 500
 
 
+@webhooks_bp.delete("/api/news/files")
+def api_news_files_delete_all():
+    """Delete all scraped files."""
+    try:
+        files = _list_scraped_files()
+        deleted = []
+        errors = []
+
+        for file_info in files:
+            safe_name = os.path.basename(file_info.get("name", ""))
+            if not safe_name:
+                continue
+            path = os.path.join(SCRAPED_DIR, safe_name)
+            try:
+                if os.path.exists(path):
+                    os.remove(path)
+                    deleted.append(safe_name)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"{safe_name}: {exc}")
+
+        return jsonify({
+            "success": len(errors) == 0,
+            "deleted": deleted,
+            "deleted_count": len(deleted),
+            "errors": errors,
+        })
+    except Exception as exc:  # noqa: BLE001
+        current_app.logger.exception("Cannot delete all scraped files: %s", exc)
+        return jsonify({"error": f"Nie udało się usunąć plików: {exc}"}), 500
+
+
 @webhooks_bp.get("/api/news/faiss/export")
 def api_news_faiss_export():
     manifest = _faiss_backup_manifest()

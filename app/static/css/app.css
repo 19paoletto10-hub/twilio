@@ -1489,3 +1489,73 @@ body {
     transform: scale(1);
   }
 }
+
+/* News File Cards - improved styling */
+.news-file-card {
+  border: 1px solid var(--app-border);
+  border-radius: var(--app-radius-md);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  background: var(--app-bg-elevated);
+}
+
+.news-file-card:hover {
+  border-color: var(--app-primary);
+  box-shadow: 0 4px 12px rgba(124, 64, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.news-file-icon {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--app-primary-soft);
+  color: var(--app-primary);
+  border-radius: var(--app-radius-sm);
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.news-file-meta {
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+}
+
+.news-file-meta i {
+  opacity: 0.7;
+}
+
+.news-file-delete-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--app-text-muted);
+  border-radius: var(--app-radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 0;
+  opacity: 0;
+}
+
+.news-file-card:hover .news-file-delete-btn {
+  opacity: 1;
+}
+
+.news-file-delete-btn:hover {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.news-file-delete-btn:active {
+  transform: scale(0.9);
+}
+
+.news-file-delete-btn i {
+  font-size: 0.75rem;
+}

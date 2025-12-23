@@ -108,9 +108,11 @@
   const newsScrapeSpinner = document.getElementById('news-scrape-spinner');
   const newsScrapeStatus = document.getElementById('news-scrape-status');
   const newsScrapeLog = document.getElementById('news-scrape-log');
+  const newsScrapeStopBtn = document.getElementById('news-scrape-stop-btn');
   const newsFilesGrid = document.getElementById('news-files-grid');
   const newsFilesEmpty = document.getElementById('news-files-empty');
   const newsFilesRefreshBtn = document.getElementById('news-files-refresh-btn');
+  const newsFilesDeleteAllBtn = document.getElementById('news-files-delete-all-btn');
   const newsBuildIndexBtn = document.getElementById('news-build-index-btn');
   const newsBuildIndexSpinner = document.getElementById('news-build-index-spinner');
   const newsFileOverlay = document.getElementById('news-file-overlay');
@@ -1761,23 +1763,33 @@
       const updated = file.updated_at ? new Date(file.updated_at).toLocaleString() : '—';
       const format = escapeHtml(file.format || 'txt');
       const fileName = escapeHtml(file.name || '');
+      const formatBadgeClass = format === 'json' ? 'bg-info-subtle text-info-emphasis' : 'bg-primary-subtle text-primary-emphasis';
 
       return `
         <div class="col-lg-4 col-md-6">
-          <div class="card shadow-sm border-0 news-file-card position-relative" data-filename="${fileName}">
-            <button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2" data-action="delete-file" data-filename="${fileName}">
-              <i class="bi bi-trash"></i>
-            </button>
-            <div class="card-body">
+          <div class="card news-file-card h-100" data-filename="${fileName}">
+            <div class="card-body p-3">
               <div class="d-flex justify-content-between align-items-start mb-2">
-                <h6 class="mb-0 text-truncate flex-grow-1">${category}</h6>
-                <span class="badge bg-primary-subtle text-primary-emphasis ms-2">${format}</span>
+                <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
+                  <div class="news-file-icon">
+                    <i class="bi bi-file-earmark-text"></i>
+                  </div>
+                  <h6 class="mb-0 text-truncate fw-semibold">${category}</h6>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge ${formatBadgeClass} rounded-pill">${format}</span>
+                  <button class="news-file-delete-btn" data-action="delete-file" data-filename="${fileName}" title="Usuń plik">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
               </div>
-              <div class="small text-muted">
-                <div class="text-truncate" title="${fileName}">${fileName}</div>
-                <div class="d-flex justify-content-between mt-1">
-                  <span>${size}</span>
-                  <span>${updated.split(',')[0]}</span>
+              <div class="news-file-meta">
+                <div class="text-truncate mb-1" title="${fileName}">
+                  <i class="bi bi-file-text me-1"></i>${fileName}
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span><i class="bi bi-hdd me-1"></i>${size}</span>
+                  <span><i class="bi bi-clock me-1"></i>${updated.split(',')[0]}</span>
                 </div>
               </div>
             </div>
@@ -1869,6 +1881,36 @@
     } catch (error) {
       console.error(error);
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się usunąć pliku.', type: 'error' });
+    }
+  };
+
+  const deleteAllNewsFiles = async () => {
+    const confirmDelete = confirm('Czy na pewno chcesz usunąć WSZYSTKIE zeskrapowane pliki? Tej operacji nie można cofnąć.');
+    if (!confirmDelete) return;
+
+    try {
+      newsFilesDeleteAllBtn?.setAttribute('disabled', 'true');
+      const res = await fetchJSON('/api/news/files', { method: 'DELETE' });
+      
+      if (res.success || res.deleted_count > 0) {
+        showToast({ 
+          title: 'Usunięto', 
+          message: `Usunięto ${res.deleted_count || 0} plików.`, 
+          type: 'success' 
+        });
+        await loadNewsFiles();
+      } else {
+        showToast({ 
+          title: 'Błąd', 
+          message: res.error || 'Nie udało się usunąć plików.', 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ title: 'Błąd', message: error.message || 'Nie udało się usunąć plików.', type: 'error' });
+    } finally {
+      newsFilesDeleteAllBtn?.removeAttribute('disabled');
     }
   };
 
@@ -2103,6 +2145,27 @@
     }
   };
 
+  let activeScrapeEventSource = null;
+
+  const stopNewsScrape = () => {
+    if (activeScrapeEventSource) {
+      activeScrapeEventSource.close();
+      activeScrapeEventSource = null;
+      
+      const logText = document.getElementById('news-scrape-log-text');
+      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zatrzymano';
+      if (logText) logText.textContent = 'Skrapowanie zostało zatrzymane przez użytkownika.';
+      showToast({ title: 'Zatrzymano', message: 'Proces skrapowania został przerwany.', type: 'warning' });
+      
+      newsScrapeBtn?.removeAttribute('disabled');
+      newsScrapeSpinner?.classList.add('d-none');
+      newsScrapeStopBtn?.classList.add('d-none');
+      
+      // Odśwież listę plików (może część została zapisana)
+      loadNewsFiles().catch(console.error);
+    }
+  };
+
   const runNewsScrape = async () => {
     if (!newsScrapeBtn) return;
 
@@ -2110,6 +2173,7 @@
 
     newsScrapeBtn.setAttribute('disabled', 'true');
     newsScrapeSpinner?.classList.remove('d-none');
+    newsScrapeStopBtn?.classList.remove('d-none');
     if (newsScrapeStatus) newsScrapeStatus.textContent = 'Pobieranie...';
     
     const logContainer = newsScrapeLog;
@@ -2165,6 +2229,7 @@
 
     try {
       const eventSource = new EventSource('/api/news/scrape/stream');
+      activeScrapeEventSource = eventSource;
       
       eventSource.onmessage = (event) => {
         try {
@@ -2200,6 +2265,7 @@
               
             case 'complete':
               eventSource.close();
+              activeScrapeEventSource = null;
               
               if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
               const successCount = data.items?.filter(i => i.success).length || 0;
@@ -2214,6 +2280,7 @@
               
               newsScrapeBtn.removeAttribute('disabled');
               newsScrapeSpinner?.classList.add('d-none');
+              newsScrapeStopBtn?.classList.add('d-none');
               break;
           }
         } catch (parseError) {
@@ -2224,6 +2291,7 @@
       eventSource.onerror = (error) => {
         console.error('SSE error:', error);
         eventSource.close();
+        activeScrapeEventSource = null;
         
         if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
         if (logText) logText.textContent = 'Błąd połączenia z serwerem.';
@@ -2231,16 +2299,19 @@
         
         newsScrapeBtn.removeAttribute('disabled');
         newsScrapeSpinner?.classList.add('d-none');
+        newsScrapeStopBtn?.classList.add('d-none');
       };
       
     } catch (error) {
       console.error(error);
+      activeScrapeEventSource = null;
       if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
       if (logText) logText.textContent = error.message || 'Błąd serwera.';
       showToast({ title: 'Błąd', message: error.message || 'Skrapowanie nie powiodło się.', type: 'error' });
       
       newsScrapeBtn.removeAttribute('disabled');
       newsScrapeSpinner?.classList.add('d-none');
+      newsScrapeStopBtn?.classList.add('d-none');
     }
   };
 
@@ -3038,6 +3109,10 @@
       newsScrapeBtn.addEventListener('click', runNewsScrape);
     }
 
+    if (newsScrapeStopBtn) {
+      newsScrapeStopBtn.addEventListener('click', stopNewsScrape);
+    }
+
     if (newsBuildIndexBtn) {
       newsBuildIndexBtn.addEventListener('click', buildNewsIndex);
     }
@@ -3045,6 +3120,7 @@
     if (newsFilesGrid) {
       newsFilesGrid.addEventListener('click', handleNewsFileCardClick);
       newsFilesRefreshBtn?.addEventListener('click', loadNewsFiles);
+      newsFilesDeleteAllBtn?.addEventListener('click', deleteAllNewsFiles);
       loadNewsFiles();
     }
 
