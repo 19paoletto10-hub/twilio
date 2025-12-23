@@ -2111,35 +2111,134 @@
     newsScrapeBtn.setAttribute('disabled', 'true');
     newsScrapeSpinner?.classList.remove('d-none');
     if (newsScrapeStatus) newsScrapeStatus.textContent = 'Pobieranie...';
-    if (newsScrapeLog) {
-      newsScrapeLog.classList.remove('d-none');
-      newsScrapeLog.textContent = 'Rozpoczynam skrapowanie kategorii...';
+    
+    const logContainer = newsScrapeLog;
+    const logText = document.getElementById('news-scrape-log-text');
+    const categoriesContainer = document.getElementById('news-scrape-categories');
+    
+    if (logContainer) {
+      logContainer.classList.remove('d-none');
+      if (logText) logText.textContent = 'Rozpoczynam skrapowanie kategorii...';
+      if (categoriesContainer) categoriesContainer.innerHTML = '';
     }
 
-    try {
-      const data = await fetchJSON('/api/news/scrape', { method: 'POST' });
-
-      if (!data.success) {
-        if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
-        if (newsScrapeLog) newsScrapeLog.textContent = data.error || 'Skrapowanie nie powiodło się.';
-        showToast({ title: 'Błąd', message: data.error || 'Skrapowanie nie powiodło się.', type: 'error' });
-        return;
+    // Funkcja do renderowania statusu kategorii
+    const renderCategoryItem = (category, status, message = '') => {
+      if (!categoriesContainer) return;
+      
+      let icon, textClass;
+      switch (status) {
+        case 'pending':
+          icon = '<i class="bi bi-circle text-muted me-2"></i>';
+          textClass = 'text-muted';
+          break;
+        case 'processing':
+          icon = '<span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>';
+          textClass = 'text-primary fw-medium';
+          break;
+        case 'success':
+          icon = '<i class="bi bi-check-circle-fill text-success me-2"></i>';
+          textClass = 'text-success';
+          break;
+        case 'error':
+          icon = '<i class="bi bi-x-circle-fill text-danger me-2"></i>';
+          textClass = 'text-danger';
+          break;
+        default:
+          icon = '<i class="bi bi-circle text-muted me-2"></i>';
+          textClass = 'text-muted';
       }
+      
+      const itemId = `scrape-cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
+      let item = document.getElementById(itemId);
+      
+      if (!item) {
+        item = document.createElement('div');
+        item.id = itemId;
+        item.className = 'd-flex align-items-center py-1';
+        categoriesContainer.appendChild(item);
+      }
+      
+      const messageSpan = message ? `<small class="ms-2 text-muted">(${message})</small>` : '';
+      item.innerHTML = `${icon}<span class="${textClass}">${category}</span>${messageSpan}`;
+    };
 
-      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
-      const summary = `Pobrano ${data.items?.length || 0} kategorii. FAISS odbudowany.`;
-      if (newsScrapeLog) newsScrapeLog.textContent = summary;
-      showToast({ title: 'Sukces', message: summary, type: 'success' });
-
-      if (newsLastBuild && data.completed_at) newsLastBuild.textContent = data.completed_at;
-
-      await Promise.all([loadNewsFiles(), loadNewsIndices()]);
+    try {
+      const eventSource = new EventSource('/api/news/scrape/stream');
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          
+          switch (data.type) {
+            case 'start':
+              // Inicjalizacja listy kategorii
+              if (data.categories && categoriesContainer) {
+                data.categories.forEach(cat => renderCategoryItem(cat, 'pending'));
+              }
+              break;
+              
+            case 'processing':
+              renderCategoryItem(data.category, 'processing');
+              if (newsScrapeStatus) {
+                newsScrapeStatus.textContent = `${data.index + 1}/${data.total}`;
+              }
+              break;
+              
+            case 'done':
+              if (data.success) {
+                const msg = data.articles_count ? `${data.articles_count} art.` : '';
+                renderCategoryItem(data.category, 'success', msg);
+              } else {
+                renderCategoryItem(data.category, 'error', data.message || 'błąd');
+              }
+              break;
+              
+            case 'building_faiss':
+              if (logText) logText.textContent = 'Budowanie indeksu FAISS...';
+              break;
+              
+            case 'complete':
+              eventSource.close();
+              
+              if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
+              const successCount = data.items?.filter(i => i.success).length || 0;
+              const totalCount = data.items?.length || 0;
+              const summary = `Pobrano ${successCount}/${totalCount} kategorii. FAISS odbudowany.`;
+              if (logText) logText.textContent = summary;
+              showToast({ title: 'Sukces', message: summary, type: 'success' });
+              
+              if (newsLastBuild && data.completed_at) newsLastBuild.textContent = data.completed_at;
+              
+              Promise.all([loadNewsFiles(), loadNewsIndices()]).catch(console.error);
+              
+              newsScrapeBtn.removeAttribute('disabled');
+              newsScrapeSpinner?.classList.add('d-none');
+              break;
+          }
+        } catch (parseError) {
+          console.error('SSE parse error:', parseError);
+        }
+      };
+      
+      eventSource.onerror = (error) => {
+        console.error('SSE error:', error);
+        eventSource.close();
+        
+        if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
+        if (logText) logText.textContent = 'Błąd połączenia z serwerem.';
+        showToast({ title: 'Błąd', message: 'Skrapowanie nie powiodło się.', type: 'error' });
+        
+        newsScrapeBtn.removeAttribute('disabled');
+        newsScrapeSpinner?.classList.add('d-none');
+      };
+      
     } catch (error) {
       console.error(error);
       if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
-      if (newsScrapeLog) newsScrapeLog.textContent = error.message || 'Błąd serwera.';
+      if (logText) logText.textContent = error.message || 'Błąd serwera.';
       showToast({ title: 'Błąd', message: error.message || 'Skrapowanie nie powiodło się.', type: 'error' });
-    } finally {
+      
       newsScrapeBtn.removeAttribute('disabled');
       newsScrapeSpinner?.classList.add('d-none');
     }

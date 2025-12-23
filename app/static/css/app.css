@@ -1454,3 +1454,38 @@ body {
     font-size: 0.8rem;
   }
 }
+
+/* News Scrape Progress */
+#news-scrape-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--app-border);
+}
+
+#news-scrape-categories > div {
+  transition: all 0.2s ease;
+}
+
+#news-scrape-categories .spinner-border {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.15em;
+}
+
+#news-scrape-categories .bi-check-circle-fill {
+  animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
