@@ -1,5 +1,81 @@
 # Changelog
 
+## ver3.2.3 (News Scraping UX: Live Progress & Professional Content Display)
+
+### Podsumowanie
+
+Release 3.2.3 znacząco ulepsza doświadczenie użytkownika w module News/FAISS.
+Wprowadza dynamiczny podgląd postępu skrapowania z wykorzystaniem Server-Sent Events (SSE),
+przycisk zatrzymania procesu, masowe usuwanie plików oraz profesjonalne formatowanie
+podglądu zeskrapowanych artykułów.
+
+### Najważniejsze zmiany
+
+#### 📡 Dynamiczny postęp skrapowania (SSE)
+- **Real-time streaming** – każda kategoria aktualizuje się na żywo podczas skrapowania
+- **Wizualne statusy kategorii:**
+  - ⚪ Oczekuje – kategoria w kolejce
+  - 🔄 Spinner – aktualnie przetwarzana
+  - ✅ Sukces – zapisano pliki (z liczbą artykułów)
+  - ❌ Błąd – problem z kategorią
+- **Licznik postępu** – badge pokazuje `X/Y` ukończonych kategorii
+- **Nowy endpoint SSE** – `GET /api/news/scrape/stream` dla streamingu zdarzeń
+
+#### ⏹️ Kontrola procesu skrapowania
+- **Przycisk „Zatrzymaj"** – przerywa proces w dowolnym momencie
+- Automatyczne ukrywanie przycisku po zakończeniu
+- Zachowanie częściowo zapisanych plików po przerwaniu
+
+#### 🗑️ Masowe zarządzanie plikami
+- **Przycisk „Usuń wszystkie"** – kasuje wszystkie zeskrapowane pliki jednym kliknięciem
+- Potwierdzenie przed usunięciem
+- Nowy endpoint `DELETE /api/news/files` dla operacji masowej
+
+#### 📰 Profesjonalny podgląd treści
+- **Wyświetlanie tylko plików .txt** – ukryto techniczne pliki .json
+- **Eleganckie kafelki kategorii:**
+  - Ikona gazety zamiast pliku
+  - Nazwa kategorii z wielką literą
+  - Data w formacie polskim (np. „23 gru, 14:30")
+  - Przycisk usuwania widoczny przy hover
+- **Formatowanie artykułów w overlay:**
+  - Numerowane karty dla każdego artykułu
+  - Pogrubione tytuły (pierwszy wiersz)
+  - Czytelna typografia z właściwym line-height
+  - **Filtrowanie separatorów** – linie `---` nie są wyświetlane
+
+#### 🎨 Nowe style CSS
+- `.news-file-card` – karty z efektem hover i cieniem
+- `.news-file-icon` – ikona z gradientowym tłem
+- `.news-file-delete-btn` – przycisk X widoczny przy hover
+- `.news-article-item` – karta artykułu z numerem
+- `.news-article-title` / `.news-article-body` – typografia treści
+- Animacja `fadeInScale` dla ikon sukcesu
+
+### Nowe API Endpoints
+
+| Endpoint | Metoda | Opis |
+|----------|--------|------|
+| `/api/news/scrape/stream` | GET | SSE streaming postępu skrapowania |
+| `/api/news/files` | DELETE | Usuń wszystkie zeskrapowane pliki |
+
+### Zaktualizowane pliki
+
+```
+app/webhooks.py                  # Nowe endpointy SSE i DELETE all
+app/static/js/dashboard.js       # Obsługa SSE, zatrzymanie, usuwanie, formatowanie
+app/templates/dashboard.html     # Przycisk stop, przycisk usuń wszystkie
+app/static/css/app.css           # Style kafelków i podglądu artykułów
+```
+
+### Kompatybilność
+
+- **Brak zmian łamiących** – istniejące API pozostaje kompatybilne
+- Oryginalny endpoint `POST /api/news/scrape` nadal działa (bez streamingu)
+- Wymaga przeglądarki z obsługą EventSource (wszystkie nowoczesne przeglądarki)
+
+---
+
 ## ver3.2.2 (UI/UX Modernization: Chat Page + Secrets Manager + Design System Refresh)
 
 ### Podsumowanie
