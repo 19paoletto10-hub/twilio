@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Release Notes: ver3.2.3 | Twilio Chat App</title>
+  <style>
+    :root{--bg:#f7f9fb;--card:#ffffff;--muted:#6c757d;--accent:#7c40ff;--accent-2:#f22f46;--text:#172042;--success:#10b981;--warning:#f59e0b}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.65;color:var(--text);background:var(--bg)}
+    .container{max-width:900px;margin:0 auto;padding:32px 24px}
+    header{text-align:center;margin-bottom:32px}
+    .badge{display:inline-block;padding:6px 16px;border-radius:999px;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;font-weight:700;font-size:0.85rem;margin-bottom:12px}
+    h1{margin:0 0 8px;font-size:2rem}
+    .subtitle{color:var(--muted);font-size:1.1rem}
+    .date{color:var(--muted);font-size:0.9rem;margin-top:8px}
+    .card{background:var(--card);border-radius:16px;padding:24px;margin-bottom:24px;box-shadow:0 4px 24px rgba(20,30,60,0.06)}
+    h2{margin:0 0 16px;font-size:1.4rem;display:flex;align-items:center;gap:10px}
+    h2 .icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem}
+    h3{margin:16px 0 8px;font-size:1.1rem;color:var(--accent)}
+    p{margin:8px 0}
+    ul{margin:8px 0;padding-left:24px}
+    li{margin:4px 0}
+    table{width:100%;border-collapse:collapse;margin:16px 0}
+    th,td{padding:12px;text-align:left;border-bottom:1px solid #eef2fb}
+    th{background:#f8fafc;font-weight:600}
+    code{background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:0.9em;font-family:monospace}
+    .code{background:#1e293b;color:#f1f5f9;padding:16px;border-radius:10px;font-family:monospace;font-size:0.9rem;overflow-x:auto;white-space:pre}
+    .highlight{background:linear-gradient(135deg,rgba(124,64,255,0.08),rgba(242,47,70,0.06));border-radius:12px;padding:20px;margin:16px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin:16px 0}
+    .grid-item{background:#f8fafc;padding:16px;border-radius:10px;border:1px solid #eef2fb}
+    .grid-item strong{display:block;margin-bottom:4px;color:var(--accent)}
+    .feature-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:16px 0}
+    .feature{background:#f8fafc;padding:14px;border-radius:10px;border-left:4px solid var(--accent)}
+    .feature strong{display:block;margin-bottom:4px}
+    .ascii-art{background:#0f172a;color:#94a3b8;padding:20px;border-radius:12px;font-family:monospace;font-size:0.75rem;line-height:1.4;overflow-x:auto;white-space:pre}
+    .status-table{margin:16px 0}
+    .status-table td:first-child{text-align:center;font-size:1.2rem;width:50px}
+    .event-flow{background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;padding:20px;border-radius:12px;margin:16px 0}
+    .event-flow .event{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
+    .event-flow .event:last-child{border-bottom:none}
+    .event-flow .event-name{background:var(--accent);color:#fff;padding:4px 10px;border-radius:6px;font-family:monospace;font-size:0.85rem}
+    .event-flow .event-desc{color:#94a3b8}
+    footer{text-align:center;color:var(--muted);font-size:0.9rem;margin-top:40px;padding-top:24px;border-top:1px solid #eef2fb}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:16px 0}
+    .stat-item{text-align:center;padding:20px;background:#f8fafc;border-radius:12px}
+    .stat-item .value{font-size:2rem;font-weight:700;color:var(--accent)}
+    .stat-item .label{color:var(--muted);font-size:0.9rem;margin-top:4px}
+    @media(max-width:600px){.container{padding:16px}.card{padding:16px}.stats-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span class="badge">🚀 NEW RELEASE</span>
+      <h1>ver3.2.3</h1>
+      <p class="subtitle">News Scraping UX Improvements: SSE Streaming + Process Control + Professional Content Display</p>
+      <p class="date">📅 Data wydania: 2025-12-23</p>
+    </header>
+
+    <div class="card">
+      <h2><span class="icon">📋</span> Podsumowanie</h2>
+      <p>
+        Release 3.2.3 wprowadza znaczące ulepszenia UX w zakładce News/FAISS. Główną nowością jest
+        real-time streaming postępu skrapowania z wykorzystaniem Server-Sent Events (SSE), umożliwiający
+        wizualizację statusu każdej kategorii na żywo.
+      </p>
+      <div class="grid">
+        <div class="grid-item"><strong>📡 SSE Streaming</strong>Real-time postęp skrapowania</div>
+        <div class="grid-item"><strong>🛑 Stop Button</strong>Przerwanie procesu w dowolnym momencie</div>
+        <div class="grid-item"><strong>🗑️ Delete All</strong>Masowe usuwanie plików</div>
+        <div class="grid-item"><strong>📰 Pro Preview</strong>Profesjonalny podgląd artykułów</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📡</span> SSE Streaming dla postępu skrapowania</h2>
+      <p>Real-time aktualizacja statusów kategorii podczas skrapowania:</p>
+      <table class="status-table">
+        <tr><th>Status</th><th>Ikona</th><th>Opis</th></tr>
+        <tr><td>⚪</td><td>Oczekuje</td><td>Kategoria w kolejce do skrapowania</td></tr>
+        <tr><td>🔄</td><td>W trakcie</td><td>Aktywne skrapowanie kategorii</td></tr>
+        <tr><td>✅</td><td>Sukces</td><td>Kategoria ukończona pomyślnie</td></tr>
+        <tr><td>❌</td><td>Błąd</td><td>Wystąpił błąd podczas skrapowania</td></tr>
+      </table>
+      <h3>Przepływ zdarzeń SSE</h3>
+      <div class="event-flow">
+        <div class="event"><span class="event-name">start</span><span class="event-desc">Inicjalizacja, lista kategorii</span></div>
+        <div class="event"><span class="event-name">processing</span><span class="event-desc">Rozpoczęcie skrapowania kategorii</span></div>
+        <div class="event"><span class="event-name">done</span><span class="event-desc">Zakończenie kategorii (success/error)</span></div>
+        <div class="event"><span class="event-name">building_faiss</span><span class="event-desc">Budowanie indeksu FAISS</span></div>
+        <div class="event"><span class="event-name">complete</span><span class="event-desc">Zakończenie całego procesu</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🛑</span> Przycisk „Zatrzymaj"</h2>
+      <p>Nowy przycisk pozwalający przerwać skrapowanie w dowolnym momencie:</p>
+      <div class="ascii-art">┌─────────────────────────────────────────────────────────┐
+│ 📰 Pobierz i zbuduj        [🛑 Zatrzymaj]              │
+├─────────────────────────────────────────────────────────┤
+│ Rozpoczynam skrapowanie kategorii...                    │
+├─────────────────────────────────────────────────────────┤
+│ 🔄 technologie      ← aktualnie przetwarzana           │
+│ ✅ biznes           ← ukończona                        │
+│ ✅ gospodarka       ← ukończona                        │
+│ ⚪ giełda           ← oczekuje                         │
+│ ⚪ nieruchomości    ← oczekuje                         │
+└─────────────────────────────────────────────────────────┘</div>
+      <div class="feature-list">
+        <div class="feature"><strong>Widoczność</strong>Przycisk pojawia się tylko podczas aktywnego skrapowania</div>
+        <div class="feature"><strong>Natychmiastowe działanie</strong>Przerwanie połączenia EventSource</div>
+        <div class="feature"><strong>Reset UI</strong>Automatyczna aktualizacja statusu</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🗑️</span> Przycisk „Usuń wszystkie"</h2>
+      <p>Masowe kasowanie zeskrapowanych plików jednym kliknięciem:</p>
+      <table>
+        <tr><th>Funkcja</th><th>Opis</th></tr>
+        <tr><td>Potwierdzenie</td><td>Dialog z liczbą plików do usunięcia</td></tr>
+        <tr><td>Filtrowanie</td><td>Usuwa tylko pliki .txt i .json z katalogu scrapes</td></tr>
+        <tr><td>Feedback</td><td>Toast z informacją o liczbie usuniętych plików</td></tr>
+        <tr><td>Endpoint</td><td><code>DELETE /api/news/files</code></td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📰</span> Eleganckie kafelki plików</h2>
+      <p>Przeprojektowane karty plików w stylu gazetowym:</p>
+      <div class="ascii-art">┌─────────────────────────────────┐
+│ 📰  biznes.txt                  │
+│     23.12.2025                  │
+│     12.5 KB              [🗑️]  │
+└─────────────────────────────────┘</div>
+      <div class="feature-list">
+        <div class="feature"><strong>Ikona gazety 📰</strong>Zamiast standardowej ikony pliku</div>
+        <div class="feature"><strong>Polski format daty</strong>DD.MM.YYYY</div>
+        <div class="feature"><strong>Tylko .txt</strong>Ukrycie technicznych plików .json</div>
+        <div class="feature"><strong>Efekty hover</strong>Delikatny cień przy najechaniu</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📄</span> Profesjonalny podgląd artykułów</h2>
+      <p>Nowe formatowanie zawartości w overlay:</p>
+      <div class="ascii-art">┌─────────────────────────────────────────────────────────┐
+│ 📰 biznes.txt                                     [✕]  │
+├─────────────────────────────────────────────────────────┤
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 1  Prezes NBP o stopach procentowych               │ │
+│ │    Treść artykułu o polityce monetarnej banku      │ │
+│ │    centralnego i perspektywach gospodarczych...    │ │
+│ └─────────────────────────────────────────────────────┘ │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ 2  Kursy walut w dół                               │ │
+│ │    Analiza rynku walutowego pokazuje spadek        │ │
+│ │    wartości euro względem dolara...                │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘</div>
+      <ul>
+        <li><strong>Numeracja artykułów</strong> – badge z liczbą porządkową</li>
+        <li><strong>Pogrubiony tytuł</strong> – pierwsza linia artykułu</li>
+        <li><strong>Filtrowanie separatorów</strong> – automatyczne usuwanie linii <code>----------------</code></li>
+        <li><strong>Czyste odstępy</strong> – eleganckie karty między artykułami</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🔌</span> API Endpoints</h2>
+      <p>Nowe endpointy w tej wersji:</p>
+      <table>
+        <tr><th>Metoda</th><th>Endpoint</th><th>Opis</th></tr>
+        <tr><td><code>GET</code></td><td><code>/api/news/scrape/stream</code></td><td>SSE streaming postępu skrapowania</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/api/news/files</code></td><td>Masowe usuwanie plików scrape</td></tr>
+      </table>
+      <h3>Format zdarzeń SSE</h3>
+      <div class="code">// Event: start
+{"event": "start", "categories": ["biznes", "technologie", ...]}
+
+// Event: processing
+{"event": "processing", "category": "biznes"}
+
+// Event: done
+{"event": "done", "category": "biznes", "success": true, "articles": 15}
+
+// Event: complete
+{"event": "complete", "total_articles": 120, "faiss_docs": 450}</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🎨</span> Nowe komponenty CSS</h2>
+      <table>
+        <tr><th>Komponent</th><th>Opis</th></tr>
+        <tr><td><code>.news-file-card</code></td><td>Karta pliku z efektami hover</td></tr>
+        <tr><td><code>.news-file-icon</code></td><td>Ikona gazety 24x24px</td></tr>
+        <tr><td><code>.news-file-delete-btn</code></td><td>Przycisk usuwania z czerwonym akcentem</td></tr>
+        <tr><td><code>.news-article-item</code></td><td>Kontener pojedynczego artykułu</td></tr>
+        <tr><td><code>.news-article-number</code></td><td>Badge z numerem artykułu</td></tr>
+        <tr><td><code>.news-article-title</code></td><td>Pogrubiony tytuł</td></tr>
+        <tr><td><code>@keyframes fadeInScale</code></td><td>Animacja ikon sukcesu</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🐛</span> Poprawki błędów</h2>
+      <div class="highlight">
+        <strong>Filtrowanie separatorów:</strong> Linie separatorów (<code>----------------</code>) nie wyświetlają się już jako puste elementy artykułów.
+      </div>
+      <div class="code">const separatorPattern = /^[-─—_=]+$/;
+if (separatorPattern.test(trimmed)) continue;
+if (trimmed.length <= 3) continue;</div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">📊</span> Statystyki wydania</h2>
+      <div class="stats-grid">
+        <div class="stat-item"><div class="value">6</div><div class="label">Pliki zmienione</div></div>
+        <div class="stat-item"><div class="value">+658</div><div class="label">Linie dodane</div></div>
+        <div class="stat-item"><div class="value">2</div><div class="label">Nowe endpointy</div></div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-item"><div class="value">5</div><div class="label">Nowe funkcje JS</div></div>
+        <div class="stat-item"><div class="value">8</div><div class="label">Nowe klasy CSS</div></div>
+        <div class="stat-item"><div class="value">1</div><div class="label">Bug fix</div></div>
+      </div>
+    </div>
+
+    <footer>
+      <p><strong>Full Changelog:</strong> <a href="https://github.com/19paoletto10-hub/twilio/compare/v3.2.2...v3.2.3">v3.2.2...v3.2.3</a></p>
+      <p>Twilio Chat App &copy; 2025</p>
+    </footer>
+  </div>
+</body>
+</html>
