@@ -2,8 +2,8 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.2.5-blue.svg)
-![Python](https://img.shields.io/badge/python-3.10+-green.svg)
+![Version](https://img.shields.io/badge/version-3.2.7-blue.svg)
+![Python](https://img.shields.io/badge/python-3.12+-green.svg)
 ![Flask](https://img.shields.io/badge/flask-3.x-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
 ![Type Safety](https://img.shields.io/badge/pylance-0%20errors-brightgreen.svg)
