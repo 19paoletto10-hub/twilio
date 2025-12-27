@@ -832,8 +832,8 @@ class FAISSService:
         self,
         query: str,
         *,
-        per_category_k: int = 1,
-        fetch_k: int = 40,
+        per_category_k: int = 2,
+        fetch_k: int = 50,
         mmr_lambda: float = 0.5,
     ) -> List[Document]:
         """
@@ -843,6 +843,8 @@ class FAISSService:
 
         per_category_k: how many chunks per category
         fetch_k: internal candidate pool for MMR (if available)
+        
+        GWARANCJA: Dla każdej kategorii zwraca dokumenty TYLKO z tej kategorii.
         """
         if not query or not query.strip():
             return []
@@ -858,7 +860,43 @@ class FAISSService:
             return search_similar_text(self.vector_store, query, k=max(5, per_category_k))
 
         out: List[Document] = []
+        
+        # Pobierz wszystkie dokumenty z docstore żeby móc filtrować per kategoria
+        all_docs_by_category: Dict[str, List[Document]] = {}
+        try:
+            ds = getattr(self.vector_store, "docstore", None)
+            dsdict = getattr(ds, "_dict", None)
+            if isinstance(dsdict, dict):
+                for doc in dsdict.values():
+                    md = getattr(doc, "metadata", {}) or {}
+                    cat = str(md.get("category", "")).strip()
+                    if cat:
+                        all_docs_by_category.setdefault(cat, []).append(doc)
+        except Exception as exc:
+            logging.warning("search_all_categories: Błąd podczas skanowania docstore: %s", exc)
+        
         for cat in cats:
+            # Strategia 1: Jeśli mamy dokumenty z docstore dla tej kategorii, użyj ich
+            cat_docs = all_docs_by_category.get(cat, [])
+            
+            if cat_docs:
+                # Mamy dokumenty dla tej kategorii - wybierz najlepsze per_category_k
+                # Używamy prostego podobieństwa tekstowego (query w content)
+                query_lower = query.lower()
+                scored_docs = []
+                for doc in cat_docs:
+                    content = (doc.page_content or "").lower()
+                    # Prosta heurystyka: ile słów z query występuje w dokumencie
+                    score = sum(1 for word in query_lower.split() if len(word) > 3 and word in content)
+                    scored_docs.append((score, doc))
+                
+                # Sortuj malejąco po score
+                scored_docs.sort(key=lambda x: x[0], reverse=True)
+                best_docs = [doc for _, doc in scored_docs[:per_category_k]]
+                out.extend(best_docs)
+                continue
+            
+            # Strategia 2: Fallback - użyj similarity search z filtrem
             q = f"{query}\nKategoria: {cat}"
 
             # Prefer MMR when available to reduce duplicates within a category
@@ -866,19 +904,20 @@ class FAISSService:
             try:
                 docs_cat = self.vector_store.max_marginal_relevance_search(  # type: ignore[attr-defined]
                     q,
-                    k=per_category_k,
+                    k=per_category_k * 3,  # Pobierz więcej, żeby móc filtrować
                     fetch_k=max(fetch_k, per_category_k * 10),
                     lambda_mult=mmr_lambda,
                 )
             except Exception:
-                docs_cat = self.vector_store.similarity_search(q, k=per_category_k)
+                docs_cat = self.vector_store.similarity_search(q, k=per_category_k * 3)
 
-            # If metadata category exists, prefer exact matches
+            # Filtruj TYLKO dokumenty z tej kategorii
             filtered = [d for d in docs_cat if (d.metadata or {}).get("category") == cat]
             if filtered:
                 out.extend(filtered[:per_category_k])
             else:
-                out.extend(docs_cat[:per_category_k])
+                # Ostateczność - brak dokumentów dla tej kategorii w wynikach
+                logging.warning("search_all_categories: Brak dokumentów dla kategorii '%s' po MMR", cat)
 
         return out
 
@@ -958,75 +997,134 @@ class FAISSService:
         self,
         query: str,
         *,
-        per_category_k: int = 1,
+        per_category_k: int = 2,
         chat_model: Optional[str] = None,
         system_prompt: Optional[str] = None,
-        temperature: float = 0.2,
+        temperature: float = 0.3,
     ) -> Dict:
         """
-        Category-coverage RAG: takes per_category_k chunks per category,
-        then produces a per-category summary.
-
-        This is the method you want for: "przejrzyj wszystkie kategorie".
+        Category-coverage RAG: Profesjonalne streszczenie newsów jak reporter.
+        
+        Dla każdej kategorii tworzy koherentne, płynne podsumowanie najważniejszych
+        informacji. Styl: dziennikarski, konkretny, z liczbami i faktami.
+        
+        GWARANCJA: Każda dostępna kategoria zostanie uwzględniona w odpowiedzi.
         """
         model_to_use = chat_model or self.chat_model
+        
+        # 1. Pobierz WSZYSTKIE dostępne kategorie
+        all_categories = self.list_categories()
+        if not all_categories:
+            logging.warning("answer_query_all_categories: Brak kategorii w bazie")
+            return {
+                "success": False,
+                "error": "Brak kategorii w bazie FAISS. Zeskrapuj newsy i zbuduj indeks.",
+                "query": query,
+                "count": 0,
+                "results": [],
+                "answer": "❌ Baza wiedzy jest pusta. Najpierw pobierz newsy i zbuduj indeks FAISS.",
+                "llm_used": False,
+            }
+        
+        logging.info("answer_query_all_categories: Znaleziono %d kategorii: %s", len(all_categories), all_categories)
 
+        # 2. Wyszukaj dokumenty dla wszystkich kategorii
         docs = self.search_all_categories(query, per_category_k=per_category_k)
         results = _format_results(docs)
         context_budget = _get_context_max_chars()
+        
+        # 3. Buduj konteksty per kategoria z dokumentów
         contexts_by_cat = _build_category_contexts(docs, max_chars_total=context_budget)
+        
+        # 4. GWARANCJA: Upewnij się, że KAŻDA kategoria ma wpis (nawet pusty)
+        for cat in all_categories:
+            if cat not in contexts_by_cat:
+                contexts_by_cat[cat] = ""
+                logging.warning("answer_query_all_categories: Brak dokumentów dla kategorii '%s'", cat)
+        
+        # Sortuj alfabetycznie
+        contexts_by_cat = dict(sorted(contexts_by_cat.items()))
+        
         context = "\n\n".join(
             [
                 f"=== {cat} ===\n{ctx}" if ctx else f"=== {cat} ===\n(brak danych)"
                 for cat, ctx in contexts_by_cat.items()
             ]
         ).strip()
+        
         payload = {
             "success": True,
             "query": query,
             "count": len(results),
             "results": results,
+            "categories_found": list(contexts_by_cat.keys()),
+            "categories_with_data": [cat for cat, ctx in contexts_by_cat.items() if ctx],
+            "categories_empty": [cat for cat, ctx in contexts_by_cat.items() if not ctx],
             "search_info": {
                 "mode": "category_coverage",
                 "per_category_k": per_category_k,
                 "embedding_model": self.embeddings.model,
                 "chunks_snapshot_jsonl": DOCS_JSONL_PATH,
             },
-            "context_preview": context,
+            "context_preview": context[:2000] + "..." if len(context) > 2000 else context,
         }
 
-        if not self.client or not context:
+        if not self.client:
+            logging.error("answer_query_all_categories: Brak klienta OpenAI")
             return {
                 **payload,
                 "answer": self._fallback_human_answer(query, results),
                 "llm_used": False,
+                "error": "Brak skonfigurowanego klienta OpenAI",
             }
 
+        if not context or all(not ctx for ctx in contexts_by_cat.values()):
+            logging.warning("answer_query_all_categories: Brak kontekstu dla żadnej kategorii")
+            return {
+                **payload,
+                "answer": "❌ Brak danych w bazie wiedzy dla żadnej kategorii. Zeskrapuj newsy i zbuduj indeks.",
+                "llm_used": False,
+            }
+
+        # System prompt - styl profesjonalnego reportera
         sys_msg = system_prompt or (
-            "Robisz przegląd newsów po kategoriach. Odpowiadasz po polsku. "
-            "Każdą kategorię analizujesz osobno, nie mieszając faktów między kategoriami. "
-            "Tworzysz sekcje dla każdej kategorii, krótko i konkretnie. "
-            "Korzystasz WYŁĄCZNIE z kontekstu."
+            "Jesteś doświadczonym dziennikarzem biznesowym przygotowującym poranny briefing dla kadry zarządzającej. "
+            "Twój styl: profesjonalny, zwięzły, konkretny. Używasz liczb, dat, nazw firm i osób gdy są dostępne. "
+            "Piszesz płynną, koherentną prozę - NIE używasz wypunktowań ani list. "
+            "Każda kategoria to osobny, spójny akapit 2-4 zdań. "
+            "MUSISZ uwzględnić KAŻDĄ kategorię z listy - nawet jeśli napiszesz że brak informacji. "
+            "Odpowiadasz TYLKO po polsku. Korzystasz WYŁĄCZNIE z podanego kontekstu."
         )
-        if contexts_by_cat:
-            context_sections = "\n\n".join(
-                [
-                    f"[{cat}]\n{ctx if ctx else 'brak danych'}"
-                    for cat, ctx in contexts_by_cat.items()
-                ]
-            )
-        else:
-            context_sections = "brak danych"
+        
+        # Buduj sekcje kontekstu z jawnym oznaczeniem pustych
+        context_sections_list = []
+        for cat in sorted(contexts_by_cat.keys()):
+            ctx = contexts_by_cat[cat]
+            if ctx and ctx.strip():
+                context_sections_list.append(f"### {cat.upper()} ###\n{ctx}")
+            else:
+                context_sections_list.append(f"### {cat.upper()} ###\n(BRAK DANYCH - napisz że brak informacji)")
+        
+        context_sections = "\n\n".join(context_sections_list)
+        
+        # Jawna lista kategorii do uwzględnienia
+        categories_list = ", ".join(sorted(contexts_by_cat.keys()))
 
         user_msg = (
-            f"Pytanie:\n{query}\n\n"
-            "Konteksty per kategoria (używaj tylko fragmentów z danej sekcji, nie mieszaj kategorii):\n"
-            f"{context_sections}\n\n"
-            "Dla każdej kategorii wypisz nagłówek 'Kategoria: <nazwa>' oraz 2-3 krótkie zdania (bez wypunktowań) "
-            "opisujące najważniejsze wiadomości z tej kategorii. Jeśli brak danych, napisz 'brak danych'."
+            f"Przygotuj profesjonalne streszczenie newsów. MUSISZ uwzględnić WSZYSTKIE kategorie.\n\n"
+            f"KATEGORIE DO UWZGLĘDNIENIA ({len(contexts_by_cat)}): {categories_list}\n\n"
+            f"ŹRÓDŁA (per kategoria):\n{context_sections}\n\n"
+            "INSTRUKCJE:\n"
+            f"1. Napisz streszczenie dla KAŻDEJ z {len(contexts_by_cat)} kategorii wymienionych powyżej\n"
+            "2. Każda sekcja zaczyna się od emoji i nazwy (np. 📊 BIZNES)\n"
+            "3. Dla każdej kategorii napisz 2-4 zdania płynną prozą (BEZ wypunktowań)\n"
+            "4. Jeśli przy kategorii jest '(BRAK DANYCH)', napisz: 'Brak nowych informacji w tej kategorii.'\n"
+            "5. Uwzględnij liczby, daty, nazwy firm jeśli są dostępne\n\n"
+            "WAŻNE: Odpowiedź MUSI zawierać sekcje dla WSZYSTKICH kategorii!"
         )
 
         try:
+            logging.info("answer_query_all_categories: Wywołanie OpenAI (model=%s)", model_to_use)
             resp = self.client.chat.completions.create(
                 model=model_to_use,
                 messages=[
@@ -1034,11 +1132,25 @@ class FAISSService:
                     {"role": "user", "content": user_msg},
                 ],
                 temperature=temperature,
+                max_tokens=2000,  # Zapewnij wystarczająco dużo tokenów na wszystkie kategorie
             )
             answer = (resp.choices[0].message.content or "").strip()
-        except Exception as exc:  # noqa: BLE001
-            logging.warning("OpenAI chat error: %s", exc)
-            answer = self._fallback_human_answer(query, results)
+            
+            if not answer:
+                logging.error("answer_query_all_categories: OpenAI zwróciło pustą odpowiedź")
+                answer = self._fallback_human_answer(query, results)
+                return {**payload, "answer": answer, "llm_used": False, "error": "OpenAI zwróciło pustą odpowiedź"}
+                
+            logging.info("answer_query_all_categories: Sukces, odpowiedź ma %d znaków", len(answer))
+            
+        except Exception as exc:
+            logging.exception("answer_query_all_categories: Błąd OpenAI: %s", exc)
+            return {
+                **payload,
+                "answer": f"❌ Błąd połączenia z OpenAI: {str(exc)}\n\n{self._fallback_human_answer(query, results)}",
+                "llm_used": False,
+                "error": str(exc),
+            }
 
         return {
             **payload,

@@ -2361,12 +2361,18 @@ def api_news_delete_index(name: str):
 def api_news_test_faiss():
     """
     Test FAISS query with custom prompt.
+    Optional: send_sms=true to send the result via SMS (uses chunked sending for long messages).
+    Optional: to="+48..." to specify recipient (defaults to AI_DEFAULT_RECIPIENT).
     """
+    from .message_utils import MAX_SMS_CHARS
+    
     payload = request.get_json(force=True, silent=True) or {}
     query = (payload.get("query") or "").strip()
     mode = str(payload.get("mode") or "standard").strip().lower()
     per_category_k = int(payload.get("per_category_k") or DEFAULT_PER_CATEGORY_K)
     top_k = int(payload.get("top_k") or 5)
+    send_sms = bool(payload.get("send_sms", False))
+    sms_recipient = (payload.get("to") or "").strip()
     
     if mode == "all_categories":
         query = query or ALL_CATEGORIES_PROMPT
@@ -2396,10 +2402,12 @@ def api_news_test_faiss():
             response = faiss_service.answer_query(query, top_k=max(1, top_k))
         
         if response.get("success"):
-            payload = {
+            answer_text = response.get("answer", "")
+            
+            result_payload = {
                 "success": True,
                 "query": query,
-                "answer": response.get("answer", ""),
+                "answer": answer_text,
                 "llm_used": response.get("llm_used", False),
                 "count": response.get("count", 0),
                 "results": response.get("results", []),
@@ -2407,10 +2415,58 @@ def api_news_test_faiss():
                 "search_info": response.get("search_info", {}),
                 "chat_model": response.get("chat_model"),
                 "mode": "all_categories" if mode == "all_categories" else "standard",
+                "characters": len(answer_text),
             }
             if mode == "all_categories":
-                payload["per_category_k"] = max(1, per_category_k)
-            return jsonify(payload)
+                result_payload["per_category_k"] = max(1, per_category_k)
+                result_payload["categories_found"] = response.get("categories_found", 0)
+                result_payload["categories_with_data"] = response.get("categories_with_data", [])
+                result_payload["categories_empty"] = response.get("categories_empty", [])
+            
+            # Opcjonalna wysyłka SMS
+            if send_sms and answer_text:
+                twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+                
+                # Ustal odbiorcę
+                if not sms_recipient:
+                    ai_config = get_ai_config() or {}
+                    sms_recipient = ai_config.get("default_recipient", "")
+                
+                if not sms_recipient:
+                    result_payload["sms_sent"] = False
+                    result_payload["sms_error"] = "Brak numeru odbiorcy. Podaj 'to' lub ustaw AI_DEFAULT_RECIPIENT."
+                else:
+                    current_app.logger.info(
+                        "Sending FAISS result via SMS (%d chars) to %s",
+                        len(answer_text), sms_recipient
+                    )
+                    
+                    # Użyj chunked SMS dla długich wiadomości
+                    if len(answer_text) > MAX_SMS_CHARS:
+                        sms_result = twilio_client.send_chunked_sms(
+                            to=sms_recipient,
+                            body=answer_text,
+                            max_length=MAX_SMS_CHARS
+                        )
+                    else:
+                        sms_result = twilio_client.send_sms(
+                            to=sms_recipient,
+                            body=answer_text
+                        )
+                    
+                    result_payload["sms_sent"] = sms_result.get("success", False)
+                    if sms_result.get("success"):
+                        result_payload["sms_result"] = {
+                            "parts": sms_result.get("parts", 1),
+                            "sids": sms_result.get("sids", [sms_result.get("sid")]),
+                            "characters": sms_result.get("characters", len(answer_text)),
+                            "recipient": sms_recipient,
+                        }
+                    else:
+                        result_payload["sms_error"] = sms_result.get("error", "Nieznany błąd SMS")
+                        result_payload["sms_parts_sent"] = sms_result.get("parts_sent", 0)
+            
+            return jsonify(result_payload)
         else:
             return jsonify({
                 "success": False,
@@ -2661,15 +2717,18 @@ def api_messages():
 @webhooks_bp.post("/api/messages")
 def api_messages_send():
     """
-    Send an SMS message.
+    Send an SMS message. Automatically splits long messages into multiple parts.
     
     Request body:
         to (str): Recipient phone number (e.g., +48123456789)
         body (str): Message content
     
     Returns:
-        JSON with success status and message details
+        JSON with success status and message details.
+        For long messages (>1500 chars), returns parts count and all SIDs.
     """
+    from .message_utils import MAX_SMS_CHARS
+    
     payload = request.get_json(force=True, silent=True) or {}
     to_number = (payload.get("to") or "").strip()
     body = (payload.get("body") or "").strip()
@@ -2688,24 +2747,55 @@ def api_messages_send():
     try:
         twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
         
-        # Użyj send_sms() - właściwa metoda do wysyłania SMS
-        result = twilio_client.send_sms(
-            to=to_number,
-            body=body
-        )
-        
-        if result.get("success"):
-            return jsonify({
-                "success": True,
-                "sid": result.get("sid"),
-                "status": result.get("status"),
-                "message": f"SMS wysłany do {to_number}"
-            })
+        # Automatycznie użyj send_chunked_sms() dla długich wiadomości
+        if len(body) > MAX_SMS_CHARS:
+            current_app.logger.info(
+                "Long message detected (%d chars), using chunked send to %s",
+                len(body), to_number
+            )
+            result = twilio_client.send_chunked_sms(
+                to=to_number,
+                body=body,
+                max_length=MAX_SMS_CHARS
+            )
+            
+            if result.get("success"):
+                return jsonify({
+                    "success": True,
+                    "sid": result.get("sid"),
+                    "sids": result.get("sids", []),
+                    "status": result.get("status"),
+                    "parts": result.get("parts", 1),
+                    "characters": result.get("characters", len(body)),
+                    "message": f"SMS wysłany do {to_number} w {result.get('parts', 1)} częściach"
+                })
+            else:
+                return jsonify({
+                    "success": False, 
+                    "error": result.get("error", "Nie udało się wysłać wiadomości."),
+                    "parts_sent": result.get("parts_sent", 0)
+                }), 500
         else:
-            return jsonify({
-                "success": False, 
-                "error": result.get("error", "Nie udało się wysłać wiadomości.")
-            }), 500
+            # Standardowa wysyłka dla krótkich wiadomości
+            result = twilio_client.send_sms(
+                to=to_number,
+                body=body
+            )
+            
+            if result.get("success"):
+                return jsonify({
+                    "success": True,
+                    "sid": result.get("sid"),
+                    "status": result.get("status"),
+                    "parts": 1,
+                    "characters": len(body),
+                    "message": f"SMS wysłany do {to_number}"
+                })
+            else:
+                return jsonify({
+                    "success": False, 
+                    "error": result.get("error", "Nie udało się wysłać wiadomości.")
+                }), 500
             
     except Exception as exc:
         current_app.logger.exception("Failed to send SMS: %s", exc)
