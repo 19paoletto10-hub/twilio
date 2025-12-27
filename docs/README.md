@@ -1,6 +1,18 @@
-# Dokumentacja – spis treści
+# Dokumentacja – Twilio Chat App v3.2.5
 
-Ten katalog zawiera materiały uzupełniające do głównego README:
+> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **SCHEMA_VERSION**: 9 • **Type Safety**: 0 Pylance errors
+
+Ten katalog zawiera materiały uzupełniające do głównego README.
+
+## 📋 Status dokumentacji
+
+| Dokument | Wersja | Status |
+|----------|--------|--------|
+| [app-overview.html](app-overview.html) | 3.2.5 | ✅ Aktualny |
+| [developer-guide.md](developer-guide.md) | 3.2.5 | ✅ Aktualny |
+| [docker-guide.md](docker-guide.md) | 3.2.5 | ✅ Aktualny |
+| [architecture-notes.md](architecture-notes.md) | 3.2.5 | ✅ Aktualny |
+| [changes-and-capabilities.md](changes-and-capabilities.md) | 3.2.5 | ✅ Aktualny |
 
 ## Przewodniki
 

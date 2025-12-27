@@ -1,4 +1,6 @@
-# Developer Guide
+# Developer Guide – v3.2.5
+
+> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **SCHEMA_VERSION**: 9 • **Type Safety**: 0 Pylance errors
 
 Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak działa przepływ
 żądania, jakie są granice modułów i jak testować funkcje ręcznie.
@@ -68,7 +70,7 @@ Aplikacja używa **SQLite** jako bazy danych. Cały dostęp do bazy jest zenkaps
 ### Aktualna wersja schematu
 
 ```python
-SCHEMA_VERSION = 7  # W database.py
+SCHEMA_VERSION = 9  # W database.py
 ```
 
 ### Struktura tabel
@@ -156,6 +158,32 @@ SCHEMA_VERSION = 7  # W database.py
 | `message_sid` | TEXT | SID wiadomości Twilio |
 | `error` | TEXT | Błąd (jeśli jest) |
 
+#### Tabela `listeners` – interaktywne komendy SMS (v3.2.x)
+
+| Kolumna | Typ | Opis |
+|---------|-----|------|
+| `id` | INTEGER PK | Auto-increment ID |
+| `name` | TEXT | Nazwa listenera |
+| `trigger` | TEXT | Trigger keyword (np. `/news`) |
+| `enabled` | INTEGER | 0/1 - czy aktywny |
+| `handler_type` | TEXT | Typ handlera (np. `faiss`) |
+| `config_json` | TEXT | Konfiguracja JSON |
+| `created_at` | TEXT | Timestamp utworzenia |
+| `updated_at` | TEXT | Timestamp aktualizacji |
+
+#### Tabela `news_recipients` – odbiorcy newsów RAG (v3.2.x)
+
+| Kolumna | Typ | Opis |
+|---------|-----|------|
+| `id` | INTEGER PK | Auto-increment ID |
+| `number` | TEXT UNIQUE | Numer telefonu (E.164) |
+| `prompt` | TEXT | Prompt dla RAG |
+| `send_hour` | INTEGER | Godzina wysyłki (0-23) |
+| `enabled` | INTEGER | 0/1 - czy aktywny |
+| `last_sent_at` | TEXT | Ostatnia wysyłka |
+| `created_at` | TEXT | Timestamp utworzenia |
+| `updated_at` | TEXT | Timestamp aktualizacji |
+
 ### Historia migracji
 
 | Wersja | Funkcja | Opis zmian |
@@ -166,6 +194,8 @@ SCHEMA_VERSION = 7  # W database.py
 | 4→5 | `_migration_add_ai_normalized_target` | Dodaje `target_number_normalized` |
 | 5→6 | `_migration_add_ai_enabled_source` | Dodaje `enabled_source` i `updated_at` |
 | 6→7 | `_migration_add_multi_sms_tables` | Tworzy tabele batch SMS |
+| 7→8 | `_migration_add_listeners_table` | Tworzy tabelę `listeners` dla interaktywnych komend SMS |
+| 8→9 | `_migration_add_news_recipients_table` | Tworzy tabelę `news_recipients` dla RAG/News |
 
 ### Jak działa `_ensure_schema()`
 

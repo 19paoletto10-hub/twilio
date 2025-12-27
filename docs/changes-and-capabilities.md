@@ -1,6 +1,15 @@
-# Zmiany i aktualne możliwości
+# Zmiany i aktualne możliwości – v3.2.5
+
+> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **SCHEMA_VERSION**: 9 • **Type Safety**: 0 Pylance errors
 
 Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji Twilio Chat App. Skupia się na perspektywie technicznej i operacyjnej (co zostało dodane, jak działa, jak używać w biznesie/utrzymaniu).
+
+## Nowości w v3.2.5 – Enterprise Code Quality
+
+- **Type Safety**: Usunięcie wszystkich błędów Pylance w trybie strict
+- **Professional Docstrings**: Kompletna dokumentacja funkcji i klas
+- **Defensive Programming**: Graceful error handling, explicit type hints
+- **SCHEMA_VERSION**: Podniesione do 9 (dodane `listeners`, `news_recipients`)
 
 ## Kluczowe zmiany (backend)
 - Spójna konfiguracja przez dataclasses i walidację env w [app/config.py](app/config.py) (m.in. SECOND_OPENAI, SECOND_MODEL, EMBEDDING_MODEL; maskowanie kluczy w logach dev).

@@ -1,13 +1,16 @@
-# Twilio Chat App – notatki architektoniczne
+# Twilio Chat App v3.2.5 – Notatki architektoniczne
+
+> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **SCHEMA_VERSION**: 9 • **Type Safety**: 0 Pylance errors
 
 ## Przegląd systemu
 
 - **Framework**: Flask 3.x, aplikacja tworzona przez `app.create_app()`.
 - **Warstwa HTTP**: blueprint `webhooks_bp` (`app/webhooks.py`) oraz `ui_bp` (`app/ui.py`).
+- **Code Quality**: Enterprise-grade type safety, professional docstrings, defensive programming.
 - **Integracje**:
   - Twilio (SMS/MMS, webhooki inbound/status, sync wiadomości).
   - OpenAI (Chat Completions dla odpowiedzi AI).
-- **Persistence**: SQLite z wersjonowanym schematem (`app/database.py`).
+- **Persistence**: SQLite z wersjonowanym schematem (`app/database.py`, SCHEMA_VERSION=9).
 - **Background workery**:
   - `auto_reply` – reactive auto-reply/AI auto-reply z kolejki w pamięci.
   - `reminder` – cykliczne przypomnienia z tabeli `scheduled_messages`.

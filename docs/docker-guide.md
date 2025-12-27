@@ -1,4 +1,6 @@
-# Docker Guide – Twilio Chat App
+# Docker Guide – Twilio Chat App v3.2.5
+
+> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **Docker Ready** • **NGINX + SSL**
 
 Kompletny przewodnik wdrożenia aplikacji Twilio Chat App przy użyciu Docker.
 Dokument przeznaczony dla programistów na każdym poziomie zaawansowania.

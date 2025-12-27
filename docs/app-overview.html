@@ -1,270 +1,386 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <title>Twilio Chat App – dokumentacja rozwiązania</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 2rem auto; max-width: 1000px; line-height: 1.6; color: #222; }
-    h1, h2, h3, h4 { color: #111; }
-    code { background: #f5f5f5; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.95em; }
-    pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
-    .tag { font-family: monospace; background: #eef; padding: 0.1rem 0.4rem; border-radius: 3px; }
-    .meta { font-size: 0.9rem; color: #555; margin-bottom: 1.5rem; }
-    ul { margin-left: 1.2rem; }
-    .section-lead { font-size: 0.98rem; color: #555; margin-bottom: 0.75rem; }
-    .pill { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; background: #eef; font-size: 0.85rem; margin-right: 0.25rem; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem 1.5rem; }
-    .card { border-radius: 6px; border: 1px solid #e5e5e5; padding: 1rem 1.25rem; background: #fff; }
-    .card h3 { margin-top: 0; }
-    .muted { color: #777; font-size: 0.9rem; }
-  </style>
+    <meta charset="utf-8" />
+    <title>Twilio Chat App v3.2.5 – Dokumentacja rozwiązania</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: #334155;
+            
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-success: linear-gradient(135deg, #10b981, #059669);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .nav-links { display: flex; gap: 1.5rem; list-style: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--text); }
+        .nav-version { background: var(--gradient-primary); color: white; padding: 0.35rem 0.75rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; }
+        
+        .hero {
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            position: relative;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero-content { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; }
+        .hero-badges { display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.8rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 50px; font-size: 0.8rem; font-weight: 500; }
+        .badge-primary { border-color: var(--primary); color: var(--primary-light); }
+        .badge-success { border-color: var(--success); color: var(--success); }
+        .badge-info { border-color: var(--info); color: var(--info); }
+        
+        .hero h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; margin-bottom: 1rem; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+        section { padding: 4rem 0; }
+        .section-header { text-align: center; margin-bottom: 3rem; }
+        .section-header h2 { font-size: 2rem; font-weight: 700; margin-bottom: 0.75rem; }
+        .section-header p { color: var(--text-muted); font-size: 1rem; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; }
+        .card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15); }
+        .card-icon { width: 48px; height: 48px; background: var(--gradient-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+        .card h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.75rem; }
+        .card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
+        .card ul { list-style: none; padding: 0; }
+        .card ul li { position: relative; padding-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+        .card ul li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: 600; }
+        
+        .architecture { background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-card) 50%, var(--bg-dark) 100%); }
+        .arch-diagram { background: #0d1117; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; }
+        .arch-diagram pre { font-family: 'Fira Code', 'Monaco', monospace; font-size: 0.7rem; line-height: 1.4; color: #e6edf3; margin: 0; }
+        
+        code { background: rgba(99, 102, 241, 0.15); color: var(--primary-light); padding: 0.15rem 0.4rem; border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.85em; }
+        pre { background: #0d1117; border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; }
+        pre code { background: none; padding: 0; color: #e6edf3; }
+        
+        .table-container { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: var(--bg-card); }
+        th { background: rgba(99, 102, 241, 0.1); padding: 1rem; text-align: left; font-weight: 600; color: var(--primary-light); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        td { padding: 1rem; border-top: 1px solid var(--border); font-size: 0.9rem; }
+        tr:hover td { background: rgba(99, 102, 241, 0.05); }
+        
+        .module-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+        .module-item { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; transition: border-color 0.2s; }
+        .module-item:hover { border-color: var(--primary); }
+        .module-item h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .module-item h4 code { font-size: 0.8rem; }
+        .module-item p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
+        
+        footer { background: var(--bg-card); border-top: 1px solid var(--border); padding: 3rem 2rem; text-align: center; }
+        .footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .footer-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .footer-links a:hover { color: var(--primary-light); }
+        .footer-copy { color: var(--text-dim); font-size: 0.85rem; }
+        
+        @media (max-width: 768px) {
+            nav { padding: 0 1rem; }
+            .nav-links { display: none; }
+            .hero { padding: 6rem 1.5rem 3rem; }
+            section { padding: 3rem 0; }
+            .container { padding: 0 1.5rem; }
+            .grid { grid-template-columns: 1fr; }
+        }
+        
+        @media print {
+            nav, footer { display: none; }
+            .hero { padding-top: 2rem; }
+            .card:hover { transform: none; }
+        }
+    </style>
 </head>
 <body>
-  <h1>Twilio Chat App – dokumentacja rozwiązania</h1>
-  <p class="meta">
-    Aplikacja: <strong>Twilio Chat App</strong><br />
-    Przeznaczenie: obsługa rozmów SMS/MMS z klientami z poziomu przeglądarki, z auto‑reply oraz AI auto‑reply na bazie OpenAI.<br />
-    Technologia: Python 3.12, Flask 3.x, Twilio, OpenAI, SQLite, Docker.
-  </p>
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-logo"><span class="nav-logo-icon">📱</span>Twilio Chat App</a>
+            <ul class="nav-links">
+                <li><a href="#features">Funkcje</a></li>
+                <li><a href="#architecture">Architektura</a></li>
+                <li><a href="#modules">Moduły</a></li>
+                <li><a href="#database">Baza danych</a></li>
+                <li><a href="#deployment">Deployment</a></li>
+            </ul>
+            <span class="nav-version">v3.2.5</span>
+        </div>
+    </nav>
 
-  <h2>1. Cel biznesowy i zastosowania</h2>
-  <p class="section-lead">
-    Twilio Chat App jest lekkim, samodzielnym serwerem czatu SMS z panelem WWW. Umożliwia zespołom
-    obsługę komunikacji z klientami bez konieczności implementowania własnej integracji z Twilio
-    od podstaw, a jednocześnie zapewnia pełną kontrolę nad danymi i logiką odpowiedzi.
-  </p>
-  <ul>
-    <li><strong>Obsługa klienta</strong> – prowadzenie wątków SMS jako prostego "ticket systemu" z historii rozmów i widokiem czatu dla numeru.</li>
-    <li><strong>Marketing i powiadomienia</strong> – wysyłka pojedynczych kampanii SMS z panelu lub przez API.</li>
-    <li><strong>Automatyzacja</strong> – auto‑reply i AI auto‑reply do prostych zapytań, potwierdzeń, powitań,
-      a także okresowe przypomnienia (scheduler).</li>
-    <li><strong>Eksperymenty z AI</strong> – testowanie modeli OpenAI w kontekście realnych rozmów SMS dzięki 
-      trybowi AI auto‑reply oraz endpointom testowym.</li>
-  </ul>
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badges">
+                <span class="badge badge-primary">📦 v3.2.5</span>
+                <span class="badge badge-success">✅ 0 Pylance Errors</span>
+                <span class="badge badge-info">🐳 Docker Ready</span>
+            </div>
+            <h1>Dokumentacja rozwiązania</h1>
+            <p class="hero-subtitle">Enterprise-Grade SMS Communication Hub<br>Python 3.10+ • Flask 3.x • Twilio • OpenAI • SQLite • Docker</p>
+        </div>
+    </section>
 
-  <h2>2. Najważniejsze funkcje</h2>
-  <div class="grid">
-    <div class="card">
-      <h3>Auto‑reply &amp; AI auto‑reply</h3>
-      <p class="section-lead">Automatyczne odpowiedzi na wiadomości przychodzące, sterowane z panelu lub przez zmienne środowiskowe.</p>
-      <ul>
-        <li>Klasyczny auto‑reply – pojedynczy szablon tekstowy wysyłany na każdy nowy inbound.</li>
-        <li>AI auto‑reply – odpowiedzi generowane przez OpenAI (Chat Completions) z wykorzystaniem historii rozmowy.</li>
-        <li>Tryby są <strong>wzajemnie wykluczające</strong>; AI ma priorytet wobec klasycznego auto‑reply.</li>
-        <li>Bez "retro‑odpowiedzi" – odpowiedzi tylko dla wiadomości nowszych niż moment włączenia trybu.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Panel WWW</h3>
-      <p class="section-lead">Nowoczesny dashboard dla operatora, zbudowany na Bootstrap 5.</p>
-      <ul>
-        <li>Zakładka <strong>Wiadomości</strong> – statystyki, wysyłka ręczna, tabela 50 ostatnich wiadomości z filtrami (wszystkie / przychodzące / wychodzące) i auto‑refresh.</li>
-        <li>Zakładka <strong>Auto‑odpowiedź</strong> – konfiguracja klasycznego auto‑reply (włącz/wyłącz + szablon).</li>
-        <li>Zakładka <strong>Przypomnienia</strong> – definicja cyklicznych kampanii SMS.</li>
-        <li>Zakładka <strong>AI</strong> – konfiguracja OpenAI, test połączenia, podgląd historii rozmowy AI w formie dymków czatu.</li>
-        <li>Widok <strong>/chat/&lt;numer&gt;</strong> – pełny wątek rozmowy z danym uczestnikiem.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>REST API &amp; webhooki</h3>
-      <p class="section-lead">Warstwa HTTP rozdzielona na webhooki Twilio i REST API dla panelu oraz integracji zewnętrznych.</p>
-      <ul>
-        <li>Webhooki: <code>/twilio/inbound</code>, <code>/twilio/status</code> z walidacją podpisu Twilio.</li>
-        <li>API wiadomości: wysyłka SMS/MMS, lista, szczegóły, redakcja, kasowanie, sync z Twilio.</li>
-        <li>API konfiguracyjne: auto‑reply, AI, przypomnienia.</li>
-        <li>API rozmów: listy konwersacji oraz wątki per numer.</li>
-        <li>Bezpieczna wysyłka długich treści: wiadomości AI/News są dzielone na części (limit bezpieczeństwa 1500 znaków) i wysyłane jako kilka SMS.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <h3>Background workery</h3>
-      <p class="section-lead">Przetwarzanie w tle z wykorzystaniem kolejek w pamięci i schedulerów opartych o SQLite.</p>
-      <ul>
-        <li>Worker <strong>auto_reply</strong> – reaguje na kolejkę wiadomości inbound (AI lub klasyczny auto‑reply).</li>
-        <li>Worker <strong>reminder</strong> – wysyła cykliczne przypomnienia z tabeli <code>scheduled_messages</code>.</li>
-        <li>Dedykowana logika deduplikacji SID oraz walidacji numerów w formacie E.164.</li>
-      </ul>
-    </div>
-  </div>
+    <section id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>✨ Najważniejsze funkcje</h2>
+                <p>Kompletne rozwiązanie do zarządzania komunikacją SMS</p>
+            </div>
+            <div class="grid">
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3>Auto-reply & AI Auto-reply</h3>
+                    <p>Automatyczne odpowiedzi sterowane z panelu lub przez zmienne środowiskowe</p>
+                    <ul><li>Klasyczny auto-reply – szablon tekstowy</li><li>AI auto-reply – OpenAI Chat Completions</li><li>Tryby wzajemnie wykluczające</li><li>Bez retro-odpowiedzi</li></ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🖥️</div>
+                    <h3>Panel WWW</h3>
+                    <p>Nowoczesny dashboard dla operatora, Bootstrap 5</p>
+                    <ul><li>Wiadomości – statystyki, wysyłka, filtry</li><li>Auto-odpowiedź – konfiguracja szablonu</li><li>AI – konfiguracja OpenAI, testy</li><li>News/FAISS – RAG i semantic search</li><li>Listeners – interaktywne komendy SMS</li></ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🔌</div>
+                    <h3>REST API & Webhooki</h3>
+                    <p>Kompletna warstwa HTTP dla integracji zewnętrznych</p>
+                    <ul><li>Webhooki Twilio z walidacją podpisu</li><li>API wiadomości – CRUD, sync</li><li>API konfiguracji – AI, auto-reply</li><li>Smart chunking – podział długich SMS</li></ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Background Workery</h3>
+                    <p>Przetwarzanie w tle z kolejkami w pamięci</p>
+                    <ul><li>Worker auto_reply – AI lub klasyczny</li><li>Worker reminder – cykliczne SMS</li><li>Worker multi_sms – kampanie batch</li><li>News scheduler – dzienne podsumowania</li></ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">📰</div>
+                    <h3>RAG / FAISS</h3>
+                    <p>Semantic search i baza wiedzy</p>
+                    <ul><li>Indeks wektorowy FAISS</li><li>Listener /news [pytanie]</li><li>Scraper Business Insider</li><li>Backup ZIP z manifestem</li></ul>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🔒</div>
+                    <h3>Type Safety (v3.2.5)</h3>
+                    <p>Enterprise-grade code quality</p>
+                    <ul><li>0 błędów Pylance w strict mode</li><li>Professional docstrings</li><li>Defensive programming</li><li>Graceful error handling</li></ul>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <h2>3. Architektura systemu</h2>
-  <p class="section-lead">
-    Aplikacja składa się z rdzenia Flask, warstwy integracji z Twilio i OpenAI, bazy SQLite oraz
-    lekkich workerów w tle. Konstrukcja jest modułowa, co ułatwia rozwój i utrzymanie.
-  </p>
-  <ul>
-    <li><strong>Warstwa HTTP</strong> – blueprint <code>webhooks_bp</code> (<code>app/webhooks.py</code>) oraz <code>ui_bp</code> (<code>app/ui.py</code>).</li>
-    <li><strong>Logika biznesowa</strong> – moduły <code>ai_service</code>, <code>auto_reply</code>, <code>reminder</code>, <code>chat_logic</code>.</li>
-    <li><strong>Integracje</strong> – <code>twilio_client</code> jako cienka warstwa nad <code>twilio.rest.Client</code>; bezpośredni klient OpenAI.</li>
-    <li><strong>Persistence</strong> – <code>database.py</code> z wersjonowanym schematem, migracjami i helperami.</li>
-    <li><strong>Frontend</strong> – szablony Jinja2 (<code>templates/</code>) oraz zasoby statyczne w <code>app/static/</code>.</li>
-  </ul>
+    <section id="architecture" class="architecture">
+        <div class="container">
+            <div class="section-header">
+                <h2>🏛️ Architektura systemu</h2>
+                <p>Modułowa konstrukcja z workerami w tle</p>
+            </div>
+            <div class="arch-diagram">
+                <pre>┌─────────────────────────────────────────────────────────────────┐
+│                         TWILIO CLOUD                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │ Inbound SMS │  │ Status Hook │  │ Messaging Service       │  │
+│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
+└─────────┼────────────────┼─────────────────────┼────────────────┘
+          │                │                     │
+          ▼                ▼                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      FLASK APPLICATION                          │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    webhooks.py                              ││
+│  │  /twilio/inbound  │  /twilio/status  │  /api/*             ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                              │                                  │
+│  ┌───────────┬───────────┬───┴───────┬─────────────┐           │
+│  │           │           │           │             │           │
+│  ▼           ▼           ▼           ▼             ▼           │
+│ ┌─────┐   ┌─────┐   ┌─────────┐   ┌─────┐   ┌──────────┐      │
+│ │ AI  │   │Auto │   │Listeners│   │News │   │ Multi    │      │
+│ │Reply│   │Reply│   │ /news   │   │Sched│   │ SMS      │      │
+│ └──┬──┘   └──┬──┘   └────┬────┘   └──┬──┘   └────┬─────┘      │
+│    └─────────┴───────────┴───────────┴───────────┘             │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    twilio_client.py                        ││
+│  │  send_message()  │  send_chunked_sms()  │  send_reply()   ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+          │                              │
+          ▼                              ▼
+┌─────────────────────┐      ┌────────────────────────┐
+│    SQLite (data/)   │      │   FAISS (X1_data/)     │
+│  ├── messages       │      │  ├── index.faiss       │
+│  ├── ai_config      │      │  ├── documents.jsonl   │
+│  ├── listeners      │      │  └── articles.jsonl    │
+│  └── multi_sms      │      │                        │
+└─────────────────────┘      └────────────────────────┘</pre>
+            </div>
+        </div>
+    </section>
 
-  <h3>3.1 Tworzenie aplikacji</h3>
-  <p>
-    Funkcja <code>create_app()</code> w <code>app/__init__.py</code> odpowiada za zainicjalizowanie całego środowiska aplikacji:
-  </p>
-  <ul>
-    <li>wczytuje ustawienia z env poprzez <code>get_settings()</code> (<code>app/config.py</code>),</li>
-    <li>tworzy instancję klienta Twilio (<code>TwilioService</code>) i zapisuje ją w konfiguracji Flask,</li>
-    <li>inicjalizuje bazę danych SQLite (utworzenie tabel, migracje, indeksy),</li>
-    <li>aplikuje domyślną konfigurację AI z env do tabeli <code>ai_config</code>,</li>
-    <li>rejestruje blueprinty HTTP (<code>webhooks_bp</code>, <code>ui_bp</code>),</li>
-    <li>uruchamia w tle dwa workery: <strong>auto_reply</strong> i <strong>reminder</strong>,</li>
-    <li>wystawia endpoint healthcheck <code>GET /api/health</code>, używany przez Docker i monitoring.</li>
-  </ul>
+    <section id="modules">
+        <div class="container">
+            <div class="section-header">
+                <h2>📦 Moduły aplikacji</h2>
+                <p>Kluczowe komponenty i ich odpowiedzialności</p>
+            </div>
+            <div class="module-list">
+                <div class="module-item"><h4>🔧 <code>app/__init__.py</code></h4><p>Fabryka Flask create_app(): konfiguracja, inicjalizacja, workery</p></div>
+                <div class="module-item"><h4>🌐 <code>app/webhooks.py</code></h4><p>REST API, webhooki Twilio, endpointy News/FAISS</p></div>
+                <div class="module-item"><h4>🎨 <code>app/ui.py</code></h4><p>Blueprint UI: dashboard, chat, templates Jinja2</p></div>
+                <div class="module-item"><h4>📞 <code>app/twilio_client.py</code></h4><p>TwilioService: wysyłka SMS, chunking, Messaging Service</p></div>
+                <div class="module-item"><h4>🤖 <code>app/ai_service.py</code></h4><p>AIResponder: kontekst rozmowy, OpenAI Chat Completions</p></div>
+                <div class="module-item"><h4>🔁 <code>app/auto_reply.py</code></h4><p>Worker auto-reply: kolejka, AI vs klasyczny tryb</p></div>
+                <div class="module-item"><h4>🗄️ <code>app/database.py</code></h4><p>SQLite: schemat, migracje, helpery CRUD (SCHEMA_VERSION=9)</p></div>
+                <div class="module-item"><h4>🔍 <code>app/faiss_service.py</code></h4><p>FAISS: indeks wektorowy, semantic search, RAG</p></div>
+                <div class="module-item"><h4>🕷️ <code>app/scraper_service.py</code></h4><p>Scraper: Business Insider, artykuły, kategorie</p></div>
+                <div class="module-item"><h4>📅 <code>app/news_scheduler.py</code></h4><p>Scheduler newsów: dzienne SMS do odbiorców</p></div>
+                <div class="module-item"><h4>⏰ <code>app/reminder.py</code></h4><p>Worker przypomnień: cykliczne SMS z harmonogramu</p></div>
+                <div class="module-item"><h4>📨 <code>app/multi_sms.py</code></h4><p>Worker batch SMS: kampanie do wielu odbiorców</p></div>
+            </div>
+        </div>
+    </section>
 
-  <h3>3.2 Moduły konfiguracyjne</h3>
-  <p>
-    Konfiguracja aplikacji jest oparta o zmienne środowiskowe i klasy dataclasses w <code>app/config.py</code>:
-  </p>
-  <ul>
-    <li><code>TwilioSettings</code> – zawiera SID, token, numer nadawcy i ewentualny <code>messaging_service_sid</code>.</li>
-    <li><code>AppSettings</code> – definiuje środowisko (<code>APP_ENV</code>), debug, host, port oraz ścieżkę do pliku SQLite.</li>
-    <li><code>get_settings()</code> – waliduje obecność krytycznych parametrów Twilio, rozwiązuje ścieżkę <code>DB_PATH</code> względem katalogu projektu i pozwala na użycie jednego zestawu zmiennych w dev i prod.</li>
-  </ul>
+    <section id="database">
+        <div class="container">
+            <div class="section-header">
+                <h2>🗃️ Model danych</h2>
+                <p>SQLite z wersjonowanym schematem (SCHEMA_VERSION = 9)</p>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Tabela</th><th>Opis</th><th>Kluczowe kolumny</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>messages</code></td><td>Historia SMS (inbound/outbound)</td><td>sid, direction, to_number, from_number, body, status</td></tr>
+                        <tr><td><code>auto_reply_config</code></td><td>Konfiguracja klasycznego auto-reply</td><td>enabled, message, enabled_since</td></tr>
+                        <tr><td><code>ai_config</code></td><td>Konfiguracja AI/OpenAI</td><td>enabled, api_key, system_prompt, model, temperature</td></tr>
+                        <tr><td><code>scheduled_messages</code></td><td>Zaplanowane przypomnienia</td><td>to_number, body, interval_seconds, next_run_at</td></tr>
+                        <tr><td><code>multi_sms_batches</code></td><td>Batch SMS kampanie</td><td>body, status, total_recipients, success_count</td></tr>
+                        <tr><td><code>multi_sms_recipients</code></td><td>Odbiorcy batch SMS</td><td>batch_id, number_normalized, status, message_sid</td></tr>
+                        <tr><td><code>listeners</code></td><td>Interaktywne komendy SMS</td><td>name, trigger, enabled, handler_type</td></tr>
+                        <tr><td><code>news_recipients</code></td><td>Odbiorcy newsów RAG</td><td>number, prompt, send_hour, enabled</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 
-  <h2>4. Model danych i baza SQLite</h2>
-  <p class="section-lead">
-    Baza danych została zaprojektowana jako pojedynczy plik SQLite, z prostymi, ale czytelnymi
-    tabelami oraz wersjonowanym schematem. Dzięki temu migracje są wykonywane automatycznie przy
-    starcie aplikacji, bez zewnętrznych narzędzi migracyjnych.
-  </p>
-  <ul>
-    <li><strong>Tabela <code>messages</code></strong> – przechowuje wszystkie wiadomości inbound/outbound:<br />
-      SID, numery nadawcy/odbiorcy, kierunek (<code>direction</code>), status, treść, błąd, timestampy <code>created_at</code>/<code>updated_at</code>.</li>
-    <li><strong>Tabela <code>auto_reply_config</code></strong> – pojedynczy rekord kontrolujący klasyczny auto‑reply (flaga <code>enabled</code>, tekst <code>message</code>, znacznik <code>enabled_since</code>).</li>
-    <li><strong>Tabela <code>scheduled_messages</code></strong> – definicje cyklicznych przypomnień (numer odbiorcy, treść, interwał w sekundach, <code>enabled</code>, <code>last_sent_at</code>, <code>next_run_at</code>).</li>
-    <li><strong>Tabela <code>ai_config</code></strong> – konfiguracja AI (włączone/wyłączone, klucz API, <code>system_prompt</code>, model, temperatura, numer docelowy, źródło konfiguracji, <code>updated_at</code>).</li>
-  </ul>
-  <p>
-    Moduł <code>app/database.py</code> udostępnia też szereg helperów biznesowych: <code>list_messages()</code> do budowy
-    list w dashboardzie, <code>list_conversations()</code> dla widoku czatu, a także <code>upsert_message()</code> do
-    bezpiecznego scalania danych przychodzących z Twilio bez duplikatów po SID.
-  </p>
-
-  <h2>5. Integracja z Twilio</h2>
-  <p class="section-lead">
-    Za integrację z Twilio odpowiada moduł <code>app/twilio_client.py</code> oraz zestaw webhooków w
-    <code>app/webhooks.py</code>. Celem jest maksymalne uproszczenie użycia przy jednoczesnym zachowaniu
-    spójności wątków po stronie Twilio.
-  </p>
-  <h3>5.1 Klient Twilio (<code>TwilioService</code>)</h3>
-  <ul>
-    <li><code>send_message()</code> – uniwersalna metoda wysyłki SMS/MMS z obsługą Messaging Service lub <code>from_</code>.</li>
-    <li><code>send_reply_to_inbound(inbound_from, inbound_to, body)</code> – wysyła odpowiedź jako część istniejącego wątku Twilio, preferując Messaging Service, a w jego braku używając numeru, na który przyszła wiadomość lub <code>TWILIO_DEFAULT_FROM</code>.</li>
-    <li><code>send_with_default_origin()</code> – uproszczona wysyłka z domyślnego numeru nadawcy.</li>
-    <li>Funkcje pomocnicze: <code>list_messages</code>, <code>fetch_message</code>, <code>redact_message</code>, <code>delete_message</code> – wykorzystywane w API i panelu.</li>
-  </ul>
-
-  <h3>5.2 Webhooki i walidacja podpisu</h3>
-  <ul>
-    <li><code>POST /twilio/inbound</code> – przyjmowanie wiadomości przychodzących, zapis do <code>messages</code>, kolejka auto‑reply/AI, fallback do prostego bota, jeśli tryby są wyłączone.</li>
-    <li><code>POST /twilio/status</code> – przyjmowanie statusów dostarczenia i aktualizacja rekordów w <code>messages</code>.</li>
-    <li>Walidacja podpisu Twilio odbywa się przy pomocy <code>RequestValidator</code>; można ją wyłączyć w środowisku deweloperskim poprzez <code>TWILIO_VALIDATE_SIGNATURE=false</code>.</li>
-    <li>Funkcja <code>_maybe_sync_messages()</code> umożliwia dociąganie najnowszych wiadomości z Twilio, z zachowaniem tych samych zasad auto‑reply/AI jak w webhookach.</li>
-  </ul>
-
-  <h2>6. AI i tryby odpowiedzi</h2>
-  <h3>6.1 AI auto‑reply</h3>
-  <ul>
-    <li>Konfiguracja AI przechowywana jest w tabeli <code>ai_config</code> i może być ustawiona zarówno z poziomu env (<code>OPENAI_*</code>, <code>AI_*</code>), jak i z zakładki "AI" w panelu.</li>
-    <li>Moduł <code>AIResponder</code> buduje historię rozmowy dla danego numeru na podstawie <code>messages</code> i zamienia ją na listę komunikatów <code>system</code>/<code>user</code>/<code>assistant</code> dla OpenAI.</li>
-    <li>Funkcja <code>send_ai_generated_sms()</code> generuje odpowiedź, wybiera właściwy sposób wysyłki (odpowiedź na inbound albo zwykła wysyłka) i zapisuje wynik do bazy.</li>
-    <li>Worker auto‑reply filtruje wiadomości obsługiwane przez AI tak, aby odpowiadać wyłącznie na zdarzenia nowsze niż <code>ai_config.updated_at</code> – włączenie AI lub zmiana konfiguracji działa jak punkt startowy.</li>
-  </ul>
-
-  <h3>6.2 Klasyczny auto‑reply i fallback</h3>
-  <ul>
-    <li>Klasyczny auto‑reply wykorzystuje prosty szablon tekstowy (<code>auto_reply_config.message</code>) i odpowiada tylko na wiadomości przychodzące nowsze niż <code>auto_reply_config.enabled_since</code>.</li>
-    <li>Numery są weryfikowane pod kątem formatu E.164, a wysyłka odbywa się z <code>TWILIO_DEFAULT_FROM</code>.</li>
-    <li>W przypadku, gdy zarówno AI, jak i auto‑reply są wyłączone, backend używa fallbackowego bota z <code>chat_logic.py</code> (tryb <code>echo</code> lub <code>keywords</code>), aby nie pozostawiać rozmów bez odpowiedzi w środowiskach testowych.</li>
-    <li>Zasada biznesowa: <strong>dla każdej przychodzącej wiadomości działa dokładnie jeden tryb</strong> (AI / auto‑reply / fallback), nigdy równocześnie.</li>
-  </ul>
-
-  <h2>7. Panel WWW i doświadczenie użytkownika</h2>
-  <h3>7.1 Dashboard i historia wiadomości</h3>
-  <ul>
-    <li>Zakładka "Wiadomości" prezentuje 50 ostatnich zdarzeń z bazy (<code>/api/messages</code>) z auto‑odświeżaniem co ~15 sekund.</li>
-    <li>Operator może filtrować widok na: wszystkie, tylko przychodzące lub tylko wychodzące wiadomości.</li>
-    <li>Każdy wiersz zawiera:
-      <ul>
-        <li>kierunek (oznaczony badge),</li>
-        <li>uczestnika (numer) wraz z opisem kanału i roli, np. <code>WhatsApp • od klienta</code>,</li>
-        <li>skrócony podgląd treści z pełnym tekstem w atrybucie <code>title</code>,</li>
-        <li>status oraz ewentualny błąd w osobnej linii,</li>
-        <li>czas rozbity na godzinę i datę.</li>
-      </ul>
-    </li>
-    <li>Wiersze z przypisanym numerem są klikalne – kliknięcie otwiera widok pełnego czatu (<code>/chat/&lt;numer&gt;</code>), co przyspiesza nawigację operatora.</li>
-  </ul>
-
-  <h3>7.2 Widok czatu i zakładka AI</h3>
-  <ul>
-    <li>Widok <code>/chat/&lt;numer&gt;</code> prezentuje wątek jako listę "dymków" z wyraźnym rozróżnieniem wiadomości przychodzących i wychodzących.</li>
-    <li>Zakładka "AI" w dashboardzie pozwala:
-      <ul>
-        <li>skonfigurować klucz OpenAI, model, temperaturę, system prompt oraz numer docelowy,</li>
-        <li>włączyć lub wyłączyć AI auto‑reply jednym przełącznikiem,</li>
-        <li>przetestować połączenie z OpenAI bez wysyłania SMS (<code>/api/ai/test</code>),</li>
-        <li>podejrzeć historię rozmowy z AI w formie wątku czatowego, z dzielnikami dat i statusami.</li>
-      </ul>
-    </li>
-  </ul>
-
-  <h2>8. Przypomnienia i kampanie cykliczne</h2>
-  <p class="section-lead">
-    Moduł przypomnień umożliwia definiowanie cyklicznych wiadomości SMS, które są wysyłane w zdefiniowanych
-    interwałach czasowych, np. przypomnienia o płatnościach, spotkaniach czy statusach.
-  </p>
-  <ul>
-    <li>Konfiguracja przypomnień odbywa się z zakładki "Przypomnienia" – użytkownik podaje numer, treść oraz interwał w minutach.</li>
-    <li>Worker <code>start_reminder_worker</code> cyklicznie odczytuje wiersze z <code>scheduled_messages</code> i realizuje wysyłkę poprzez <code>send_message</code>.</li>
-    <li>Każde przypomnienie aktualizuje pola <code>last_sent_at</code> i <code>next_run_at</code>, a wysłane wiadomości są logowane w tabeli <code>messages</code>.</li>
-  </ul>
-
-  <h2>9. Uruchomienie, konfiguracja i deployment</h2>
-  <h3>9.1 Szybki start lokalny</h3>
-  <pre><code>python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+    <section id="deployment">
+        <div class="container">
+            <div class="section-header">
+                <h2>🚀 Uruchomienie</h2>
+                <p>Lokalne środowisko deweloperskie i Docker</p>
+            </div>
+            <div class="grid">
+                <div class="card"><h3>🖥️ Lokalnie</h3><pre><code>python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-python run.py
-</code></pre>
-  <p class="muted">Aplikacja startuje domyślnie na <code>http://0.0.0.0:3000</code>.</p>
+python run.py</code></pre><p style="margin-top:1rem">Panel: <code>http://localhost:3000</code></p></div>
+                <div class="card"><h3>🐳 Docker</h3><pre><code>cp .env.example .env
+mkdir -p data X1_data
+docker compose up --build</code></pre><p style="margin-top:1rem">Panel: <code>http://localhost:3000</code></p></div>
+            </div>
+            <div style="margin-top:2rem">
+                <h3 style="margin-bottom:1rem">⚙️ Kluczowe zmienne środowiskowe</h3>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Zmienna</th><th>Opis</th><th>Wymagana</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>TWILIO_ACCOUNT_SID</code></td><td>Twilio Account SID</td><td>✅ Tak</td></tr>
+                            <tr><td><code>TWILIO_AUTH_TOKEN</code></td><td>Twilio Auth Token</td><td>✅ Tak</td></tr>
+                            <tr><td><code>TWILIO_DEFAULT_FROM</code></td><td>Numer nadawcy (E.164)</td><td>✅ Tak*</td></tr>
+                            <tr><td><code>OPENAI_API_KEY</code></td><td>Klucz OpenAI dla AI</td><td>❌ Opcjonalna</td></tr>
+                            <tr><td><code>SECOND_OPENAI</code></td><td>Klucz OpenAI dla RAG/FAISS</td><td>❌ Opcjonalna</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
 
-  <h3>9.2 Zmienne środowiskowe</h3>
-  <ul>
-    <li><strong>Twilio</strong>: <code>TWILIO_ACCOUNT_SID</code>, <code>TWILIO_AUTH_TOKEN</code>, <code>TWILIO_DEFAULT_FROM</code>, opcjonalnie <code>TWILIO_MESSAGING_SERVICE_SID</code>.</li>
-    <li><strong>OpenAI / AI</strong>: <code>OPENAI_API_KEY</code>, <code>OPENAI_MODEL</code>, <code>OPENAI_TEMPERATURE</code>, <code>AI_TARGET_NUMBER</code>, <code>AI_SYSTEM_PROMPT</code>, <code>AI_ENABLED</code>.</li>
-    <li><strong>Aplikacja</strong>: <code>APP_ENV</code>, <code>APP_DEBUG</code>, <code>APP_HOST</code>, <code>APP_PORT</code>, <code>DB_PATH</code>, <code>PUBLIC_BASE_URL</code>, <code>TWILIO_VALIDATE_SIGNATURE</code>.</li>
-  </ul>
-
-  <h3>9.3 Docker i środowisko produkcyjne</h3>
-  <ul>
-    <li>Obraz budowany jest na bazie <code>python:3.12-slim</code>, aplikacja uruchamiana przez <code>gunicorn</code> z kilkoma workerami i wątkami.</li>
-    <li>Plik <code>docker-compose.production.yml</code> zawiera przykładową konfigurację produkcyjną z mapowaniem wolumenu <code>./data</code> na katalog <code>/app/data</code>.</li>
-    <li>Rekomendowane jest ustawienie <code>TWILIO_VALIDATE_SIGNATURE=true</code> w środowisku produkcyjnym.</li>
-  </ul>
-
-  <h2>10. Bezpieczeństwo, niezawodność i rozwój</h2>
-  <ul>
-    <li><strong>Bezpieczeństwo webhooków</strong> – walidacja podpisu Twilio, ograniczenie dostępu przez poprawnie skonfigurowany <code>PUBLIC_BASE_URL</code> i HTTPS po stronie frontowej infrastruktury.</li>
-    <li><strong>Higiena danych</strong> – możliwość redakcji lub usunięcia treści wiadomości po SID, logowanie błędów AI i Twilio.</li>
-    <li><strong>Niezawodność</strong> – deduplikacja SID w workerze auto‑reply, ograniczone kolejki w pamięci, defensywne sprawdzanie konfiguracji (np. obowiązkowe <code>TWILIO_DEFAULT_FROM</code> dla auto‑reply).</li>
-    <li><strong>Rozszerzalność</strong> – możliwość dodawania nowych trybów odpowiedzi w <code>chat_logic.py</code>, kolejnych kanałów komunikacji (np. WhatsApp) oraz nowych endpointów API bez naruszania istniejących integracji.</li>
-  </ul>
-
-  <h2>11. Wersjonowanie i release notes</h2>
-  <p class="section-lead">
-    Historia zmian jest utrzymywana w plikach Markdown i HTML w katalogu <code>deploy/releases</code>,
-    co ułatwia budowanie przejrzystych opisów wydań oraz publikowanie ich jako GitHub Releases.
-  </p>
-  <ul>
-    <li><code>ver3.0.0</code> – wprowadzenie trybu AI auto‑reply, refaktoryzacja klienta Twilio, porządki w repozytorium.</li>
-    <li><code>ver3.0.1</code> – dopracowanie UX dashboardu, estetyczna i funkcjonalna historia wiadomości oraz szybki dostęp do widoku czatu.</li>
-  </ul>
-
+    <footer>
+        <div class="footer-links">
+            <a href="../README.html">README</a>
+            <a href="developer-guide.md">Developer Guide</a>
+            <a href="docker-guide.md">Docker Guide</a>
+            <a href="architecture-notes.md">Architecture</a>
+            <a href="https://github.com/19paoletto10-hub/twilio">GitHub</a>
+        </div>
+        <p class="footer-copy">Twilio Chat App v3.2.5 • © 2025 • MIT License</p>
+    </footer>
 </body>
 </html>
