@@ -1,14 +1,15 @@
 # Twilio Chat App — Pełna prezentacja produktu
 
-Data: 2025-12-19  
-Wersja: ver3.2.2
+Data: 2025-12-27  
+Wersja: ver3.2.5
 
 ## Executive Summary
 
 Twilio Chat App to komercyjnie gotowe, samodzielne rozwiązanie do zarządzania komunikacją SMS/MMS.
 Produkt łączy panel operatora z nowoczesnym UI (collapsible sidebar, compose modal, secrets manager),
 REST API, wsparcie webhooków Twilio oraz zaawansowany tryb auto‑reply oparty na OpenAI.
-Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przykłady ilustrujące sposób użycia.
+Najnowsza wersja 3.2.5 wprowadza **profesjonalny refaktoring kodu** z pełnym type safety,
+eliminując wszystkie błędy Pylance i zapewniając niezawodność produkcyjną.
 
 ---
 
@@ -17,15 +18,18 @@ Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przy
 - Szybkie wdrożenie kanału SMS z kontrolą nad danymi (własny serwer + SQLite).
 - Redukcja kosztów obsługi dzięki automatycznym odpowiedziom (klasycznym i AI).
 - Łatwe integrowanie z CRM i innymi systemami dzięki prostemu REST API i webhookom.
-- **[NOWOŚĆ 3.2.2]** Centralne zarządzanie kluczami API z poziomu UI bez edycji plików.
+- **[NOWOŚĆ 3.2.5]** Profesjonalny kod z pełnym type safety i zero błędów Pylance.
+- **[NOWOŚĆ 3.2.4]** Listeners — inteligentne komendy SMS z integracją FAISS/RAG.
 
 ## 2. Krótki przegląd funkcji
 
 - **Dashboard operatora** — statystyki, ręczna wysyłka, szybki dostęp do historii.
 - **Collapsible sidebar** — zwijane menu boczne z ikonami i szybkimi akcjami.
 - **Compose modal** — tworzenie wiadomości bez opuszczania bieżącego widoku.
-- **[NOWOŚĆ 3.2.2] Secrets Manager** — dedykowana strona /secrets do zarządzania kluczami API.
-- **[NOWOŚĆ 3.2.2] Zmodernizowany czat** — animowane dymki, ikony statusu, awatary.
+- **[NOWOŚĆ 3.2.5] Type Safety** — profesjonalny kod z zerową ilością błędów Pylance.
+- **[NOWOŚĆ 3.2.4] Listeners** — inteligentne komendy SMS z integracją FAISS/RAG.
+- **Secrets Manager** — dedykowana strona /secrets do zarządzania kluczami API.
+- **Zmodernizowany czat** — animowane dymki, ikony statusu, awatary.
 - Historia wiadomości — czytelna tabela z filtrem kierunku, statusami i metadanymi kanału.
 - Widok czatu — pełna rozmowa z numerem, dymki wiadomości, timestampy.
 - Auto‑reply — prosty szablon tekstowy do natychmiastowego włączenia.
@@ -36,7 +40,74 @@ Dokument ten prezentuje kluczowe funkcje, wartości biznesowe oraz ekranowe przy
 
 ---
 
-## 2.1 Nowości w wersji 3.2.2
+## 2.0 Nowości w wersji 3.2.5 (Najnowsza)
+
+### 🔧 Type Safety & Code Quality
+
+Profesjonalny refaktoring kodu na poziomie Senior Developer:
+
+| Komponent | Ulepszenie |
+|-----------|------------|
+| `AIServiceError` | Atrybut `reply_text` dostępny bezpośrednio na klasie |
+| `database.py` | Helper `_get_lastrowid()` dla bezpiecznego dostępu |
+| `webhooks.py` | Poprawne wyciąganie odpowiedzi z Dict w `answer_query()` |
+| `auto_reply.py` | Walidacja `from_number` przed wywołaniem Twilio API |
+
+### 📚 Profesjonalne Docstrings
+
+Wszystkie kluczowe funkcje posiadają pełną dokumentację:
+
+```python
+def start_auto_reply_worker(force_restart: bool = False) -> None:
+    """
+    Start the background worker thread for auto-reply processing.
+    
+    Args:
+        force_restart: If True, stop any existing worker and start fresh.
+    
+    Thread Safety:
+        Uses module-level _worker_lock to prevent race conditions.
+    """
+```
+
+### 🛡️ Defensive Programming
+
+- Explicit `None` checks przed konwersjami typów
+- Type guards dla Dict/str ambiguity
+- Validation gates przed zewnętrznymi API calls
+- Graceful fallbacks dla edge cases
+
+### ✅ Zero Błędów Pylance
+
+Wszystkie pliki aplikacji przechodzą strict type checking bez ostrzeżeń.
+
+---
+
+## 2.1 Nowości w wersji 3.2.4
+
+### 🎧 Listeners — Inteligentne komendy SMS
+
+Nowa zakładka do zarządzania nasłuchiwaczami komend:
+
+- Karty z przełącznikiem ON/OFF dla każdego listenera
+- Komenda `/news` z integracją FAISS semantic search
+- Panel testowy do symulacji zapytań bez SMS
+- Synchroniczna obsługa z natychmiastową odpowiedzią
+
+### 📰 Komenda /news
+
+Odbiorcy SMS mogą zadawać pytania do bazy newsów:
+
+```
+SMS: /news Jakie są prognozy dla złotówki?
+
+Odpowiedź: 📰 News:
+Według najnowszych analiz, kurs złotówki...
+```
+
+---
+
+## 2.2 Nowości w wersji 3.2.2
 
 ### 🔐 Secrets Manager (Nowa strona /secrets)
 
@@ -72,7 +143,7 @@ Centralne miejsce do zarządzania kluczami API:
 
 ---
 
-## 2.2 Nowości w wersji 3.2.1
+## 2.3 Nowości w wersji 3.2.1
 
  ### Collapsible Sidebar (Zwijane menu boczne)
  - **Tryb rozwinięty (280px):** Pełne etykiety i ikony dla wszystkich zakładek
