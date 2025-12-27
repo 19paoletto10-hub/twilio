@@ -116,24 +116,41 @@ class TwilioAPIError(TwilioChatError):
 
 
 class AIServiceError(TwilioChatError):
-    """Raised when AI/OpenAI operations fail."""
+    """
+    Raised when AI/OpenAI operations fail.
+    
+    This exception is used for all AI-related failures including:
+    - OpenAI API connection errors
+    - Token limit exceeded
+    - Invalid API key
+    - Model not available
+    - Response generation failures
+    
+    Attributes:
+        reply_text: Partially generated reply text (if available before failure)
+    """
+
+    reply_text: Optional[str]
 
     def __init__(
         self,
         message: str,
         *,
         reply_text: Optional[str] = None,
+        status_code: int = 502,
         **kwargs: Any,
     ) -> None:
         """
         Initialize AI service error.
 
         Args:
-            message: Error description
-            reply_text: Partially generated reply (if available)
+            message: Human-readable error description
+            reply_text: Partially generated reply (if available before failure)
+            status_code: HTTP status code for API responses (default: 502 Bad Gateway)
             **kwargs: Additional arguments passed to parent
         """
-        super().__init__(message, status_code=502, **kwargs)
+        super().__init__(message, status_code=status_code, **kwargs)
+        self.reply_text = reply_text
         if reply_text:
             self.details["reply_text"] = reply_text
 

@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 from flask import current_app, g
 
 SCHEMA_VERSION = 9
+_SCHEMA_INIT_FLAG = "_SCHEMA_INITIALIZED"
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 _NORMALIZE_PREFIXES = ("whatsapp:", "sms:", "mms:", "client:", "sip:")
 _NORMALIZE_STRIP_CHARS = (" ", "-", "(", ")", ".", "_")
@@ -24,6 +25,11 @@ def init_app(app) -> None:
 
 
 def _get_connection() -> sqlite3.Connection:
+    if not current_app.config.get(_SCHEMA_INIT_FLAG):
+        # Defensive: ensure schema exists even if init_app was not called.
+        _ensure_schema()
+        current_app.config[_SCHEMA_INIT_FLAG] = True
+
     if "db_conn" not in g:
         db_path = Path(current_app.config["APP_SETTINGS"].db_path)
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -80,6 +86,29 @@ def _normalized_sql(column: str) -> str:
     for ch in _NORMALIZE_STRIP_CHARS:
         expr = f"REPLACE({expr}, '{ch}', '')"
     return expr
+
+
+def _get_lastrowid(cursor: sqlite3.Cursor) -> int:
+    """
+    Safely extract last inserted row ID from cursor.
+    
+    SQLite's lastrowid returns None only in edge cases (e.g., REPLACE
+    with no actual insert). In practice, after INSERT it's always set.
+    
+    Args:
+        cursor: SQLite cursor after INSERT operation
+        
+    Returns:
+        The row ID of the last inserted row
+        
+    Raises:
+        DatabaseError: If lastrowid is unexpectedly None
+    """
+    row_id = cursor.lastrowid
+    if row_id is None:
+        # This should never happen after a successful INSERT
+        raise ValueError("Database INSERT did not return a valid row ID")
+    return row_id
 
 
 def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
@@ -332,6 +361,8 @@ def _migration_add_listeners_config(conn: sqlite3.Connection) -> None:
     
     The /news listener integrates with FAISS to answer questions based on
     scraped news articles.
+    
+    The * listener is a catch-all for messages not matching any specific command.
     """
     if _table_exists(conn, "listeners_config"):
         return
@@ -349,6 +380,9 @@ def _migration_add_listeners_config(conn: sqlite3.Connection) -> None:
         
         INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
         VALUES ('/news', 0, 'Odpowiada na pytania z bazy newsów (FAISS RAG)', datetime('now'), datetime('now'));
+        
+        INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
+        VALUES ('*', 1, 'Domyślny listener - AI/auto-reply dla wiadomości nie pasujących do innych komend', datetime('now'), datetime('now'));
         """
     )
     conn.commit()
@@ -368,6 +402,24 @@ def _ensure_multi_sms_tables(conn: sqlite3.Connection) -> None:
         return
 
     _migration_add_multi_sms_tables(conn)
+
+
+def _ensure_listeners_config_table(conn: sqlite3.Connection) -> None:
+    """Ensure listeners_config table exists (idempotent)."""
+    if not _table_exists(conn, "listeners_config"):
+        _migration_add_listeners_config(conn)
+
+
+def _ensure_listeners_table_after_error(conn: sqlite3.Connection, exc: Exception) -> bool:
+    """Create listeners_config table if an operation failed because it is missing.
+
+    Returns True when the table was missing and has been created so the caller
+    can retry its query, otherwise False.
+    """
+    if isinstance(exc, sqlite3.OperationalError) and "listeners_config" in str(exc):
+        _ensure_listeners_config_table(conn)
+        return True
+    return False
 
 
 def _ensure_schema() -> None:
@@ -423,6 +475,7 @@ def _ensure_schema() -> None:
                 current_version = 9
 
         _ensure_multi_sms_tables(conn)
+        _ensure_listeners_config_table(conn)
 
         conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()
@@ -562,7 +615,7 @@ def upsert_message(
                 (sid, direction, to_number, from_number, body, status, error, created_value, updated_value),
             )
             conn.commit()
-            return int(cursor.lastrowid)
+            return _get_lastrowid(cursor)
         except sqlite3.IntegrityError:
             existing = conn.execute(
                 "SELECT id FROM messages WHERE sid = ?",
@@ -589,7 +642,7 @@ def upsert_message(
         (sid, direction, to_number, from_number, body, status, error, created_value, updated_value),
     )
     conn.commit()
-    return int(cursor.lastrowid)
+    return _get_lastrowid(cursor)
 
 
 def insert_message(
@@ -625,7 +678,7 @@ def insert_message(
         (sid, direction, to_number, from_number, body, status, error, created_value, updated_value),
     )
     conn.commit()
-    return int(cursor.lastrowid)
+    return _get_lastrowid(cursor)
 
 
 def update_message_status_by_sid(
@@ -645,6 +698,69 @@ def update_message_status_by_sid(
     )
     conn.commit()
     return cursor.rowcount > 0
+
+
+def has_outbound_reply_for_inbound(inbound_sid: str, to_number: str) -> bool:
+    """
+    Check if an outbound reply was already sent for a specific inbound message.
+    
+    This function implements database-level deduplication to prevent sending
+    duplicate responses to the same inbound message. It's the authoritative
+    check that runs in the background worker before processing each message.
+    
+    Algorithm:
+        1. Look up the inbound message by SID to get its timestamp
+        2. Check if any outbound message exists to the sender after that time
+        3. If yes, skip processing (already replied)
+    
+    Why Database-Level:
+        In-memory deduplication fails across process restarts and in debug mode
+        where Werkzeug creates multiple processes. Database deduplication is
+        persistent and works correctly in all scenarios.
+    
+    Performance:
+        Uses indexed lookups on 'sid' and 'direction' columns. The datetime
+        comparison is efficient with SQLite's datetime() function.
+    
+    Args:
+        inbound_sid: Twilio SID of the inbound message (e.g., 'SM1234567890')
+        to_number: Phone number of the original sender (recipient of our reply)
+        
+    Returns:
+        True if we already sent a reply, False if this is a new message
+        
+    Example:
+        >>> if has_outbound_reply_for_inbound("SM123", "+48123456789"):
+        ...     logger.debug("Skipping duplicate")
+        ...     return
+    """
+    conn = _get_connection()
+    
+    # First, get the created_at timestamp of the inbound message
+    inbound_row = conn.execute(
+        "SELECT created_at FROM messages WHERE sid = ? AND direction = 'inbound'",
+        (inbound_sid,)
+    ).fetchone()
+    
+    if not inbound_row:
+        # Inbound message not in DB yet - no reply exists
+        return False
+    
+    inbound_created_at = inbound_row[0]
+    
+    # Check if there's an outbound message to this number after the inbound
+    outbound_row = conn.execute(
+        """
+        SELECT 1 FROM messages 
+        WHERE direction = 'outbound' 
+          AND to_number = ?
+          AND datetime(created_at) >= datetime(?)
+        LIMIT 1
+        """,
+        (to_number, inbound_created_at)
+    ).fetchone()
+    
+    return outbound_row is not None
 
 
 def list_messages(
@@ -1136,7 +1252,7 @@ def create_scheduled_message(*, to_number: str, body: str, interval_seconds: int
         (to_number, body, interval_seconds, 1 if enabled else 0, next_run, now, now),
     )
     conn.commit()
-    return int(cursor.lastrowid)
+    return _get_lastrowid(cursor)
 
 
 def update_scheduled_message(
@@ -1315,7 +1431,7 @@ def create_multi_sms_batch(
         """,
         (body, sender_identity, len(cleaned), invalid_count, now, scheduled_value),
     )
-    batch_id = int(cursor.lastrowid)
+    batch_id = _get_lastrowid(cursor)
 
     for raw, normalized in cleaned:
         status = 'pending' if normalized else 'invalid'
@@ -1337,7 +1453,13 @@ def create_multi_sms_batch(
         )
 
     conn.commit()
-    return get_multi_sms_batch(batch_id)
+    
+    # get_multi_sms_batch should always find the just-inserted batch
+    result = get_multi_sms_batch(batch_id)
+    if result is None:
+        # This should never happen after successful INSERT
+        raise ValueError(f"Failed to retrieve newly created batch with ID {batch_id}")
+    return result
 
 
 def get_multi_sms_batch(batch_id: int) -> Optional[Dict[str, Any]]:
@@ -1628,13 +1750,25 @@ def get_listeners_config() -> List[Dict[str, Any]]:
         id, command, enabled, description, created_at, updated_at
     """
     conn = _get_connection()
-    rows = conn.execute(
-        """
-        SELECT id, command, enabled, description, created_at, updated_at 
-        FROM listeners_config 
-        ORDER BY id
-        """
-    ).fetchall()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, command, enabled, description, created_at, updated_at 
+            FROM listeners_config 
+            ORDER BY id
+            """
+        ).fetchall()
+    except Exception as exc:  # noqa: BLE001
+        if _ensure_listeners_table_after_error(conn, exc):
+            rows = conn.execute(
+                """
+                SELECT id, command, enabled, description, created_at, updated_at 
+                FROM listeners_config 
+                ORDER BY id
+                """
+            ).fetchall()
+        else:
+            raise
     return [dict(row) for row in rows]
 
 
@@ -1648,14 +1782,27 @@ def get_listener_by_command(command: str) -> Optional[Dict[str, Any]]:
         Listener config dict if found, None otherwise
     """
     conn = _get_connection()
-    row = conn.execute(
-        """
-        SELECT id, command, enabled, description, created_at, updated_at 
-        FROM listeners_config 
-        WHERE command = ?
-        """,
-        (command.lower().strip(),)
-    ).fetchone()
+    try:
+        row = conn.execute(
+            """
+            SELECT id, command, enabled, description, created_at, updated_at 
+            FROM listeners_config 
+            WHERE command = ?
+            """,
+            (command.lower().strip(),)
+        ).fetchone()
+    except Exception as exc:  # noqa: BLE001
+        if _ensure_listeners_table_after_error(conn, exc):
+            row = conn.execute(
+                """
+                SELECT id, command, enabled, description, created_at, updated_at 
+                FROM listeners_config 
+                WHERE command = ?
+                """,
+                (command.lower().strip(),)
+            ).fetchone()
+        else:
+            raise
     return dict(row) if row else None
 
 
@@ -1691,11 +1838,21 @@ def update_listener_config(
     
     params.append(listener_id)
     
-    conn.execute(
-        f"UPDATE listeners_config SET {', '.join(updates)} WHERE id = ?",
-        params
-    )
-    conn.commit()
+    try:
+        conn.execute(
+            f"UPDATE listeners_config SET {', '.join(updates)} WHERE id = ?",
+            params
+        )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        if _ensure_listeners_table_after_error(conn, exc):
+            conn.execute(
+                f"UPDATE listeners_config SET {', '.join(updates)} WHERE id = ?",
+                params
+            )
+            conn.commit()
+        else:
+            raise
     
     row = conn.execute(
         """
@@ -1729,14 +1886,27 @@ def create_listener(
     conn = _get_connection()
     now = datetime.utcnow().strftime(_TIMESTAMP_FORMAT)
     
-    cursor = conn.execute(
-        """
-        INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?)
-        """,
-        (command.lower().strip(), 1 if enabled else 0, description, now, now)
-    )
-    conn.commit()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (command.lower().strip(), 1 if enabled else 0, description, now, now)
+        )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        if _ensure_listeners_table_after_error(conn, exc):
+            cursor = conn.execute(
+                """
+                INSERT INTO listeners_config (command, enabled, description, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (command.lower().strip(), 1 if enabled else 0, description, now, now)
+            )
+            conn.commit()
+        else:
+            raise
     
     row = conn.execute(
         """
@@ -1759,9 +1929,19 @@ def delete_listener(listener_id: int) -> bool:
         True if deleted, False if not found
     """
     conn = _get_connection()
-    cursor = conn.execute(
-        "DELETE FROM listeners_config WHERE id = ?",
-        (listener_id,)
-    )
-    conn.commit()
+    try:
+        cursor = conn.execute(
+            "DELETE FROM listeners_config WHERE id = ?",
+            (listener_id,)
+        )
+        conn.commit()
+    except Exception as exc:  # noqa: BLE001
+        if _ensure_listeners_table_after_error(conn, exc):
+            cursor = conn.execute(
+                "DELETE FROM listeners_config WHERE id = ?",
+                (listener_id,)
+            )
+            conn.commit()
+        else:
+            raise
     return cursor.rowcount > 0

@@ -246,7 +246,8 @@ class TwilioService:
         """
 
         sender_number = (inbound_from or "").strip()
-        origin_number = (inbound_to or "").strip() or self.settings.default_from
+        # Always prefer configured default sender; fall back to inbound_to only if missing
+        origin_number = (self.settings.default_from or "").strip() or (inbound_to or "").strip()
         reply_text = body or ""
 
         if not sender_number:

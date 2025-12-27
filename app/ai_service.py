@@ -285,6 +285,7 @@ def send_ai_generated_sms(
         total_parts = len(parts)
 
         for idx, part in enumerate(parts, start=1):
+            # Always use configured origin_number if provided (TWILIO_DEFAULT_FROM in webhook)
             if origin_number:
                 msg = twilio_client.send_reply_to_inbound(
                     inbound_from=destination_for_twilio,

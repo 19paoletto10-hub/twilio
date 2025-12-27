@@ -1,5 +1,115 @@
 # Changelog
 
+## ver3.2.5 (Code Quality & Type Safety: Senior-Level Refactoring)
+
+📅 Data wydania: 2025-12-27
+
+### Podsumowanie
+
+Release 3.2.5 to profesjonalny refaktoring kodu z perspektywy Senior Developera. Wersja eliminuje 
+wszystkie błędy typów wykryte przez Pylance, dodaje solidną obsługę błędów, rozbudowuje 
+dokumentację funkcji oraz implementuje database-level deduplication dla niezawodnego 
+przetwarzania wiadomości w trybie asynchronicznym.
+
+### Najważniejsze zmiany
+
+#### 🔒 Type Safety & Error Handling
+- **Naprawiono `AIReplyError.reply_text`** – atrybut był w `details` dict, teraz jest dostępny bezpośrednio jako `self.reply_text`
+- **Bezpieczne `cursor.lastrowid`** – nowa funkcja `_get_lastrowid()` z walidacją i obsługą błędów
+- **Type guards dla `int()`** – wszystkie parsowania `int()` z `request.get_json()` mają explicit `None` check
+- **Walidacja `from_number`** – przed każdym wysłaniem SMS sprawdzane jest czy numer odbiorcy nie jest `None`
+- **Fix `answer_query()` return** – poprawiona ekstrakcja `answer` z Dict zamiast używania całego Dict jako body SMS
+
+#### 🔄 Database-Level Deduplication
+- **Nowa funkcja `has_outbound_reply_for_inbound()`** – sprawdza w bazie czy wysłaliśmy już odpowiedź
+- **Zastąpienie in-memory dedupe** – `_LISTENER_PROCESSED_SIDS` deque usunięte na rzecz trwałego sprawdzania DB
+- **Działa między restartami** – deduplikacja jest persystentna, nie gubi się przy restarcie procesu
+- **Poprawka debug mode** – działa poprawnie z Werkzeug reloader (wiele procesów)
+
+#### 🔧 Auto-Reply Worker Improvements
+- **Force restart parameter** – `start_auto_reply_worker(app, force_restart=True)` dla recovery
+- **Auto-recovery** – `enqueue_auto_reply()` automatycznie restartuje martwego workera
+- **Thread alive check** – sprawdzanie `thread.is_alive()` przed enqueue
+- **Usunięty duplicate code** – zmienne `from_number`, `to_number`, `body`, `sid` deklarowane raz
+- **AI niezależne od Listener `*`** – AI działa nawet gdy domyślny listener jest wyłączony
+
+#### 📚 Profesjonalna dokumentacja
+- **Rozbudowane docstringi** z pełnymi opisami algorytmów, thread safety, performance notes
+- **Przykłady użycia** w docstringach (`>>> enqueue_auto_reply(...)`)
+- **Type hints** poprawione dla wszystkich funkcji
+
+#### 🗄️ Database Improvements
+- **`_get_lastrowid()`** – bezpieczna ekstrakcja ID po INSERT z walidacją
+- **`_ensure_listeners_table_after_error()`** – auto-recovery gdy tabela nie istnieje
+- **Listener `*`** – nowy domyślny listener kontrolujący auto-reply (AI działa niezależnie)
+- **`create_multi_sms_batch()`** – poprawione zwracanie `Dict` zamiast `Optional[Dict]`
+
+### Naprawione błędy typów
+
+| Plik | Problem | Rozwiązanie |
+|------|---------|-------------|
+| `exceptions.py` | `AIReplyError.reply_text` niedostępny | Dodano atrybut `reply_text: Optional[str]` |
+| `database.py` | `cursor.lastrowid` może być `None` | Nowa funkcja `_get_lastrowid()` |
+| `webhooks.py` | `answer_query()` zwraca Dict, nie str | Ekstrakcja `answer_result.get("answer")` |
+| `webhooks.py` | `int(history_limit_raw)` gdy `None` | Explicit `None` check przed `int()` |
+| `auto_reply.py` | `from_number` może być `None` | Walidacja przed `send_chunked_sms()` |
+
+### Zaktualizowane pliki
+
+```
+app/exceptions.py                # AIServiceError z reply_text jako atrybut
+app/database.py                  # _get_lastrowid(), has_outbound_reply_for_inbound()
+app/auto_reply.py                # Force restart, auto-recovery, docstrings
+app/webhooks.py                  # Type guards, DB deduplication, fix answer_query
+app/twilio_client.py             # Preferuj default_from nad inbound_to
+app/ai_service.py                # Comment clarifying origin_number usage
+```
+
+### Architektura deduplikacji
+
+```
+Inbound SMS ─────────────────────────────────────────────────────────────►
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  1. Webhook: has_outbound_reply_for_inbound(sid, from_number)           │
+│     ↓ False                                                              │
+│  2. Insert inbound message to DB                                         │
+│     ↓                                                                    │
+│  3. Enqueue to SimpleQueue                                               │
+└──────────────────────────────────────────────────────────────────────────┘
+       │
+       ▼
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Worker Thread:                                                          │
+│  4. Get payload from queue                                               │
+│  5. has_outbound_reply_for_inbound(sid, from_number)                    │
+│     ↓ False (brak duplikatu)                                            │
+│  6. Process: AI reply / /news listener / auto-reply                     │
+│  7. Send SMS via Twilio                                                  │
+│  8. Insert outbound message to DB ← deduplikacja działa od teraz        │
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### Thread Safety & Recovery
+
+```python
+# Worker automatycznie restartuje się gdy umrze
+def enqueue_auto_reply(app, *, sid, from_number, to_number, body, received_at=None):
+    thread = app.config.get("AUTO_REPLY_THREAD")
+    if not thread or not thread.is_alive():
+        start_auto_reply_worker(app, force_restart=True)
+    queue.put(payload)
+```
+
+### Kompatybilność
+
+- **Brak zmian łamiących** – wszystkie istniejące API pozostają kompatybilne
+- **Brak migracji DB** – schemat pozostaje na wersji 9
+- **Backward compatible** – `AIReplyError` alias zachowany dla legacy code
+
+---
+
 ## ver3.2.4 (Listeners: SMS Command Processing with FAISS Integration)
 
 📅 Data wydania: 2025-12-23

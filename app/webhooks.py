@@ -32,6 +32,7 @@ from .database import (
     get_listeners_config,
     get_listener_by_command,
     update_listener_config,
+    has_outbound_reply_for_inbound,
 )
 from .database import (
     list_scheduled_messages,
@@ -95,9 +96,8 @@ webhooks_bp = Blueprint("webhooks", __name__)
 
 CHAT_HISTORY_LIMIT = 50
 
-# Deduplikacja przetworzonych wiadomości listenerów (SID -> timestamp)
-from collections import deque
-_LISTENER_PROCESSED_SIDS: deque = deque(maxlen=500)
+# Deduplikacja teraz odbywa się przez sprawdzanie bazy danych
+# Funkcja has_outbound_reply_for_inbound() sprawdza czy wysłaliśmy odpowiedź
 
 
 def _datetime_to_iso(value: Optional[datetime]) -> Optional[str]:
@@ -263,12 +263,11 @@ def _handle_news_listener_sync(from_number: str, to_number: str, body: str, sid:
     """Synchronicznie obsłuż komendę /news - odpytaj FAISS i wyślij SMS."""
     from .faiss_service import FAISSService
 
-    # Deduplikacja - nie przetwarzaj tej samej wiadomości dwa razy
-    if sid:
-        if sid in _LISTENER_PROCESSED_SIDS:
-            current_app.logger.debug("/news: SID %s already processed, skipping", sid)
+    # DEDUPLIKACJA: Sprawdź w bazie czy już wysłaliśmy odpowiedź do tego nadawcy
+    if sid and from_number:
+        if has_outbound_reply_for_inbound(sid, from_number):
+            current_app.logger.debug("/news: SID %s already replied to %s, skipping", sid, from_number)
             return
-        _LISTENER_PROCESSED_SIDS.append(sid)
 
     twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
 
@@ -318,13 +317,10 @@ def _handle_news_listener_sync(from_number: str, to_number: str, body: str, sid:
 
 
 def _maybe_enqueue_auto_reply_for_message(message) -> None:
-    """Queue reactive replies (AI, auto-reply or listeners) when enabled and inbound."""
-
-    auto_cfg = get_auto_reply_config()
-    ai_cfg = get_ai_config()
-
-    ai_enabled = bool(ai_cfg.get("enabled"))
-    auto_enabled = bool(auto_cfg.get("enabled"))
+    """Queue reactive replies (AI, auto-reply or listeners) when enabled and inbound.
+    
+    Wszystko jest przetwarzane ASYNCHRONICZNIE przez worker w tle.
+    """
 
     # Pobierz dane wiadomości
     body = getattr(message, "body", "") or ""
@@ -337,22 +333,36 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
     to_number = (getattr(message, "to", "") or "").strip()
     sid = getattr(message, "sid", None)
 
-    # ─────────────────────────────────────────────────────────
-    # LISTENER /news - obsłuż synchronicznie przy pollingu
-    # ─────────────────────────────────────────────────────────
-    if body.strip().lower().startswith("/news"):
-        news_listener = get_listener_by_command("/news")
-        if news_listener and news_listener.get("enabled"):
-            current_app.logger.info(
-                "Processing /news command from polling: from=%s body=%s",
-                from_number, body[:100]
+    # DEDUPLIKACJA: Sprawdź w bazie czy już wysłaliśmy odpowiedź do tego nadawcy
+    if sid and from_number:
+        if has_outbound_reply_for_inbound(sid, from_number):
+            current_app.logger.debug(
+                "Skipping message SID=%s - already replied to %s", sid, from_number
             )
-            _handle_news_listener_sync(from_number, to_number, body, sid)
-            return  # Nie enqueue'uj dalej
+            return
 
-    if not ai_enabled and not auto_enabled:
+    auto_cfg = get_auto_reply_config()
+    ai_cfg = get_ai_config()
+
+    ai_enabled = bool(ai_cfg.get("enabled"))
+    auto_enabled = bool(auto_cfg.get("enabled"))
+
+    # Sprawdź listener * dla auto-reply (AI działa niezależnie od listenera *)
+    default_listener = get_listener_by_command("*")
+    default_listener_enabled = default_listener and default_listener.get("enabled")
+    
+    # Dla wszystkich wiadomości - sprawdź czy AI lub auto-reply jest włączone
+    if not ai_enabled and (not auto_enabled or not default_listener_enabled):
+        current_app.logger.debug(
+            "No active response for polling: ai=%s, auto=%s, listener*=%s",
+            ai_enabled, auto_enabled, default_listener_enabled
+        )
         return
 
+    # ─────────────────────────────────────────────────────────
+    # ENQUEUE do workera w tle - asynchroniczne przetwarzanie
+    # Worker obsłuży: AI reply, /news listener, auto-reply
+    # ─────────────────────────────────────────────────────────
     received_at_iso = None
     for attr in ("date_created", "date_sent", "date_updated"):
         dt_value = getattr(message, attr, None)
@@ -362,42 +372,6 @@ def _maybe_enqueue_auto_reply_for_message(message) -> None:
                 break
     if not received_at_iso:
         received_at_iso = _datetime_to_iso(datetime.utcnow())
-
-    should_enqueue = False
-
-    # AI: odpowiadamy tylko na wiadomości nowsze niż ostatnia zmiana konfiguracji AI
-    if ai_enabled:
-        api_key = (ai_cfg.get("api_key") or "").strip()
-        if not api_key:
-            current_app.logger.warning("AI mode enabled but API key missing; skipping AI reply enqueue")
-        else:
-            enabled_since_dt = _parse_iso_timestamp(ai_cfg.get("updated_at"))
-            received_at_dt = _parse_iso_timestamp(received_at_iso)
-            if enabled_since_dt and received_at_dt and received_at_dt < enabled_since_dt:
-                current_app.logger.info(
-                    "Skipping AI reply enqueue for SID=%s: received %s before AI config updated_at %s",
-                    sid,
-                    received_at_iso,
-                    ai_cfg.get("updated_at"),
-                )
-            else:
-                should_enqueue = True
-
-    if not should_enqueue and auto_enabled:
-        enabled_since_dt = _parse_iso_timestamp(auto_cfg.get("enabled_since"))
-        received_at_dt = _parse_iso_timestamp(received_at_iso)
-        if enabled_since_dt and received_at_dt and received_at_dt < enabled_since_dt:
-            current_app.logger.info(
-                "Skipping auto-reply enqueue for SID=%s: received %s before enabled toggle %s",
-                sid,
-                received_at_iso,
-                auto_cfg.get("enabled_since"),
-            )
-            return
-        should_enqueue = True
-
-    if not should_enqueue:
-        return
 
     enqueue_auto_reply(
         current_app,
@@ -910,6 +884,14 @@ def inbound_message():
     except Exception as exc:  # noqa: BLE001
         app.logger.exception("Failed to store inbound message: %s", exc)
 
+    # DEDUPLIKACJA: Sprawdź w bazie czy już wysłaliśmy odpowiedź do tego nadawcy
+    if message_sid and from_number:
+        if has_outbound_reply_for_inbound(message_sid, from_number):
+            app.logger.debug(
+                "Skipping inbound SID=%s - already replied to %s", message_sid, from_number
+            )
+            return Response("OK", mimetype="text/plain")
+
     twilio_client: TwilioService = app.config["TWILIO_CLIENT"]
 
     ai_cfg = get_ai_config()
@@ -928,13 +910,15 @@ def inbound_message():
                 try:
                     from .faiss_service import FAISSService
                     faiss_svc = FAISSService()
-                    answer = faiss_svc.answer_query(query)
-                    if answer:
+                    answer_result = faiss_svc.answer_query(query)
+                    # answer_query returns Dict with 'answer' key
+                    answer_text = answer_result.get("answer") if isinstance(answer_result, dict) else str(answer_result)
+                    if answer_text:
                         # Wyślij odpowiedź SMS
                         message = twilio_client.send_reply_to_inbound(
                             inbound_from=from_number,
                             inbound_to=to_number,
-                            body=answer,
+                            body=str(answer_text),
                         )
                         _persist_twilio_message(message)
                         app.logger.info("Sent /news reply to %s (SID: %s)", from_number, message.sid)
@@ -962,9 +946,71 @@ def inbound_message():
                     _persist_twilio_message(message)
                 except Exception as exc:
                     app.logger.exception("Failed to send /news help: %s", exc)
+            # Listener /news obsłużył komendę
             return Response("OK", mimetype="text/plain")
 
-    if ai_enabled or auto_enabled:
+    # Dla wszystkich innych wiadomości (nie /news) - sprawdź AI i auto-reply
+    # Listener * kontroluje tylko auto-reply, AI działa niezależnie gdy włączone
+    default_listener = get_listener_by_command("*")
+    default_listener_enabled = default_listener and default_listener.get("enabled")
+    
+    app.logger.info(
+        "Processing message: ai_enabled=%s, auto_enabled=%s, default_listener=%s",
+        ai_enabled, auto_enabled, default_listener_enabled
+    )
+
+    # Handle AI reply synchronously gdy AI włączone (niezależnie od listenera *)
+    if ai_enabled:
+        try:
+            api_key = (ai_cfg.get("api_key") or "").strip()
+            if api_key:
+                app.logger.info("Processing AI reply synchronously for %s", from_number)
+                responder = AIResponder(
+                    api_key=api_key,
+                    model=(ai_cfg.get("model") or "gpt-4o-mini").strip(),
+                    system_prompt=ai_cfg.get("system_prompt") or "",
+                    temperature=float(ai_cfg.get("temperature", 0.7) or 0.7),
+                )
+                
+                result = send_ai_generated_sms(
+                    responder=responder,
+                    twilio_client=twilio_client,
+                    participant_number=from_number,
+                    latest_user_message=body,
+                    # Wymuszamy nadawcę z TWILIO_DEFAULT_FROM (nie numer przychodzący)
+                    origin_number=twilio_client.settings.default_from,
+                    logger=app.logger,
+                )
+                
+                insert_message(
+                    direction="outbound",
+                    sid=result.sid,
+                    to_number=result.to_number,
+                    from_number=result.origin_number or to_number or twilio_client.settings.default_from,
+                    body=result.reply_text,
+                    status=result.status or "ai-auto-reply",
+                )
+                
+                # Odpowiedź zapisana do bazy - deduplikacja zadziała automatycznie
+                app.logger.info("AI reply sent to %s with SID=%s", from_number, result.sid or "unknown")
+                return Response("OK", mimetype="text/plain")
+            else:
+                app.logger.error("AI enabled but no API key configured")
+        except Exception as exc:
+            app.logger.exception("Synchronous AI reply failed: %s", exc)
+            insert_message(
+                direction="outbound",
+                sid=None,
+                to_number=from_number,
+                from_number=to_number or twilio_client.settings.default_from,
+                body="",
+                status="failed",
+                error=str(exc),
+            )
+
+    # Fallback to async auto-reply gdy listener * włączony i auto_enabled
+    # Auto-reply wymaga włączonego listenera * (w przeciwieństwie do AI)
+    if default_listener_enabled and auto_enabled:
         enqueue_auto_reply(
             app,
             sid=message_sid,
@@ -973,6 +1019,12 @@ def inbound_message():
             body=body,
             received_at=received_at_iso,
         )
+        return Response("OK", mimetype="text/plain")
+
+    # Jeśli brak AI i brak auto-reply (lub listener * wyłączony dla auto-reply) - zwróć OK bez odpowiedzi
+    if not ai_enabled and (not default_listener_enabled or not auto_enabled):
+        app.logger.info("No active response mechanism for message from %s (ai=%s, auto=%s, listener=%s)", 
+                       from_number, ai_enabled, auto_enabled, default_listener_enabled)
         return Response("OK", mimetype="text/plain")
 
     # Generate auto-reply using chat engine when both AI and auto-reply are disabled
@@ -1237,10 +1289,13 @@ def api_test_ai_connection():
     history_limit_raw = payload.get("history_limit")
     use_latest_message = payload.get("use_latest_message", True)
 
-    try:
-        history_limit = max(1, min(int(history_limit_raw), 200))
-    except (TypeError, ValueError):
-        history_limit = 20
+    # Safely parse history_limit with explicit None check
+    history_limit = 20  # default
+    if history_limit_raw is not None:
+        try:
+            history_limit = max(1, min(int(history_limit_raw), 200))
+        except (TypeError, ValueError):
+            pass  # Keep default
 
     cfg = get_ai_config()
     api_key = api_key_override or (cfg.get("api_key") or "").strip()
@@ -1322,10 +1377,14 @@ def api_ai_send_message():
     latest = (payload.get("latest") or "").strip()
     api_key_override = (payload.get("api_key") or "").strip()
     history_limit_raw = payload.get("history_limit", 20)
-    try:
-        history_limit = max(1, min(int(history_limit_raw), 200))
-    except (TypeError, ValueError):
-        history_limit = 20
+    
+    # Safely parse history_limit with explicit None check
+    history_limit = 20  # default
+    if history_limit_raw is not None:
+        try:
+            history_limit = max(1, min(int(history_limit_raw), 200))
+        except (TypeError, ValueError):
+            pass  # Keep default
 
     try:
         result = send_ai_message_to_configured_target(
@@ -1473,10 +1532,13 @@ def api_create_reminder():
     body = (payload.get("body") or "").strip()
     interval_minutes_raw = payload.get("interval_minutes")
 
-    try:
-        interval_minutes = int(interval_minutes_raw)
-    except (TypeError, ValueError):
-        interval_minutes = 0
+    # Safely parse interval_minutes with explicit None check
+    interval_minutes = 0
+    if interval_minutes_raw is not None:
+        try:
+            interval_minutes = int(interval_minutes_raw)
+        except (TypeError, ValueError):
+            pass  # Keep default (0, will fail validation below)
 
     if not to_number:
         return jsonify({"error": "Pole 'to' jest wymagane."}), 400
@@ -1820,6 +1882,7 @@ def api_test_news():
     if not html:
         return jsonify({"success": False, "error": "Brak odpowiedzi z serwisu news."}), 502
 
+    cfg = _load_news_config()
     cfg["last_test_at"] = datetime.utcnow().isoformat() + "Z"
     _save_news_config(cfg)
     return jsonify(
