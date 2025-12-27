@@ -2,7 +2,7 @@
 
 /**
  * Twilio Chat App - Conversation View Controller
- * @version 3.2.6
+ * @version 3.2.7
  * @description Professional chat interface with dynamic conversation switching,
  *              real-time updates, and responsive design.
  */
@@ -377,9 +377,26 @@
    */
   const updateCurrentConversationUI = () => {
     const display = currentDisplayNumber || currentParticipant;
+    const participant = currentParticipant;
     
+    // Update main header title and subtitle
     if (chatCurrentTitle) chatCurrentTitle.textContent = display || 'Nieznany numer';
+    if (chatCurrentSubtitle) {
+      // Show participant number in subtitle if different from display, else generic label
+      const subtitleText = (participant && participant !== display) 
+        ? participant 
+        : 'Rozmowa SMS';
+      chatCurrentSubtitle.textContent = subtitleText;
+    }
+    
+    // Update sidebar title
     if (chatSidebarTitle) chatSidebarTitle.textContent = display || 'Nieznany';
+    
+    // Update data attributes on root element for consistency
+    if (root) {
+      root.dataset.participant = participant;
+      root.dataset.displayNumber = display;
+    }
     
     // Update composer recipient
     updateComposerRecipient();
@@ -1128,7 +1145,7 @@
     initEventListeners();
     initSidebar();
     updateMessageCounter();
-    updateComposerRecipient();
+    updateCurrentConversationUI();
     
     // Load initial data
     await Promise.all([
