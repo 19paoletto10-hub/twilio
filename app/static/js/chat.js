@@ -35,6 +35,7 @@
   // Current conversation state
   let currentParticipant = root.dataset.participant || '';
   let currentDisplayNumber = root.dataset.displayNumber || currentParticipant;
+  let currentLastActivity = root.dataset.lastActivity || '';
   
   // Thread elements
   const threadEl = document.getElementById('chat-thread');
@@ -59,6 +60,7 @@
   const chatCurrentTitle = document.getElementById('chat-current-title');
   const chatCurrentSubtitle = document.getElementById('chat-current-subtitle');
   const chatSidebarTitle = document.getElementById('chat-sidebar-title');
+  const chatThreadTitle = document.getElementById('chat-thread-title');
   
   // Conversation switcher elements
   const conversationsList = document.getElementById('conversations-list');
@@ -348,9 +350,14 @@
     
     if (!participant || participant === currentParticipant) return;
 
+    // Find conversation in cache to get last activity
+    const conv = conversationsCache.find(c => c.participant === participant);
+    const lastActivity = conv?.last_message?.created_at || '';
+
     // Update state
     currentParticipant = participant;
     currentDisplayNumber = displayNumber;
+    currentLastActivity = lastActivity;
     
     // Update URL without reload
     const newUrl = `/chat/${encodeURIComponent(participant)}`;
@@ -391,6 +398,14 @@
     
     // Update sidebar title
     if (chatSidebarTitle) chatSidebarTitle.textContent = display || 'Nieznany';
+    
+    // Update thread header title (above message bubbles)
+    if (chatThreadTitle) chatThreadTitle.textContent = display || 'Nieznany';
+    
+    // Update last activity timestamp in thread header
+    if (lastUpdatedInlineEl) {
+      lastUpdatedInlineEl.textContent = currentLastActivity ? formatDateTime(currentLastActivity) : '—';
+    }
     
     // Update data attributes on root element for consistency
     if (root) {
@@ -588,9 +603,22 @@
         totalMessagesEl.textContent = String(data.count ?? 0);
       }
       
+      // Update last activity from latest message in thread
+      const items = data.items || [];
+      if (items.length > 0) {
+        // Items are sorted descending - first is newest
+        const latestMessage = items[0];
+        currentLastActivity = latestMessage.date_created || latestMessage.created_at || '';
+      }
+      
+      // Update inline timestamp with actual last activity
+      if (lastUpdatedInlineEl) {
+        lastUpdatedInlineEl.textContent = currentLastActivity ? formatDateTime(currentLastActivity) : '—';
+      }
+      
+      // Update sidebar timestamp if exists
       const timestamp = new Date().toLocaleString();
       if (lastUpdatedEl) lastUpdatedEl.textContent = timestamp;
-      if (lastUpdatedInlineEl) lastUpdatedInlineEl.textContent = timestamp;
       
     } catch (error) {
       console.error('Thread refresh error:', error);
