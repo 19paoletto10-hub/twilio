@@ -1,35 +1,90 @@
 {% extends "base.html" %}
 {% block title %}Rozmowa z {{ display_number or 'kontaktem' }} | Twilio{% endblock %}
 
+{% block extra_css %}
+<style>
+  /* Chat page: Force sidebar always open */
+  body:has(.chat-page) [data-app-sidebar-state] { --sidebar-forced-open: 1; }
+  body:has(.chat-page) .app-sidebar { transform: translateX(0) !important; }
+  body:has(.chat-page) [data-app-sidebar-collapse-toggle] { display: none !important; }
+  body:has(.chat-page) .app-sidebar__overlay { display: none !important; }
+  @media (min-width: 992px) {
+    body:has(.chat-page) .app-sidebar { position: sticky; flex-shrink: 0; }
+    body:has(.chat-page) .conversation-switcher { display: flex !important; }
+  }
+</style>
+{% endblock %}
+
 {% block sidebar %}
-  <aside class="app-sidebar" data-app-sidebar>
-    <div>
-      <div class="app-sidebar__section-title mb-3">Nawigacja</div>
+  <aside class="app-sidebar app-sidebar--chat-page" data-app-sidebar>
+    {# --- Conversation Switcher Panel --- #}
+    <div class="conversation-switcher">
+      <div class="conversation-switcher__header">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h2 class="conversation-switcher__title">
+            <i class="bi bi-chat-left-text-fill"></i>
+            <span>Rozmowy</span>
+          </h2>
+          <div class="d-flex gap-1">
+            <button type="button" class="btn btn-sm btn-primary conversation-switcher__new" id="new-conversation-btn" title="Nowa rozmowa">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary conversation-switcher__refresh" id="conversations-refresh-btn" title="Odśwież listę">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+        <div class="conversation-switcher__search">
+          <i class="bi bi-search"></i>
+          <input 
+            type="text" 
+            class="form-control form-control-sm" 
+            id="conversations-search" 
+            placeholder="Szukaj kontaktu..." 
+            autocomplete="off"
+          >
+          <button type="button" class="conversation-switcher__search-clear d-none" id="conversations-search-clear" title="Wyczyść">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+      <div class="conversation-switcher__stats" id="conversations-stats">
+        <span class="conversation-switcher__stat">
+          <i class="bi bi-people-fill"></i>
+          <span id="conversations-count">0</span> kontaktów
+        </span>
+      </div>
+      <div class="conversation-switcher__list" id="conversations-list">
+        <div class="conversation-switcher__loading">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <span>Ładowanie...</span>
+        </div>
+      </div>
+    </div>
+
+    {# --- Quick Actions --- #}
+    <div class="conversation-switcher__quick-actions mb-3">
+      <button type="button" class="btn btn-gradient-primary w-100 d-flex align-items-center justify-content-center gap-2" id="quick-new-conversation-btn">
+        <i class="bi bi-plus-circle-fill"></i>
+        <span>Nowa rozmowa</span>
+      </button>
+    </div>
+
+    {# --- Navigation --- #}
+    <div class="mt-auto">
+      <div class="app-sidebar__section-title mb-3">Szybkie akcje</div>
       <nav class="app-sidebar__nav" aria-label="Widoki">
         <a class="app-sidebar__link" href="/">
           <i class="bi bi-speedometer2"></i>
           <span class="app-sidebar__label">Panel główny</span>
         </a>
-        <a class="app-sidebar__link is-active" href="#chat-root" data-chat-scroll>
-          <i class="bi bi-chat-dots"></i>
-          <span class="app-sidebar__label">Bieżąca rozmowa</span>
-        </a>
-      </nav>
-    </div>
-    <div>
-      <div class="app-sidebar__section-title mb-3">Akcje</div>
-      <nav class="app-sidebar__nav" aria-label="Akcje rozmowy">
-        <a class="app-sidebar__link" href="#chat-thread" data-chat-scroll>
-          <i class="bi bi-journal-text"></i>
-          <span class="app-sidebar__label">Historia wiadomości</span>
-        </a>
-        <a class="app-sidebar__link" href="#chat-send-form" data-chat-scroll>
+        <a class="app-sidebar__link" href="#chat-send-form" id="nav-write-message" data-action="focus-composer">
           <i class="bi bi-pencil-square"></i>
           <span class="app-sidebar__label">Napisz odpowiedź</span>
         </a>
-        <a class="app-sidebar__link" href="https://console.twilio.com/" target="_blank" rel="noreferrer">
-          <i class="bi bi-box-arrow-up-right"></i>
-          <span class="app-sidebar__label">Twilio Console</span>
+        <a class="app-sidebar__link" href="{{ url_for('ui.secrets_view') }}">
+          <i class="bi bi-key-fill"></i>
+          <span class="app-sidebar__label">Konfiguracja API</span>
         </a>
       </nav>
     </div>
@@ -41,22 +96,28 @@
     class="container-fluid chat-page px-lg-4"
     id="chat-root"
     data-participant="{{ participant|e }}"
+    data-display-number="{{ display_number|e }}"
   >
+    {# --- Chat Header with Conversation Indicator --- #}
     <div class="chat-page-header mb-4">
       <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div class="d-flex align-items-center gap-3">
-          <a class="btn btn-outline-secondary btn-sm" href="/" title="Powrót">
+          <a class="btn btn-outline-secondary btn-sm" href="/" title="Powrót do panelu">
             <i class="bi bi-arrow-left"></i>
           </a>
-          <div class="chat-page-header__avatar">
+          <div class="chat-page-header__avatar" id="chat-current-avatar">
             <i class="bi bi-person-fill"></i>
           </div>
           <div>
-            <h1 class="h5 fw-semibold mb-0">{{ display_number or 'Nieznany numer' }}</h1>
-            <small class="text-muted">Rozmowa SMS</small>
+            <h1 class="h5 fw-semibold mb-0" id="chat-current-title">{{ display_number or 'Nieznany numer' }}</h1>
+            <small class="text-muted" id="chat-current-subtitle">Rozmowa SMS</small>
           </div>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
+          <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 d-xl-none" data-bs-toggle="offcanvas" data-bs-target="#conversationsOffcanvas" aria-controls="conversationsOffcanvas">
+            <i class="bi bi-list"></i>
+            <span>Rozmowy</span>
+          </button>
           <span class="badge bg-success-subtle text-success-emphasis px-2 py-1">
             <i class="bi bi-circle-fill me-1" style="font-size:0.5rem"></i>Online
           </span>
@@ -73,11 +134,11 @@
           <div class="card-header bg-transparent border-0 pb-0 pt-3 px-3">
             <div class="d-flex align-items-center justify-content-between gap-2">
               <div class="d-flex align-items-center gap-2">
-                <span class="chat-avatar">
+                <span class="chat-avatar" id="chat-sidebar-avatar">
                   <i class="bi bi-person-fill"></i>
                 </span>
                 <div>
-                  <h2 class="h6 mb-0 fw-semibold">{{ display_number or 'Nieznany' }}</h2>
+                  <h2 class="h6 mb-0 fw-semibold" id="chat-sidebar-title">{{ display_number or 'Nieznany' }}</h2>
                   <small class="text-muted">SMS / MMS</small>
                 </div>
               </div>
@@ -145,7 +206,7 @@
                     <i class="bi bi-chat-dots-fill"></i>
                   </span>
                   <div>
-                    <h2 class="h6 mb-0 fw-semibold">{{ display_number or 'Nieznany' }}</h2>
+                    <h2 class="h6 mb-0 fw-semibold" id="chat-thread-title">{{ display_number or 'Nieznany' }}</h2>
                     <small class="text-muted d-flex align-items-center gap-1">
                       <i class="bi bi-clock"></i>
                       <span id="chat-last-updated-inline">—</span>
@@ -174,27 +235,63 @@
                 <i class="bi bi-chevron-double-down"></i> Na dół
               </button>
             </div>
-            <div class="chat-composer border-top">
-              <form id="chat-send-form" class="chat-composer-form p-3" novalidate>
-                <div class="chat-composer-input-wrap">
-                  <textarea class="form-control chat-composer-textarea" id="chat-message-input" rows="2" maxlength="1000" placeholder="Napisz wiadomość..." required></textarea>
+            <div class="chat-composer chat-composer--enhanced">
+              <form id="chat-send-form" class="chat-composer-form" novalidate>
+                <div class="chat-composer__header">
+                  <div class="chat-composer__recipient">
+                    <i class="bi bi-person-check-fill"></i>
+                    <span>Do:</span>
+                    <strong id="composer-recipient">{{ participant }}</strong>
+                  </div>
+                  <div class="chat-composer__status" id="composer-status">
+                    <i class="bi bi-circle-fill"></i>
+                    <span>Gotowy</span>
+                  </div>
+                </div>
+                <div class="chat-composer__body">
+                  <div class="chat-composer__input-wrapper">
+                    <textarea 
+                      class="chat-composer__textarea" 
+                      id="chat-message-input" 
+                      rows="3" 
+                      maxlength="1000" 
+                      placeholder="Napisz wiadomość..." 
+                      required
+                      aria-label="Treść wiadomości"
+                    ></textarea>
+                    <div class="chat-composer__input-actions">
+                      <button type="button" class="chat-composer__action-btn" id="chat-emoji-btn" title="Emoji" disabled>
+                        <i class="bi bi-emoji-smile"></i>
+                      </button>
+                      <button type="button" class="chat-composer__action-btn" id="chat-template-btn" title="Szablony" disabled>
+                        <i class="bi bi-file-text"></i>
+                      </button>
+                    </div>
+                  </div>
                   <div class="invalid-feedback">Treść wiadomości jest wymagana.</div>
                 </div>
-                <div class="d-flex justify-content-between align-items-center mt-2 flex-wrap gap-2">
-                  <div class="d-flex align-items-center gap-2 text-muted small">
-                    <i class="bi bi-person-check"></i>
-                    <span>Do: <strong>{{ participant }}</strong></span>
+                <div class="chat-composer__footer">
+                  <div class="chat-composer__info">
+                    <span class="chat-composer__counter" id="chat-message-counter" data-max="1000">
+                      <span class="chat-composer__counter-current">0</span>
+                      <span class="chat-composer__counter-separator">/</span>
+                      <span class="chat-composer__counter-max">1000</span>
+                    </span>
+                    <span class="chat-composer__hint">
+                      <kbd>Shift</kbd>+<kbd>Enter</kbd> nowa linia
+                    </span>
                   </div>
-                  <span class="badge bg-light text-muted" id="chat-message-counter" data-max="1000">0 / 1000</span>
-                </div>
-                <div class="d-flex justify-content-end align-items-center mt-3 gap-2">
-                  <button type="button" class="btn btn-light d-flex align-items-center gap-1" id="chat-clear-btn">
-                    <i class="bi bi-x-lg"></i> Wyczyść
-                  </button>
-                  <button type="submit" class="btn btn-primary d-flex align-items-center gap-2" id="chat-send-btn">
-                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
-                    <i class="bi bi-send-fill"></i> Wyślij
-                  </button>
+                  <div class="chat-composer__actions">
+                    <button type="button" class="btn btn-ghost" id="chat-clear-btn">
+                      <i class="bi bi-x-lg"></i>
+                      <span>Wyczyść</span>
+                    </button>
+                    <button type="submit" class="btn btn-primary-gradient" id="chat-send-btn">
+                      <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                      <i class="bi bi-send-fill"></i>
+                      <span>Wyślij</span>
+                    </button>
+                  </div>
                 </div>
               </form>
             </div>
@@ -204,6 +301,105 @@
     </div>
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3" id="chat-toast-wrapper"></div>
+  </div>
+
+  {# --- Mobile Offcanvas for Conversations --- #}
+  <div class="offcanvas offcanvas-start" tabindex="-1" id="conversationsOffcanvas" aria-labelledby="conversationsOffcanvasLabel">
+    <div class="offcanvas-header border-bottom">
+      <h5 class="offcanvas-title" id="conversationsOffcanvasLabel">
+        <i class="bi bi-chat-left-text-fill me-2"></i>Rozmowy
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Zamknij"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <div class="p-3 border-bottom">
+        <div class="input-group input-group-sm">
+          <span class="input-group-text bg-transparent border-end-0">
+            <i class="bi bi-search text-muted"></i>
+          </span>
+          <input type="text" class="form-control border-start-0" id="conversations-search-mobile" placeholder="Szukaj kontaktu...">
+        </div>
+      </div>
+      <div class="conversation-switcher__list-mobile" id="conversations-list-mobile">
+        <div class="conversation-switcher__loading">
+          <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+          <span>Ładowanie...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# --- New Conversation Modal --- #}
+  <div class="modal fade" id="newConversationModal" tabindex="-1" aria-labelledby="newConversationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <div class="d-flex align-items-center gap-3">
+            <div class="modal-icon">
+              <i class="bi bi-plus-circle-fill"></i>
+            </div>
+            <div>
+              <h5 class="modal-title mb-0" id="newConversationModalLabel">Nowa rozmowa</h5>
+              <small class="text-muted">Rozpocznij rozmowę z nowym kontaktem</small>
+            </div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body pt-4">
+          <form id="new-conversation-form" novalidate>
+            <div class="mb-4">
+              <label for="new-conversation-number" class="form-label fw-semibold">
+                <i class="bi bi-telephone-fill text-primary me-2"></i>Numer telefonu
+              </label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text bg-light border-end-0">
+                  <i class="bi bi-phone"></i>
+                </span>
+                <input 
+                  type="tel" 
+                  class="form-control border-start-0 ps-0" 
+                  id="new-conversation-number" 
+                  placeholder="+48 XXX XXX XXX"
+                  pattern="^\+?[0-9\s\-()]+$"
+                  required
+                  autocomplete="tel"
+                >
+              </div>
+              <div class="invalid-feedback">Wprowadź poprawny numer telefonu w formacie E.164</div>
+              <div class="form-text mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Format międzynarodowy, np. +48732070140
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="new-conversation-message" class="form-label fw-semibold">
+                <i class="bi bi-chat-text-fill text-primary me-2"></i>Pierwsza wiadomość <span class="text-muted fw-normal">(opcjonalna)</span>
+              </label>
+              <textarea 
+                class="form-control" 
+                id="new-conversation-message" 
+                rows="3" 
+                maxlength="1000"
+                placeholder="Napisz pierwszą wiadomość..."
+              ></textarea>
+              <div class="d-flex justify-content-between mt-1">
+                <small class="text-muted">Możesz wysłać wiadomość później</small>
+                <small class="text-muted" id="new-conversation-counter">0 / 1000</small>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">
+            <i class="bi bi-x-lg me-2"></i>Anuluj
+          </button>
+          <button type="button" class="btn btn-primary-gradient px-4" id="start-conversation-btn">
+            <span class="spinner-border spinner-border-sm d-none me-2" role="status"></span>
+            <i class="bi bi-arrow-right-circle-fill me-2"></i>Rozpocznij
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 {% endblock %}
 

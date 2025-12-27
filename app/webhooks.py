@@ -948,6 +948,18 @@ def inbound_message():
                     app.logger.exception("Failed to send /news help: %s", exc)
             # Listener /news obsłużył komendę
             return Response("OK", mimetype="text/plain")
+        disabled_msg = "Funkcja /news jest chwilowo niedostępna."
+        try:
+            message = twilio_client.send_reply_to_inbound(
+                inbound_from=from_number,
+                inbound_to=to_number,
+                body=disabled_msg,
+            )
+            _persist_twilio_message(message)
+            app.logger.info("/news listener disabled notice sent to %s", from_number)
+        except Exception as exc:
+            app.logger.exception("Failed to send /news disabled notice: %s", exc)
+        return Response("OK", mimetype="text/plain")
 
     # Dla wszystkich innych wiadomości (nie /news) - sprawdź AI i auto-reply
     # Listener * kontroluje tylko auto-reply, AI działa niezależnie gdy włączone
@@ -1134,8 +1146,7 @@ def api_update_ai_config():
             return jsonify({"error": "Temperatura musi być w zakresie 0-2."}), 400
 
     normalized_target = normalize_contact(target_number)
-    if enabled and not normalized_target:
-        return jsonify({"error": "Podaj numer uczestnika rozmowy."}), 400
+    # AI odpowiada wszystkim nadawcom - target_number jest opcjonalny (do wyświetlania historii)
 
     api_key_provided = "api_key" in payload
     api_key_value = payload.get("api_key") if api_key_provided else None
@@ -1282,12 +1293,11 @@ def api_reload_settings():
 
 @webhooks_bp.post("/api/ai/test")
 def api_test_ai_connection():
+    """Test połączenia z OpenAI - nie wymaga numeru uczestnika."""
     payload = request.get_json(force=True, silent=True) or {}
-    participant_override = (payload.get("participant") or "").strip()
     message = (payload.get("message") or "").strip()
     api_key_override = (payload.get("api_key") or "").strip()
     history_limit_raw = payload.get("history_limit")
-    use_latest_message = payload.get("use_latest_message", True)
 
     # Safely parse history_limit with explicit None check
     history_limit = 20  # default
@@ -1302,30 +1312,8 @@ def api_test_ai_connection():
     if not api_key:
         return jsonify({"error": "Brak klucza OpenAI. Wklej go w formularzu lub zapisz w konfiguracji."}), 400
 
-    target_number = participant_override or (cfg.get("target_number") or "").strip()
-    normalized_target = normalize_contact(target_number)
-    if not normalized_target:
-        return jsonify({"error": "Podaj numer rozmówcy w konfiguracji AI lub w polu 'participant'."}), 400
-
-    latest_message = None
-    if use_latest_message and not message:
-        candidates = list_messages(
-            limit=10,
-            direction="inbound",
-            participant_normalized=normalized_target,
-        )
-        for item in candidates:
-            body = (item.get("body") or "").strip()
-            if body:
-                latest_message = item
-                break
-
-    prompt_text = message or (latest_message.get("body") if latest_message else "")
-    fallback_prompt = "To jest test połączenia z OpenAI. Potwierdź, że wszystko działa."
-    used_latest_message = bool(latest_message and not message)
-    if not prompt_text:
-        prompt_text = fallback_prompt
-        used_latest_message = False
+    # Testujemy tylko połączenie z OpenAI - nie potrzeba participant
+    prompt_text = message or "To jest test połączenia z OpenAI. Potwierdź, że wszystko działa poprawnie."
 
     responder = AIResponder(
         api_key=api_key,
@@ -1336,7 +1324,8 @@ def api_test_ai_connection():
     )
 
     try:
-        reply = responder.build_reply(participant=target_number, latest_user_message=prompt_text)
+        # Test bez historii konwersacji - tylko sprawdzamy API
+        reply = responder.build_reply(participant=None, latest_user_message=prompt_text)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("AI test request failed: %s", exc)
         return jsonify({"error": f"Żądanie OpenAI nie powiodło się: {exc}"}), 502
@@ -1347,16 +1336,12 @@ def api_test_ai_connection():
 
     return jsonify(
         {
-            "participant": target_number,
-            "participant_normalized": normalize_contact(target_number),
             "input": prompt_text,
             "reply": reply,
             "model": responder.model,
             "temperature": responder.temperature,
             "history_limit": responder.history_limit,
-            "used_latest_message": used_latest_message,
-            "latest_message": latest_message,
-            "fallback_used": not message and not latest_message,
+            "connection_ok": True,
         }
     )
 
@@ -2388,12 +2373,18 @@ def api_news_delete_index(name: str):
 def api_news_test_faiss():
     """
     Test FAISS query with custom prompt.
+    Optional: send_sms=true to send the result via SMS (uses chunked sending for long messages).
+    Optional: to="+48..." to specify recipient (defaults to AI_DEFAULT_RECIPIENT).
     """
+    from .message_utils import MAX_SMS_CHARS
+    
     payload = request.get_json(force=True, silent=True) or {}
     query = (payload.get("query") or "").strip()
     mode = str(payload.get("mode") or "standard").strip().lower()
     per_category_k = int(payload.get("per_category_k") or DEFAULT_PER_CATEGORY_K)
     top_k = int(payload.get("top_k") or 5)
+    send_sms = bool(payload.get("send_sms", False))
+    sms_recipient = (payload.get("to") or "").strip()
     
     if mode == "all_categories":
         query = query or ALL_CATEGORIES_PROMPT
@@ -2423,10 +2414,12 @@ def api_news_test_faiss():
             response = faiss_service.answer_query(query, top_k=max(1, top_k))
         
         if response.get("success"):
-            payload = {
+            answer_text = response.get("answer", "")
+            
+            result_payload = {
                 "success": True,
                 "query": query,
-                "answer": response.get("answer", ""),
+                "answer": answer_text,
                 "llm_used": response.get("llm_used", False),
                 "count": response.get("count", 0),
                 "results": response.get("results", []),
@@ -2434,10 +2427,58 @@ def api_news_test_faiss():
                 "search_info": response.get("search_info", {}),
                 "chat_model": response.get("chat_model"),
                 "mode": "all_categories" if mode == "all_categories" else "standard",
+                "characters": len(answer_text),
             }
             if mode == "all_categories":
-                payload["per_category_k"] = max(1, per_category_k)
-            return jsonify(payload)
+                result_payload["per_category_k"] = max(1, per_category_k)
+                result_payload["categories_found"] = response.get("categories_found", 0)
+                result_payload["categories_with_data"] = response.get("categories_with_data", [])
+                result_payload["categories_empty"] = response.get("categories_empty", [])
+            
+            # Opcjonalna wysyłka SMS
+            if send_sms and answer_text:
+                twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+                
+                # Ustal odbiorcę
+                if not sms_recipient:
+                    ai_config = get_ai_config() or {}
+                    sms_recipient = ai_config.get("default_recipient", "")
+                
+                if not sms_recipient:
+                    result_payload["sms_sent"] = False
+                    result_payload["sms_error"] = "Brak numeru odbiorcy. Podaj 'to' lub ustaw AI_DEFAULT_RECIPIENT."
+                else:
+                    current_app.logger.info(
+                        "Sending FAISS result via SMS (%d chars) to %s",
+                        len(answer_text), sms_recipient
+                    )
+                    
+                    # Użyj chunked SMS dla długich wiadomości
+                    if len(answer_text) > MAX_SMS_CHARS:
+                        sms_result = twilio_client.send_chunked_sms(
+                            to=sms_recipient,
+                            body=answer_text,
+                            max_length=MAX_SMS_CHARS
+                        )
+                    else:
+                        sms_result = twilio_client.send_sms(
+                            to=sms_recipient,
+                            body=answer_text
+                        )
+                    
+                    result_payload["sms_sent"] = sms_result.get("success", False)
+                    if sms_result.get("success"):
+                        result_payload["sms_result"] = {
+                            "parts": sms_result.get("parts", 1),
+                            "sids": sms_result.get("sids", [sms_result.get("sid")]),
+                            "characters": sms_result.get("characters", len(answer_text)),
+                            "recipient": sms_recipient,
+                        }
+                    else:
+                        result_payload["sms_error"] = sms_result.get("error", "Nieznany błąd SMS")
+                        result_payload["sms_parts_sent"] = sms_result.get("parts_sent", 0)
+            
+            return jsonify(result_payload)
         else:
             return jsonify({
                 "success": False,
@@ -2685,15 +2726,132 @@ def api_messages():
     return jsonify({"items": messages, "count": len(messages)})
 
 
+@webhooks_bp.post("/api/messages")
+def api_messages_send():
+    """
+    Send an SMS message. Automatically splits long messages into multiple parts.
+    
+    Request body:
+        to (str): Recipient phone number (e.g., +48123456789)
+        body (str): Message content
+    
+    Returns:
+        JSON with success status and message details.
+        For long messages (>1500 chars), returns parts count and all SIDs.
+    """
+    from .message_utils import MAX_SMS_CHARS
+    
+    payload = request.get_json(force=True, silent=True) or {}
+    to_number = (payload.get("to") or "").strip()
+    body = (payload.get("body") or "").strip()
+    
+    if not to_number:
+        return jsonify({"success": False, "error": "Brak numeru odbiorcy (to)."}), 400
+    
+    if not body:
+        return jsonify({"success": False, "error": "Brak treści wiadomości (body)."}), 400
+    
+    # Podstawowa walidacja numeru
+    import re
+    if not re.match(r'^\+?[0-9]{9,15}$', to_number.replace(" ", "")):
+        return jsonify({"success": False, "error": "Nieprawidłowy format numeru telefonu."}), 400
+    
+    try:
+        twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+        
+        # Automatycznie użyj send_chunked_sms() dla długich wiadomości
+        if len(body) > MAX_SMS_CHARS:
+            current_app.logger.info(
+                "Long message detected (%d chars), using chunked send to %s",
+                len(body), to_number
+            )
+            result = twilio_client.send_chunked_sms(
+                to=to_number,
+                body=body,
+                max_length=MAX_SMS_CHARS
+            )
+            
+            if result.get("success"):
+                return jsonify({
+                    "success": True,
+                    "sid": result.get("sid"),
+                    "sids": result.get("sids", []),
+                    "status": result.get("status"),
+                    "parts": result.get("parts", 1),
+                    "characters": result.get("characters", len(body)),
+                    "message": f"SMS wysłany do {to_number} w {result.get('parts', 1)} częściach"
+                })
+            else:
+                return jsonify({
+                    "success": False, 
+                    "error": result.get("error", "Nie udało się wysłać wiadomości."),
+                    "parts_sent": result.get("parts_sent", 0)
+                }), 500
+        else:
+            # Standardowa wysyłka dla krótkich wiadomości
+            result = twilio_client.send_sms(
+                to=to_number,
+                body=body
+            )
+            
+            if result.get("success"):
+                return jsonify({
+                    "success": True,
+                    "sid": result.get("sid"),
+                    "status": result.get("status"),
+                    "parts": 1,
+                    "characters": len(body),
+                    "message": f"SMS wysłany do {to_number}"
+                })
+            else:
+                return jsonify({
+                    "success": False, 
+                    "error": result.get("error", "Nie udało się wysłać wiadomości.")
+                }), 500
+            
+    except Exception as exc:
+        current_app.logger.exception("Failed to send SMS: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @webhooks_bp.get("/api/conversations")
 def api_conversations():
+    """
+    Return list of conversations with last message metadata.
+    
+    Query params:
+        limit (int): Maximum conversations to return (1-200, default 30)
+    
+    Returns:
+        JSON with items array containing conversation objects with:
+        - participant: The contact number
+        - message_count: Total messages in conversation
+        - last_message: Object with body, direction, status, created_at
+    """
     limit_raw = request.args.get("limit", "30")
     try:
         limit = max(1, min(int(limit_raw), 200))
     except ValueError:
         limit = 30
 
-    conversations = list_conversations(limit=limit)
+    raw_conversations = list_conversations(limit=limit)
+    
+    # Transform to structured format for frontend
+    conversations = []
+    for conv in raw_conversations:
+        conversations.append({
+            "participant": conv.get("participant", ""),
+            "message_count": conv.get("total_messages", 0),
+            "last_message": {
+                "body": conv.get("last_body", ""),
+                "direction": conv.get("last_direction", "outbound"),
+                "status": conv.get("last_status", ""),
+                "error": conv.get("last_error"),
+                "created_at": conv.get("last_created_at", ""),
+                "updated_at": conv.get("last_updated_at", ""),
+            }
+        })
+    
     return jsonify({"items": conversations, "count": len(conversations)})
 
 
