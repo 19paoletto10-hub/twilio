@@ -1,5 +1,115 @@
 # Changelog
 
+## ver3.2.9 (Code Optimization & Design Patterns)
+
+📅 Data wydania: 2025-12-27
+
+### Podsumowanie
+
+Release 3.2.9 wprowadza zaawansowane wzorce projektowe, optymalizacje wydajności
+i profesjonalne techniki programistyczne na poziomie enterprise.
+
+### Najważniejsze zmiany
+
+#### 🎯 Nowe moduły
+
+##### patterns.py - Railway-Oriented Programming
+- **Result Type** – `Success[T]` / `Failure[E]` zamiast wyjątków
+- **Retry Pattern** – exponential backoff z jitter
+- **Circuit Breaker** – ochrona przed kaskadowymi awariami
+- **TTL Cache** – thread-safe cache z automatyczną ewolucją
+- **Processor Chain** – Chain of Responsibility dla wiadomości
+
+##### message_handler.py - Clean Architecture
+- **Command Pattern** – każdy handler jako samodzielna komenda
+- **Strategy Pattern** – różne strategie odpowiedzi (AI, template, listener)
+- **Value Objects** – immutable `PhoneNumber`, `InboundMessage`, `ReplyResult`
+- **Composable Validators** – Builder pattern dla walidacji
+- **Dependency Injection** – łatwe testowanie i mockowanie
+
+##### performance.py - Monitoring & Profiling
+- **@timed decorator** – automatyczne mierzenie czasu wykonania
+- **MetricsCollector** – zbieranie statystyk (avg, p50, p95)
+- **RateLimiter** – token bucket dla throttlingu API
+- **Lazy[T]** – thread-safe lazy initialization
+- **timed_block** – context manager dla bloków kodu
+
+#### ⚡ Optymalizacje
+
+##### database.py
+- **WAL Mode** – lepsze współbieżne odczyty/zapisy
+- **Query Cache** – cache dla często używanych zapytań SQL
+- **Transaction Context Manager** – automatyczne commit/rollback
+- **@db_operation** – dekorator z logowaniem błędów
+- **Connection Pooling** – lock dla thread-safety
+
+##### faiss_service.py
+- **Embedding Cache** – LRU cache z TTL (1h domyślnie)
+- **Batched Embeddings** – częściowe cache lookup przed API call
+- **Cache Stats** – monitoring hit rate
+
+##### validators.py
+- **ValidationResult Type** – `ValidationSuccess` / `ValidationFailure`
+- **Composable Validator** – fluent API z chainowaniem
+- **validate_json_payload** – walidacja struktury JSON
+- **validate_phone_numbers** – batch validation z skip_invalid
+
+### Zaktualizowane pliki
+
+```
+app/patterns.py             # Nowy: Design patterns
+app/message_handler.py      # Nowy: Clean Architecture handlers
+app/performance.py          # Nowy: Monitoring utilities
+app/database.py             # WAL mode, query cache, transactions
+app/faiss_service.py        # Embedding cache
+app/validators.py           # Composable validators
+```
+
+### Przykłady użycia
+
+```python
+# Result Type - Railway-Oriented Programming
+from app.patterns import Success, Failure, result_from_exception
+
+@result_from_exception
+def risky_operation():
+    return external_api.call()
+
+result = risky_operation()
+if result.is_success():
+    data = result.unwrap()
+else:
+    log_error(result.error)
+
+# Retry with Exponential Backoff
+@retry(RetryConfig(max_attempts=3, strategy=RetryStrategy.EXPONENTIAL))
+def call_external_api():
+    return requests.get(url)
+
+# Circuit Breaker
+@circuit_breaker("twilio_api")
+def send_sms(to: str, body: str):
+    return twilio_client.messages.create(to=to, body=body)
+
+# Composable Validators
+result = (Validator(phone_input, "phone")
+    .strip()
+    .not_empty()
+    .matches(E164_PATTERN, "Invalid E.164 format")
+    .validate())
+
+# Performance Monitoring
+@timed(threshold_ms=100)
+def slow_database_query():
+    ...
+
+# Lazy Initialization
+expensive_client = Lazy(lambda: OpenAI(api_key=key))
+# Client created only on first .get() call
+```
+
+---
+
 ## ver3.2.8 (News Command Fallback & Consolidation)
 
 📅 Data wydania: 2025-12-27
