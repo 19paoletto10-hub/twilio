@@ -106,9 +106,26 @@
   const newsRefreshIndicesBtn = document.getElementById('news-refresh-indices-btn');
   const newsScrapeBtn = document.getElementById('news-scrape-btn');
   const newsScrapeSpinner = document.getElementById('news-scrape-spinner');
-  const newsScrapeStatus = document.getElementById('news-scrape-status');
-  const newsScrapeLog = document.getElementById('news-scrape-log');
   const newsScrapeStopBtn = document.getElementById('news-scrape-stop-btn');
+  
+  // Log Bubble dla skrapowania
+  const newsLogBubble = document.getElementById('news-log-bubble');
+  const newsLogBubbleStatus = document.getElementById('news-log-bubble-status');
+  const newsLogBubbleStatusText = document.getElementById('news-log-bubble-status-text');
+  const newsLogBubbleMessage = document.getElementById('news-log-bubble-message');
+  const newsLogBubbleCategories = document.getElementById('news-log-bubble-categories');
+  const newsLogProgressBar = document.getElementById('news-log-progress-bar');
+  const newsLogBubbleClose = document.getElementById('news-log-bubble-close');
+  const newsLogBubbleToggle = document.getElementById('news-log-bubble-toggle');
+  const newsLogBubbleCollapsible = document.getElementById('news-log-bubble-collapsible');
+  
+  // Log Bubble dla budowania indeksu
+  const newsBuildLogBubble = document.getElementById('news-build-log-bubble');
+  const newsBuildLogStatusText = document.getElementById('news-build-log-status-text');
+  const newsBuildLogMessage = document.getElementById('news-build-log-message');
+  const newsBuildLogSteps = document.getElementById('news-build-log-steps');
+  const newsBuildProgressBar = document.getElementById('news-build-progress-bar');
+  
   const newsFilesGrid = document.getElementById('news-files-grid');
   const newsFilesEmpty = document.getElementById('news-files-empty');
   const newsFilesRefreshBtn = document.getElementById('news-files-refresh-btn');
@@ -138,6 +155,11 @@
   const newsFaissRestoreBtn = document.getElementById('news-faiss-restore-btn');
   const newsFaissRestoreInput = document.getElementById('news-faiss-restore-input');
   const newsFaissBackupStatus = document.getElementById('news-faiss-backup-status');
+
+  // News SMS Send
+  const newsSmsRecipient = document.getElementById('news-sms-recipient');
+  const newsSmsSendBtn = document.getElementById('news-sms-send-btn');
+  const newsSmsSendSpinner = newsSmsSendBtn?.querySelector('.spinner-border');
 
   // Multi-SMS tab
   const multiSmsForm = document.getElementById('multi-sms-form');
@@ -1324,6 +1346,69 @@
     }
   };
 
+  const sendNewsSms = async () => {
+    const recipient = newsSmsRecipient?.value.trim();
+    const messageBody = newsFaissAnswer?.textContent?.trim();
+
+    if (!recipient) {
+      showToast({ title: 'Błąd', message: 'Wpisz numer telefonu odbiorcy.', type: 'error' });
+      newsSmsRecipient?.focus();
+      return;
+    }
+
+    if (!messageBody) {
+      showToast({ title: 'Błąd', message: 'Brak treści do wysłania. Najpierw wykonaj zapytanie AI.', type: 'error' });
+      return;
+    }
+
+    // Walidacja numeru telefonu - podstawowa
+    const phoneRegex = /^\+?[0-9]{9,15}$/;
+    if (!phoneRegex.test(recipient.replace(/\s/g, ''))) {
+      showToast({ title: 'Błąd', message: 'Nieprawidłowy format numeru telefonu.', type: 'error' });
+      newsSmsRecipient?.focus();
+      return;
+    }
+
+    if (newsSmsSendSpinner) newsSmsSendSpinner.classList.remove('d-none');
+    if (newsSmsSendBtn) newsSmsSendBtn.setAttribute('disabled', 'true');
+
+    try {
+      const data = await fetchJSON('/api/messages', {
+        method: 'POST',
+        body: JSON.stringify({
+          to: recipient,
+          body: messageBody
+        })
+      });
+
+      if (data.success) {
+        showToast({ 
+          title: 'SMS wysłany', 
+          message: `Wiadomość została wysłana do ${recipient}.`, 
+          type: 'success' 
+        });
+        // Opcjonalnie wyczyść pole numeru po wysłaniu
+        // if (newsSmsRecipient) newsSmsRecipient.value = '';
+      } else {
+        showToast({ 
+          title: 'Błąd', 
+          message: data.error || 'Nie udało się wysłać SMS.', 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      showToast({ 
+        title: 'Błąd', 
+        message: error.message || 'Nie udało się wysłać SMS.', 
+        type: 'error' 
+      });
+    } finally {
+      if (newsSmsSendSpinner) newsSmsSendSpinner.classList.add('d-none');
+      if (newsSmsSendBtn) newsSmsSendBtn.removeAttribute('disabled');
+    }
+  };
+
   const downloadFaissBackup = async (event) => {
     event?.preventDefault();
     if (!newsFaissBackupBtn || newsFaissBackupBtn.disabled) return;
@@ -1771,40 +1856,59 @@
     });
 
     if (!txtFiles.length) {
-      newsFilesGrid.innerHTML = '<div class="col-12 text-center text-muted py-4">Brak plików. Uruchom skrapowanie, aby zobaczyć kafelki.</div>';
+      newsFilesGrid.innerHTML = `
+        <div class="col-12">
+          <div class="news-files-empty-state">
+            <div class="news-files-empty-icon">
+              <i class="bi bi-folder2-open"></i>
+            </div>
+            <h6>Brak zeskrapowanych plików</h6>
+            <p class="text-muted small mb-0">Uruchom skrapowanie, aby pobrać newsy z Business Insider.</p>
+          </div>
+        </div>`;
       return;
     }
 
-    const cards = txtFiles.map((file) => {
-      const categoryName = (file.name || '').replace(/\.txt$/i, '').replace(/_/g, ' ');
+    // Mapowanie kategorii na kolory i ikony
+    const categoryConfig = {
+      'biznes': { icon: 'bi-briefcase-fill', color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)' },
+      'gospodarka': { icon: 'bi-bank2', color: '#0ea5e9', gradient: 'linear-gradient(135deg, #0ea5e9, #0284c7)' },
+      'technologie': { icon: 'bi-cpu-fill', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' },
+      'gieda': { icon: 'bi-graph-up-arrow', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981, #059669)' },
+      'gielda': { icon: 'bi-graph-up-arrow', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981, #059669)' },
+      'nieruchomosci': { icon: 'bi-house-fill', color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b, #d97706)' },
+      'praca': { icon: 'bi-person-workspace', color: '#ec4899', gradient: 'linear-gradient(135deg, #ec4899, #be185d)' },
+      'prawo': { icon: 'bi-balance-scale', color: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1, #4338ca)' },
+      'poradnik': { icon: 'bi-lightbulb-fill', color: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6, #0d9488)' },
+      'poradnik_finansowy': { icon: 'bi-piggy-bank-fill', color: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6, #0d9488)' },
+      'default': { icon: 'bi-file-text-fill', color: '#7c40ff', gradient: 'linear-gradient(135deg, #7c40ff, #5a24d8)' }
+    };
+
+    const cards = txtFiles.map((file, index) => {
+      const rawName = (file.name || '').replace(/\.txt$/i, '');
+      const categoryKey = rawName.toLowerCase().replace(/_/g, '');
+      const categoryName = rawName.replace(/_/g, ' ');
       const category = escapeHtml(categoryName.charAt(0).toUpperCase() + categoryName.slice(1));
-      const size = file.size_bytes ? `${(file.size_bytes / 1024).toFixed(1)} KB` : '—';
-      const updated = file.updated_at ? new Date(file.updated_at).toLocaleString('pl-PL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+      const config = categoryConfig[categoryKey] || categoryConfig['default'];
+      
+      const sizeKB = file.size_bytes ? (file.size_bytes / 1024).toFixed(1) : 0;
+      const updated = file.updated_at 
+        ? new Date(file.updated_at).toLocaleString('pl-PL', { day: 'numeric', month: 'short' }) 
+        : '—';
       const fileName = escapeHtml(file.name || '');
+      const articleCount = file.article_count || Math.floor(parseFloat(sizeKB) / 2) || '?';
 
       return `
-        <div class="col-lg-4 col-md-6">
-          <div class="card news-file-card h-100" data-filename="${fileName}">
-            <div class="card-body p-3">
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="d-flex align-items-center gap-2 flex-grow-1 min-w-0">
-                  <div class="news-file-icon">
-                    <i class="bi bi-newspaper"></i>
-                  </div>
-                  <h6 class="mb-0 text-truncate fw-semibold">${category}</h6>
-                </div>
-                <button class="news-file-delete-btn" data-action="delete-file" data-filename="${fileName}" title="Usuń plik">
-                  <i class="bi bi-x-lg"></i>
-                </button>
-              </div>
-              <div class="news-file-meta">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span><i class="bi bi-hdd me-1"></i>${size}</span>
-                  <span><i class="bi bi-clock me-1"></i>${updated}</span>
-                </div>
-              </div>
-            </div>
+        <div class="news-file-chip" data-filename="${fileName}" data-category="${rawName}" style="--chip-color: ${config.color}; animation-delay: ${index * 0.05}s">
+          <div class="news-file-chip__icon"><i class="${config.icon}"></i></div>
+          <div class="news-file-chip__body">
+            <span class="news-file-chip__name">${category}</span>
+            <span class="news-file-chip__meta">${articleCount} art. • ${sizeKB} KB • ${updated}</span>
           </div>
+          <span class="news-file-chip__arrow"><i class="bi bi-chevron-right"></i></span>
+          <button class="news-file-chip__delete" data-action="delete-file" data-filename="${fileName}" title="Usuń" onclick="event.stopPropagation()">
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
       `;
     });
@@ -1826,6 +1930,12 @@
   const openNewsFileOverlay = async (filename) => {
     if (!newsFileOverlay || !filename) return;
 
+    // Pobierz nowe elementy overlay
+    const overlayIcon = document.getElementById('news-overlay-icon');
+    const overlayArticles = document.getElementById('news-overlay-articles');
+    const overlaySize = document.getElementById('news-overlay-size');
+    const overlayUpdated = document.getElementById('news-overlay-updated');
+
     try {
       const data = await fetchJSON(`/api/news/files/${encodeURIComponent(filename)}`);
       if (data.error) {
@@ -1835,29 +1945,78 @@
 
       const categoryName = filename.replace(/\.(txt|json)$/i, '').replace(/_/g, ' ');
       const category = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
-      if (newsOverlayTitle) newsOverlayTitle.textContent = category;
-      if (newsOverlayMeta) {
-        const size = data.size_bytes ? `${(data.size_bytes / 1024).toFixed(1)} KB` : '—';
-        const updated = data.updated_at ? new Date(data.updated_at).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
-        newsOverlayMeta.innerHTML = `<i class="bi bi-hdd me-1"></i>${size} <span class="mx-2">•</span> <i class="bi bi-clock me-1"></i>${updated}`;
+      const categoryKey = categoryName.toLowerCase().replace(/\s/g, '');
+
+      // Mapowanie kategorii na ikony
+      const categoryIcons = {
+        'biznes': 'bi-briefcase-fill',
+        'gospodarka': 'bi-bank2',
+        'technologie': 'bi-cpu-fill',
+        'gieda': 'bi-graph-up-arrow',
+        'gielda': 'bi-graph-up-arrow',
+        'nieruchomosci': 'bi-house-fill',
+        'praca': 'bi-person-workspace',
+        'prawo': 'bi-balance-scale',
+        'poradnik': 'bi-lightbulb-fill',
+        'poradnikfinansowy': 'bi-piggy-bank-fill',
+        'default': 'bi-newspaper'
+      };
+
+      const iconClass = categoryIcons[categoryKey] || categoryIcons['default'];
+      if (overlayIcon) {
+        overlayIcon.innerHTML = `<i class="${iconClass}"></i>`;
       }
+
+      if (newsOverlayTitle) newsOverlayTitle.textContent = category;
+
+      const sizeKB = data.size_bytes ? `${(data.size_bytes / 1024).toFixed(1)} KB` : '—';
+      const updated = data.updated_at 
+        ? new Date(data.updated_at).toLocaleString('pl-PL', { dateStyle: 'medium', timeStyle: 'short' }) 
+        : '—';
+
+      if (overlaySize) overlaySize.textContent = sizeKB;
+      if (overlayUpdated) overlayUpdated.textContent = updated;
+
+      // Policz artykuły
+      const rawContent = data.content || '';
+      const articleCount = countArticles(rawContent);
+      if (overlayArticles) overlayArticles.textContent = articleCount;
+
       if (newsOverlayContent) {
-        const rawContent = data.content || '(pusty plik)';
         const formattedContent = formatNewsContent(rawContent);
         newsOverlayContent.innerHTML = formattedContent;
       }
 
       newsFileOverlay.classList.remove('d-none');
       newsFileOverlay.classList.add('news-overlay--visible');
+      document.body.style.overflow = 'hidden';
     } catch (error) {
       console.error(error);
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się wczytać pliku.', type: 'error' });
     }
   };
 
+  const countArticles = (content) => {
+    if (!content) return 0;
+    const rawArticles = content.split(/\n{2,}/).filter(a => a.trim());
+    const articles = rawArticles.filter(article => {
+      const trimmed = article.trim();
+      if (/^[-─—_=]+$/.test(trimmed)) return false;
+      if (trimmed.replace(/[-─—_=\s]/g, '').length < 5) return false;
+      if (trimmed.length < 10) return false;
+      return true;
+    });
+    return articles.length;
+  };
+
   const formatNewsContent = (content) => {
     if (!content || content === '(pusty plik)') {
-      return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Brak treści</div>';
+      return `
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+          <h5 class="mt-3 mb-2">Brak artykułów</h5>
+          <p class="mb-0">Ta kategoria jest pusta.</p>
+        </div>`;
     }
 
     // Podziel treść na artykuły (rozdzielone podwójną nową linią)
@@ -1876,16 +2035,38 @@
     });
     
     if (articles.length === 0) {
-      return '<div class="text-center text-muted py-4"><i class="bi bi-inbox fs-1 d-block mb-2"></i>Brak treści</div>';
+      return `
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+          <h5 class="mt-3 mb-2">Brak artykułów</h5>
+          <p class="mb-0">Ta kategoria jest pusta.</p>
+        </div>`;
     }
     
+    // Pasek statystyk
+    let html = `
+      <div class="news-articles-stats">
+        <div class="news-articles-stat">
+          <i class="bi bi-file-text"></i>
+          <span class="news-articles-stat-value">${articles.length}</span>
+          <span class="news-articles-stat-label">artykułów</span>
+        </div>
+        <div class="news-articles-stat">
+          <i class="bi bi-fonts"></i>
+          <span class="news-articles-stat-value">${Math.round(content.length / 1000)}k</span>
+          <span class="news-articles-stat-label">znaków</span>
+        </div>
+      </div>
+    `;
+
     if (articles.length === 1) {
       // Pojedynczy blok tekstu
-      return `<div class="news-article-single">${escapeHtml(articles[0])}</div>`;
+      html += `<div class="news-article-single">${escapeHtml(articles[0])}</div>`;
+      return html;
     }
 
     // Wiele artykułów - każdy jako osobna karta
-    let html = '<div class="news-articles-list">';
+    html += '<div class="news-articles-list">';
     articles.forEach((article, index) => {
       const lines = article.trim().split('\n').filter(l => l.trim() && !/^[-─—_=]+$/.test(l.trim()));
       if (lines.length === 0) return;
@@ -1911,9 +2092,10 @@
   const closeNewsFileOverlay = () => {
     if (!newsFileOverlay) return;
     newsFileOverlay.classList.remove('news-overlay--visible');
+    document.body.style.overflow = '';
     setTimeout(() => {
       newsFileOverlay.classList.add('d-none');
-    }, 300);
+    }, 350);
   };
 
   const handleNewsFileCardClick = (event) => {
@@ -1925,6 +2107,15 @@
       return;
     }
 
+    // Obsługa kliknięcia na chip kategorii
+    const chip = event.target.closest('.news-file-chip');
+    if (chip) {
+      const filename = chip.getAttribute('data-filename');
+      if (filename) openNewsFileOverlay(filename);
+      return;
+    }
+
+    // Stara obsługa kart
     const card = event.target.closest('.news-file-card');
     if (!card) return;
     const filename = card.getAttribute('data-filename');
@@ -2431,21 +2622,105 @@
     newsBuildIndexBtn.setAttribute('disabled', 'true');
     newsBuildIndexSpinner?.classList.remove('d-none');
 
+    // Pokaż dymek logów dla budowania
+    if (newsBuildLogBubble) {
+      newsBuildLogBubble.classList.remove('d-none');
+      newsBuildLogBubble.classList.add('news-log-bubble--active');
+      newsBuildLogBubble.classList.remove('news-log-bubble--success', 'news-log-bubble--error');
+    }
+    if (newsBuildLogStatusText) newsBuildLogStatusText.textContent = 'Budowanie...';
+    if (newsBuildLogMessage) newsBuildLogMessage.textContent = 'Inicjalizacja indeksu FAISS...';
+    if (newsBuildProgressBar) newsBuildProgressBar.style.width = '0%';
+    
+    // Renderuj kroki procesu
+    const renderBuildSteps = (currentStep) => {
+      if (!newsBuildLogSteps) return;
+      const steps = [
+        { id: 'load', label: 'Ładowanie dokumentów', icon: 'bi-folder' },
+        { id: 'embed', label: 'Generowanie embeddings', icon: 'bi-cpu' },
+        { id: 'index', label: 'Tworzenie indeksu FAISS', icon: 'bi-lightning-charge' },
+        { id: 'save', label: 'Zapisywanie na dysk', icon: 'bi-hdd' }
+      ];
+      
+      newsBuildLogSteps.innerHTML = steps.map((step, idx) => {
+        let statusClass = '';
+        let icon = `<i class="${step.icon}"></i>`;
+        
+        if (idx < currentStep) {
+          statusClass = 'news-log-bubble__step--done';
+          icon = '<i class="bi bi-check-circle-fill"></i>';
+        } else if (idx === currentStep) {
+          statusClass = 'news-log-bubble__step--active';
+          icon = '<span class="spinner-border spinner-border-sm"></span>';
+        }
+        
+        return `
+          <div class="news-log-bubble__step ${statusClass}">
+            <span class="news-log-bubble__step-icon">${icon}</span>
+            <span>${step.label}</span>
+          </div>
+        `;
+      }).join('');
+    };
+    
+    renderBuildSteps(0);
+    if (newsBuildProgressBar) newsBuildProgressBar.style.width = '10%';
+
     try {
+      // Symulacja postępu (API nie daje SSE dla build)
+      setTimeout(() => {
+        renderBuildSteps(1);
+        if (newsBuildProgressBar) newsBuildProgressBar.style.width = '30%';
+        if (newsBuildLogMessage) newsBuildLogMessage.textContent = 'Generowanie wektorów...';
+      }, 500);
+      
+      setTimeout(() => {
+        renderBuildSteps(2);
+        if (newsBuildProgressBar) newsBuildProgressBar.style.width = '60%';
+        if (newsBuildLogMessage) newsBuildLogMessage.textContent = 'Budowanie struktury FAISS...';
+      }, 1200);
+
       const data = await fetchJSON('/api/news/indices/build', { method: 'POST' });
 
       if (!data.success) {
+        if (newsBuildLogStatusText) newsBuildLogStatusText.textContent = 'Błąd';
+        if (newsBuildLogMessage) newsBuildLogMessage.textContent = data.error || 'Nie udało się zbudować indeksu';
+        if (newsBuildLogBubble) {
+          newsBuildLogBubble.classList.remove('news-log-bubble--active');
+          newsBuildLogBubble.classList.add('news-log-bubble--error');
+        }
         showToast({ title: 'Błąd', message: data.error || 'Nie udało się zbudować indeksu.', type: 'error' });
         return;
       }
 
+      renderBuildSteps(4);
+      if (newsBuildProgressBar) newsBuildProgressBar.style.width = '100%';
+      if (newsBuildLogStatusText) newsBuildLogStatusText.textContent = 'Gotowe';
+      if (newsBuildLogMessage) newsBuildLogMessage.textContent = `✓ ${data.message || 'Indeks FAISS zbudowany'}`;
+      if (newsBuildLogBubble) {
+        newsBuildLogBubble.classList.remove('news-log-bubble--active');
+        newsBuildLogBubble.classList.add('news-log-bubble--success');
+      }
+      
       showToast({ title: 'Sukces', message: data.message || 'Indeks FAISS został zbudowany.', type: 'success' });
       
       if (newsLastBuild && data.built_at) newsLastBuild.textContent = data.built_at;
       
-      await loadNewsIndices();
+      await Promise.all([loadNewsIndices(), loadFaissStatus()]);
+      
+      // Auto-ukryj dymek po 3s
+      setTimeout(() => {
+        if (newsBuildLogBubble) newsBuildLogBubble.classList.add('d-none');
+      }, 3000);
+      
     } catch (error) {
       console.error(error);
+      if (newsBuildLogStatusText) newsBuildLogStatusText.textContent = 'Błąd';
+      if (newsBuildLogMessage) newsBuildLogMessage.textContent = error.message || 'Błąd serwera';
+      if (newsBuildLogBubble) {
+        newsBuildLogBubble.classList.remove('news-log-bubble--active');
+        newsBuildLogBubble.classList.add('news-log-bubble--error');
+      }
       showToast({ title: 'Błąd', message: error.message || 'Nie udało się zbudować indeksu.', type: 'error' });
     } finally {
       newsBuildIndexBtn.removeAttribute('disabled');
@@ -2460,79 +2735,105 @@
       activeScrapeEventSource.close();
       activeScrapeEventSource = null;
       
-      const logText = document.getElementById('news-scrape-log-text');
-      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zatrzymano';
-      if (logText) logText.textContent = 'Skrapowanie zostało zatrzymane przez użytkownika.';
+      if (newsLogBubbleStatusText) newsLogBubbleStatusText.textContent = 'Zatrzymano';
+      if (newsLogBubbleMessage) newsLogBubbleMessage.textContent = '⏹ Skrapowanie przerwane przez użytkownika';
+      if (newsLogBubble) {
+        newsLogBubble.classList.remove('news-log-bubble--active');
+        newsLogBubble.classList.add('news-log-bubble--error');
+      }
       showToast({ title: 'Zatrzymano', message: 'Proces skrapowania został przerwany.', type: 'warning' });
       
       newsScrapeBtn?.removeAttribute('disabled');
       newsScrapeSpinner?.classList.add('d-none');
-      newsScrapeStopBtn?.classList.add('d-none');
+      if (newsScrapeStopBtn) newsScrapeStopBtn.classList.add('d-none');
       
       // Odśwież listę plików (może część została zapisana)
       loadNewsFiles().catch(console.error);
     }
   };
 
+  // Zamknij dymek logów
+  const closeLogBubble = () => {
+    if (newsLogBubble) {
+      newsLogBubble.classList.add('d-none');
+      newsLogBubble.classList.remove('news-log-bubble--active', 'news-log-bubble--success', 'news-log-bubble--error', 'news-log-bubble--collapsed');
+    }
+  };
+
+  // Zwijanie/rozwijanie dymka logów
+  const toggleLogBubble = () => {
+    if (newsLogBubble) {
+      newsLogBubble.classList.toggle('news-log-bubble--collapsed');
+    }
+  };
+
   const runNewsScrape = async () => {
     if (!newsScrapeBtn) return;
-
     if (newsScrapeBtn.hasAttribute('disabled')) return;
 
     newsScrapeBtn.setAttribute('disabled', 'true');
     newsScrapeSpinner?.classList.remove('d-none');
-    newsScrapeStopBtn?.classList.remove('d-none');
-    if (newsScrapeStatus) newsScrapeStatus.textContent = 'Pobieranie...';
     
-    const logContainer = newsScrapeLog;
-    const logText = document.getElementById('news-scrape-log-text');
-    const categoriesContainer = document.getElementById('news-scrape-categories');
-    
-    if (logContainer) {
-      logContainer.classList.remove('d-none');
-      if (logText) logText.textContent = 'Rozpoczynam skrapowanie kategorii...';
-      if (categoriesContainer) categoriesContainer.innerHTML = '';
+    // Pokaż dymek logów
+    if (newsLogBubble) {
+      newsLogBubble.classList.remove('d-none');
+      newsLogBubble.classList.add('news-log-bubble--active');
+      newsLogBubble.classList.remove('news-log-bubble--success', 'news-log-bubble--error');
     }
+    if (newsLogBubbleStatusText) newsLogBubbleStatusText.textContent = 'Pobieranie...';
+    if (newsLogBubbleMessage) newsLogBubbleMessage.textContent = 'Rozpoczynam skrapowanie kategorii...';
+    if (newsLogBubbleCategories) newsLogBubbleCategories.innerHTML = '';
+    if (newsLogProgressBar) newsLogProgressBar.style.width = '0%';
+    if (newsScrapeStopBtn) newsScrapeStopBtn.classList.remove('d-none');
 
-    // Funkcja do renderowania statusu kategorii
+    let totalCategories = 0;
+    let processedCategories = 0;
+
+    // Funkcja do renderowania statusu kategorii w dymku
     const renderCategoryItem = (category, status, message = '') => {
-      if (!categoriesContainer) return;
+      if (!newsLogBubbleCategories) return;
       
-      let icon, textClass;
+      let icon, statusClass;
       switch (status) {
         case 'pending':
-          icon = '<i class="bi bi-circle text-muted me-2"></i>';
-          textClass = 'text-muted';
+          icon = '<i class="bi bi-circle"></i>';
+          statusClass = 'news-log-bubble__category--pending';
           break;
         case 'processing':
-          icon = '<span class="spinner-border spinner-border-sm text-primary me-2" role="status"></span>';
-          textClass = 'text-primary fw-medium';
+          icon = '<span class="spinner-border spinner-border-sm" role="status"></span>';
+          statusClass = 'news-log-bubble__category--processing';
           break;
         case 'success':
-          icon = '<i class="bi bi-check-circle-fill text-success me-2"></i>';
-          textClass = 'text-success';
+          icon = '<i class="bi bi-check-circle-fill"></i>';
+          statusClass = 'news-log-bubble__category--success';
           break;
         case 'error':
-          icon = '<i class="bi bi-x-circle-fill text-danger me-2"></i>';
-          textClass = 'text-danger';
+          icon = '<i class="bi bi-x-circle-fill"></i>';
+          statusClass = 'news-log-bubble__category--error';
           break;
         default:
-          icon = '<i class="bi bi-circle text-muted me-2"></i>';
-          textClass = 'text-muted';
+          icon = '<i class="bi bi-circle"></i>';
+          statusClass = 'news-log-bubble__category--pending';
       }
       
-      const itemId = `scrape-cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
+      const itemId = `bubble-cat-${category.replace(/\s+/g, '-').toLowerCase()}`;
       let item = document.getElementById(itemId);
       
       if (!item) {
         item = document.createElement('div');
         item.id = itemId;
-        item.className = 'd-flex align-items-center py-1';
-        categoriesContainer.appendChild(item);
+        item.className = `news-log-bubble__category ${statusClass}`;
+        newsLogBubbleCategories.appendChild(item);
+      } else {
+        item.className = `news-log-bubble__category ${statusClass}`;
       }
       
-      const messageSpan = message ? `<small class="ms-2 text-muted">(${message})</small>` : '';
-      item.innerHTML = `${icon}<span class="${textClass}">${category}</span>${messageSpan}`;
+      const metaSpan = message ? `<span class="news-log-bubble__category-meta">${message}</span>` : '';
+      item.innerHTML = `
+        <span class="news-log-bubble__category-icon">${icon}</span>
+        <span class="news-log-bubble__category-name">${category}</span>
+        ${metaSpan}
+      `;
     };
 
     try {
@@ -2545,20 +2846,25 @@
           
           switch (data.type) {
             case 'start':
-              // Inicjalizacja listy kategorii
-              if (data.categories && categoriesContainer) {
+              totalCategories = data.categories?.length || 0;
+              if (data.categories) {
                 data.categories.forEach(cat => renderCategoryItem(cat, 'pending'));
               }
               break;
               
             case 'processing':
               renderCategoryItem(data.category, 'processing');
-              if (newsScrapeStatus) {
-                newsScrapeStatus.textContent = `${data.index + 1}/${data.total}`;
+              if (newsLogBubbleStatusText) {
+                newsLogBubbleStatusText.textContent = `${data.index + 1}/${data.total}`;
               }
               break;
               
             case 'done':
+              processedCategories++;
+              if (newsLogProgressBar && totalCategories > 0) {
+                const progress = (processedCategories / totalCategories) * 100;
+                newsLogProgressBar.style.width = `${progress}%`;
+              }
               if (data.success) {
                 const msg = data.articles_count ? `${data.articles_count} art.` : '';
                 renderCategoryItem(data.category, 'success', msg);
@@ -2568,27 +2874,33 @@
               break;
               
             case 'building_faiss':
-              if (logText) logText.textContent = 'Budowanie indeksu FAISS...';
+              if (newsLogBubbleMessage) newsLogBubbleMessage.textContent = '⚡ Budowanie indeksu FAISS...';
+              if (newsLogProgressBar) newsLogProgressBar.style.width = '100%';
               break;
               
             case 'complete':
               eventSource.close();
               activeScrapeEventSource = null;
               
-              if (newsScrapeStatus) newsScrapeStatus.textContent = 'Zakończono';
               const successCount = data.items?.filter(i => i.success).length || 0;
               const totalCount = data.items?.length || 0;
-              const summary = `Pobrano ${successCount}/${totalCount} kategorii. FAISS odbudowany.`;
-              if (logText) logText.textContent = summary;
-              showToast({ title: 'Sukces', message: summary, type: 'success' });
+              const summary = `✓ Pobrano ${successCount}/${totalCount} kategorii`;
+              
+              if (newsLogBubbleStatusText) newsLogBubbleStatusText.textContent = 'Zakończono';
+              if (newsLogBubbleMessage) newsLogBubbleMessage.textContent = summary;
+              if (newsLogBubble) {
+                newsLogBubble.classList.remove('news-log-bubble--active');
+                newsLogBubble.classList.add('news-log-bubble--success');
+              }
+              showToast({ title: 'Sukces', message: `${summary}. FAISS odbudowany.`, type: 'success' });
               
               if (newsLastBuild && data.completed_at) newsLastBuild.textContent = data.completed_at;
               
-              Promise.all([loadNewsFiles(), loadNewsIndices()]).catch(console.error);
+              Promise.all([loadNewsFiles(), loadNewsIndices(), loadFaissStatus()]).catch(console.error);
               
               newsScrapeBtn.removeAttribute('disabled');
               newsScrapeSpinner?.classList.add('d-none');
-              newsScrapeStopBtn?.classList.add('d-none');
+              if (newsScrapeStopBtn) newsScrapeStopBtn.classList.add('d-none');
               break;
           }
         } catch (parseError) {
@@ -2601,25 +2913,33 @@
         eventSource.close();
         activeScrapeEventSource = null;
         
-        if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
-        if (logText) logText.textContent = 'Błąd połączenia z serwerem.';
+        if (newsLogBubbleStatusText) newsLogBubbleStatusText.textContent = 'Błąd';
+        if (newsLogBubbleMessage) newsLogBubbleMessage.textContent = '✗ Błąd połączenia z serwerem';
+        if (newsLogBubble) {
+          newsLogBubble.classList.remove('news-log-bubble--active');
+          newsLogBubble.classList.add('news-log-bubble--error');
+        }
         showToast({ title: 'Błąd', message: 'Skrapowanie nie powiodło się.', type: 'error' });
         
         newsScrapeBtn.removeAttribute('disabled');
         newsScrapeSpinner?.classList.add('d-none');
-        newsScrapeStopBtn?.classList.add('d-none');
+        if (newsScrapeStopBtn) newsScrapeStopBtn.classList.add('d-none');
       };
       
     } catch (error) {
       console.error(error);
       activeScrapeEventSource = null;
-      if (newsScrapeStatus) newsScrapeStatus.textContent = 'Błąd';
-      if (logText) logText.textContent = error.message || 'Błąd serwera.';
+      if (newsLogBubbleStatusText) newsLogBubbleStatusText.textContent = 'Błąd';
+      if (newsLogBubbleMessage) newsLogBubbleMessage.textContent = error.message || 'Błąd serwera';
+      if (newsLogBubble) {
+        newsLogBubble.classList.remove('news-log-bubble--active');
+        newsLogBubble.classList.add('news-log-bubble--error');
+      }
       showToast({ title: 'Błąd', message: error.message || 'Skrapowanie nie powiodło się.', type: 'error' });
       
       newsScrapeBtn.removeAttribute('disabled');
       newsScrapeSpinner?.classList.add('d-none');
-      newsScrapeStopBtn?.classList.add('d-none');
+      if (newsScrapeStopBtn) newsScrapeStopBtn.classList.add('d-none');
     }
   };
 
@@ -2766,11 +3086,9 @@
     } catch (error) {
       console.error(error);
       const msg = error.message || '';
-      if (msg.includes('Target number is required')) {
-        showToast({ title: 'Błąd', message: 'Podaj numer rozmówcy, aby włączyć AI.', type: 'error' });
-      } else if (msg.includes('API key is required')) {
+      if (msg.includes('API key is required') || msg.includes('Podaj klucz API')) {
         showToast({ title: 'Błąd', message: 'Podaj klucz API OpenAI, aby włączyć AI.', type: 'error' });
-      } else if (msg.includes('Temperature must be')) {
+      } else if (msg.includes('Temperature must be') || msg.includes('Temperatura')) {
         showToast({ title: 'Błąd', message: 'Temperatura musi być liczbą z zakresu 0–2.', type: 'error' });
       } else {
         showToast({ title: 'Błąd', message: msg || 'Nie udało się zapisać konfiguracji AI.', type: 'error' });
@@ -2784,7 +3102,6 @@
     if (!aiTestBtn) return;
     const message = aiTestMessage?.value.trim();
     const apiKeyOverride = aiApiKey?.value.trim();
-    const participantOverride = aiTargetNumber?.value.trim();
     setAiTestLoading(true);
     renderAiTestResult(null);
     if (aiTestStatus) {
@@ -2792,17 +3109,12 @@
     }
 
     try {
-      const payload = {
-        use_latest_message: true
-      };
+      const payload = {};
       if (message) {
         payload.message = message;
       }
       if (apiKeyOverride) {
         payload.api_key = apiKeyOverride;
-      }
-      if (participantOverride) {
-        payload.participant = participantOverride;
       }
 
       const data = await fetchJSON('/api/ai/test', {
@@ -2812,9 +3124,9 @@
 
       renderAiTestResult(data);
       if (aiTestStatus) {
-        aiTestStatus.textContent = data.used_latest_message
-          ? 'Połączenie OK — użyto ostatniej wiadomości z historii.'
-          : 'Połączenie OK — odpowiedź wygenerowana na podstawie tekstu testowego.';
+        aiTestStatus.textContent = data.connection_ok
+          ? '✓ Połączenie z OpenAI działa poprawnie!'
+          : 'Połączenie OK — odpowiedź wygenerowana.';
       }
     } catch (error) {
       console.error(error);
@@ -3384,10 +3696,9 @@
       loadReminders();
     }
 
-    if (newsAddRecipientForm) {
-      newsAddRecipientForm.addEventListener('submit', addNewsRecipient);
-      newsRecipientAllCat?.addEventListener('change', syncRecipientPromptMode);
-      newsRecipientsRefreshBtn?.addEventListener('click', loadNewsRecipients);
+    // ===================== FAISS Status & Test (News Tab) =====================
+    // Inicjalizacja niezależna od formularza odbiorców (który został usunięty)
+    if (newsFaissStatusPill || newsFaissTestBtn) {
       newsFaissTestBtn?.addEventListener('click', () => testNewsFAISS());
       newsFaissStatusRefreshBtn?.addEventListener('click', loadFaissStatus);
       newsFaissQuickTestBtn?.addEventListener('click', () => {
@@ -3401,9 +3712,9 @@
       newsFaissRestoreBtn?.addEventListener('click', triggerFaissRestoreDialog);
       newsFaissRestoreInput?.addEventListener('change', handleFaissRestoreInputChange);
       newsFaissAllCat?.addEventListener('change', syncFaissPromptMode);
-      loadNewsRecipients();
+      // Event listener dla wysyłania SMS z odpowiedzi AI
+      newsSmsSendBtn?.addEventListener('click', sendNewsSms);
       loadFaissStatus();
-      syncRecipientPromptMode();
       syncFaissPromptMode();
     }
 
@@ -3419,6 +3730,19 @@
 
     if (newsScrapeStopBtn) {
       newsScrapeStopBtn.addEventListener('click', stopNewsScrape);
+    }
+
+    // Zamykanie dymka logów
+    if (newsLogBubbleClose) {
+      newsLogBubbleClose.addEventListener('click', closeLogBubble);
+    }
+
+    // Zwijanie/rozwijanie dymka logów
+    if (newsLogBubbleToggle) {
+      newsLogBubbleToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleLogBubble();
+      });
     }
 
     if (newsBuildIndexBtn) {

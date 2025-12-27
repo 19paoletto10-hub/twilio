@@ -1134,8 +1134,7 @@ def api_update_ai_config():
             return jsonify({"error": "Temperatura musi być w zakresie 0-2."}), 400
 
     normalized_target = normalize_contact(target_number)
-    if enabled and not normalized_target:
-        return jsonify({"error": "Podaj numer uczestnika rozmowy."}), 400
+    # AI odpowiada wszystkim nadawcom - target_number jest opcjonalny (do wyświetlania historii)
 
     api_key_provided = "api_key" in payload
     api_key_value = payload.get("api_key") if api_key_provided else None
@@ -1282,12 +1281,11 @@ def api_reload_settings():
 
 @webhooks_bp.post("/api/ai/test")
 def api_test_ai_connection():
+    """Test połączenia z OpenAI - nie wymaga numeru uczestnika."""
     payload = request.get_json(force=True, silent=True) or {}
-    participant_override = (payload.get("participant") or "").strip()
     message = (payload.get("message") or "").strip()
     api_key_override = (payload.get("api_key") or "").strip()
     history_limit_raw = payload.get("history_limit")
-    use_latest_message = payload.get("use_latest_message", True)
 
     # Safely parse history_limit with explicit None check
     history_limit = 20  # default
@@ -1302,30 +1300,8 @@ def api_test_ai_connection():
     if not api_key:
         return jsonify({"error": "Brak klucza OpenAI. Wklej go w formularzu lub zapisz w konfiguracji."}), 400
 
-    target_number = participant_override or (cfg.get("target_number") or "").strip()
-    normalized_target = normalize_contact(target_number)
-    if not normalized_target:
-        return jsonify({"error": "Podaj numer rozmówcy w konfiguracji AI lub w polu 'participant'."}), 400
-
-    latest_message = None
-    if use_latest_message and not message:
-        candidates = list_messages(
-            limit=10,
-            direction="inbound",
-            participant_normalized=normalized_target,
-        )
-        for item in candidates:
-            body = (item.get("body") or "").strip()
-            if body:
-                latest_message = item
-                break
-
-    prompt_text = message or (latest_message.get("body") if latest_message else "")
-    fallback_prompt = "To jest test połączenia z OpenAI. Potwierdź, że wszystko działa."
-    used_latest_message = bool(latest_message and not message)
-    if not prompt_text:
-        prompt_text = fallback_prompt
-        used_latest_message = False
+    # Testujemy tylko połączenie z OpenAI - nie potrzeba participant
+    prompt_text = message or "To jest test połączenia z OpenAI. Potwierdź, że wszystko działa poprawnie."
 
     responder = AIResponder(
         api_key=api_key,
@@ -1336,7 +1312,8 @@ def api_test_ai_connection():
     )
 
     try:
-        reply = responder.build_reply(participant=target_number, latest_user_message=prompt_text)
+        # Test bez historii konwersacji - tylko sprawdzamy API
+        reply = responder.build_reply(participant=None, latest_user_message=prompt_text)
     except Exception as exc:  # noqa: BLE001
         current_app.logger.exception("AI test request failed: %s", exc)
         return jsonify({"error": f"Żądanie OpenAI nie powiodło się: {exc}"}), 502
@@ -1347,16 +1324,12 @@ def api_test_ai_connection():
 
     return jsonify(
         {
-            "participant": target_number,
-            "participant_normalized": normalize_contact(target_number),
             "input": prompt_text,
             "reply": reply,
             "model": responder.model,
             "temperature": responder.temperature,
             "history_limit": responder.history_limit,
-            "used_latest_message": used_latest_message,
-            "latest_message": latest_message,
-            "fallback_used": not message and not latest_message,
+            "connection_ok": True,
         }
     )
 
@@ -2683,6 +2656,60 @@ def api_messages():
     _maybe_sync_messages(limit=limit)
     messages = list_messages(limit=limit, direction=direction)
     return jsonify({"items": messages, "count": len(messages)})
+
+
+@webhooks_bp.post("/api/messages")
+def api_messages_send():
+    """
+    Send an SMS message.
+    
+    Request body:
+        to (str): Recipient phone number (e.g., +48123456789)
+        body (str): Message content
+    
+    Returns:
+        JSON with success status and message details
+    """
+    payload = request.get_json(force=True, silent=True) or {}
+    to_number = (payload.get("to") or "").strip()
+    body = (payload.get("body") or "").strip()
+    
+    if not to_number:
+        return jsonify({"success": False, "error": "Brak numeru odbiorcy (to)."}), 400
+    
+    if not body:
+        return jsonify({"success": False, "error": "Brak treści wiadomości (body)."}), 400
+    
+    # Podstawowa walidacja numeru
+    import re
+    if not re.match(r'^\+?[0-9]{9,15}$', to_number.replace(" ", "")):
+        return jsonify({"success": False, "error": "Nieprawidłowy format numeru telefonu."}), 400
+    
+    try:
+        twilio_client: TwilioService = current_app.config["TWILIO_CLIENT"]
+        
+        # Użyj send_sms() - właściwa metoda do wysyłania SMS
+        result = twilio_client.send_sms(
+            to=to_number,
+            body=body
+        )
+        
+        if result.get("success"):
+            return jsonify({
+                "success": True,
+                "sid": result.get("sid"),
+                "status": result.get("status"),
+                "message": f"SMS wysłany do {to_number}"
+            })
+        else:
+            return jsonify({
+                "success": False, 
+                "error": result.get("error", "Nie udało się wysłać wiadomości.")
+            }), 500
+            
+    except Exception as exc:
+        current_app.logger.exception("Failed to send SMS: %s", exc)
+        return jsonify({"success": False, "error": str(exc)}), 500
 
 
 @webhooks_bp.get("/api/conversations")

@@ -1860,17 +1860,17 @@
     }
   },
   {
-    "id": "b4b36d8af87421f566a9fa1e1bc52c80e53aa234",
-    "page_content": "z dn. 27.12.2025 godz. 03:37",
+    "id": "a74f9fd4583e7a5fcb26a85777e65907f33674bf",
+    "page_content": "z dn. 27.12.2025 godz. 07:50",
     "metadata": {
       "source": "business_insider_scraper",
       "url": "https://businessinsider.com.pl/gielda/akcje",
       "title": "Notowania giełdowe akcji na GPW - sprawdź na Businessinsider.com.pl",
       "category": "Giełda",
-      "scraped_at": "2025-12-27T02:38:51.768715Z",
-      "content_hash": "350f0ca7c8c8a964e0c563c93e02cec757592d38ec3973d78c9e4fe42a8af688",
+      "scraped_at": "2025-12-27T06:50:54.226623Z",
+      "content_hash": "75fba1770aa37077555ac552305b22589f67b1faaad45e1740521896a65bae00",
       "chunk_index": 0,
-      "chunk_hash": "87013150e74e0701be514660a50f1571dafdd43d",
+      "chunk_hash": "7602fd6ac627fdfebfb2a3f5db6a6c6dfcc3c658",
       "chunk_len": 28
     }
   },
@@ -1950,17 +1950,17 @@
     }
   },
   {
-    "id": "befacd2a327212ee3f6cacbb86bb553dda9b70a1",
-    "page_content": "z dn. 27.12.2025 godz. 03:23",
+    "id": "b6dca9aa7097487c877807c8cd39329eed87d26e",
+    "page_content": "z dn. 27.12.2025 godz. 07:22",
     "metadata": {
       "source": "business_insider_scraper",
       "url": "https://businessinsider.com.pl/gielda/komunikaty-gieldowe",
       "title": "Komunikaty giełdowe",
       "category": "Giełda",
-      "scraped_at": "2025-12-27T02:38:56.398144Z",
-      "content_hash": "ddfd7bdc21ac4309cf51c59ab40b684cd0761430bea0cfc9e75f9f23e0079cf3",
+      "scraped_at": "2025-12-27T06:50:58.379885Z",
+      "content_hash": "b72770fe03bf7e86fa8effb4d1720ba1e1b6a44cd7230dc35c7e1e4bdc82af0a",
       "chunk_index": 0,
-      "chunk_hash": "fe21d80ecb293ce56b177b54a98fceb87888bcb9",
+      "chunk_hash": "7c042cfb379b63cc29cfc06e1cf64eda3a2a6c50",
       "chunk_len": 28
     }
   },
@@ -2415,6 +2415,231 @@
     }
   },
   {
+    "id": "593b8c69f94d116ce72bb5aa84ab51421b407574",
+    "page_content": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]\nNa świecie w ostatnich latach ubyło ateistów i agnostyków — wynika z analizy Business Insidera. Ludzie najwyraźniej poszukują pozamaterialnego sensu życia, co często przekłada się też na wybory polityczne. Niekoniecznie polega to na wyborze najbardziej powszechnych religii. Ciekawym przypadkiem są Chiny.\nZebraliśmy oficjalnie dostępne dane z 248 krajów świata, a to z cenzusów, a to z badań opinii publicznej, czy danych ARDA i Pew Research Institute, które monitorują wierzenia ludzi na całym globie. Zestawiając to z danymi o liczbie ludności z Międzynarodowego Funduszu Walutowego, mamy obraz współczesnej, religijnej mapy świata.\nCzytaj też: Globalne zmiany religijne. Ubywa ateistów i chrześcijan, między innymi w Polsce",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 0,
+      "chunk_hash": "8c5730a5d620b8f0468fb3bb37335a08e25f195d",
+      "chunk_len": 803
+    }
+  },
+  {
+    "id": "ff95cb436053e2827bd92b3eede8ada26683a6c3",
+    "page_content": "Czytaj też: Globalne zmiany religijne. Ubywa ateistów i chrześcijan, między innymi w Polsce\nZauważyliśmy przy tym wyraźny trend ku wierze, bo zmalała liczba niewierzących. Gdy się jednak spojrzy w szczegóły, to w wielu przypadkach jest to trend deklaratywny i nie idą za nim czyny w postaci praktyk religijnych.\nChrześcijaństwo na czele\nZbieramy dane przy okazji Bożego Narodzenia i z zestawienia wynika, że największą grupą religijną świata jest właśnie chrześcijaństwo. Przyznaje się do niego obecnie około 2,5 mld ludzi na Ziemi. Z tego 1,2 mld to katolicy (niekoniecznie rzymscy), 1,1 mld to ogólnie rzecz ujmując protestanci (w tym: ewangelicy, anglikanie, mormoni, Świadkowie Jehowy, zielonoświątkowcy i inne odłamy chrześcijaństwa) no i 253 mln jest prawosławnych.\nCzytaj też: Polska to najbardziej katolicki kraj na świecie. Jak to realnie wygląda w praktykach religijnych? [ANALIZA]",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 1,
+      "chunk_hash": "f8f56056e496da4f079c25f528fa88c981c590b5",
+      "chunk_len": 891
+    }
+  },
+  {
+    "id": "a5b2fd8a90d08aadc23f13e588264335747f6f0e",
+    "page_content": "Czytaj też: Polska to najbardziej katolicki kraj na świecie. Jak to realnie wygląda w praktykach religijnych? [ANALIZA]\nDrugą co do wielkości religią jest islam, który wyznaje 1,9 mld ludzi, w tym 1,7 mld to sunnici, a pozostała część to szyici i inne odłamy tej wiary.\nTrzecią grupą wiernych są hinduiści, których na świecie żyje ponad 1,1 mld, dalej mamy różne religie etniczne z 0,7 mld wyznawców, buddyzm z 0,5 mld i judaizm z 15 mln.\nNajbardziej wierzące kraje\nAteistów i agnostyków było na świecie 986 mln. Jednak w aż 52 krajach świata nie ma ich niemal w ogóle, tj. stanowią mniej niż 1 proc. populacji. Można to nazwać grupą krajów najbardziej wierzących.\nZ tego 25 państw ma większość muzułmańską, 21 chrześcijańską, cztery buddyjską, jeden hinduistyczną (Nepal) a jeden to kraj z dominującą religią etniczną (Laos).",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 2,
+      "chunk_hash": "ff4f5a569201284510d245794495551f0debc74f",
+      "chunk_len": 826
+    }
+  },
+  {
+    "id": "723f272c1d0daab4d2649cdfd3e75dab73ea8481",
+    "page_content": "Czytaj też: Religie zamożne i biedne. Wyznawcom których żyje się najlepiej, a których najgorzej\nDruga strona medalu, czyli kraje z większością niewyznającą żadnej religii to głównie kraje Europy: Belgia, Czechy i Estonia oraz obie Koree.\nKrajów z przewagą chrześcijan jest 109, w tym najwięcej, bo 56 z katolicką większością. Państw z przewagą muzułmanów jest 43, w tym 37 z większością sunnicką. Krajów, gdzie buddyzm jest religią dominującą, jest dziewięć. Tych z przewagą religii etnicznych jest cztery, hinduistycznych — dwa, judaistycznych — jeden i wreszcie dominacja ateistów i agnostyków dotyczy sześciu krajów.\nChrześcijan przybywa najwięcej. Co z katolikami?",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 3,
+      "chunk_hash": "3d49ff2e74d347f8d1e521250d29ed20600d6dc9",
+      "chunk_len": 668
+    }
+  },
+  {
+    "id": "4438d75b7ead269050d8e698417da97e17384c03",
+    "page_content": "Chrześcijan przybywa najwięcej. Co z katolikami?\nZ różnych danych i przekazów medialnych można się dowiedzieć, że to muzułmanie mają najwięcej potomstwa i w związku z tym przybywa ich na świecie najwięcej. Zgodnie z naszym wyliczeniami to jednak nie jest prawda. Chrześcijan przybywa więcej niż islamistów, choć oczywiście nie musi to mieć związku z liczebnością dzieci, ale np. z konwersjami na tę religię.\nCzytaj też: Chrześcijanie, muzułmanie czy ateiści. Kto zdobywa przewagę na świecie?\nI tak nasze szacunki wskazują, że w ciągu pięciu lat 2020-2025 liczba chrześcijan zwiększyła się o 172 mln, a w ciągu piętnastu lat 2010-2025 o aż 521 mln i wynosi obecnie 2 mld 511 mln. Dla porównania liczba muzułmanów zwiększyła się o 399 mln od 2010 r. i o 78 mln od 2020 r. do 1 mld 905 mln.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 4,
+      "chunk_hash": "d7bf5d64bbc52aaae959b0ecda349599f8077a5f",
+      "chunk_len": 787
+    }
+  },
+  {
+    "id": "3802c62348b4f8f6a3569b53927eedc0c304d363",
+    "page_content": "Prym we wzroście liczby chrześcijan wiodą kościoły protestanckie, w których liczba wiernych zwiększyła się o 94 mln w pięć lat i o 336 mln w ciągu dziesięciu do 1 mld 93 mln. Katolicy przyrostem populacji protestantom ustępują, bo ich liczba wzrosła w pięć lat o 86 mln, a w piętnaście lat — o 142 mln do 1 mld 165 mln.\nPrawosławie jest w odwrocie, na co wpływ miała prowadzona przez dwa prawosławne państwa wojna na terenie Ukrainy. Tu w pięć lat liczba wiernych się skurczyła o 8 mln, ale za to w piętnaście — wzrosła o 43 mln do 253 mln.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 5,
+      "chunk_hash": "191abd708833f9153a749e51cee98077d57d826e",
+      "chunk_len": 540
+    }
+  },
+  {
+    "id": "67c1c0de86284879d5e5c420a640639907eb4d3e",
+    "page_content": "Na wysoki przyrost liczby protestantów od 2010 r. wpływ miały głównie zmiany w Chinach, gdzie w ciągu 15 lat przybyło 81 mln wyznawców. Choć to zaledwie 7,9 proc. populacji, a wzrost liczony jest od 2,2 proc. w 2010 r., to Chiny są jednak drugim najbardziej ludnym (po Indiach) krajem świata, więc nawet taka zmiana odbija się mocno na globalnej statystyce. Wysokie, ponad 30-milionowe wzrosty liczby protestantów zauważyliśmy też w Indiach i Demokratycznej Republice Kongo.\nKatolików od 2010 r. najwięcej przybyło w Meksyku (+16 mln) i jest ich tam obecnie 83,4 proc., czyli 111 mln. Ponad 10-milionowe przyrosty liczby katolików odnotowały jeszcze wspomniane wyżej Kongo oraz Indie.\nW Polsce ubywa katolików",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 6,
+      "chunk_hash": "0bc8da34c607d80a492930c7abf4985e67a6159a",
+      "chunk_len": 709
+    }
+  },
+  {
+    "id": "45db1bbf88a230bc71ada2761393c509a311c81a",
+    "page_content": "W Polsce ubywa katolików\nJeśli chodzi o Polskę, to tu liczba katolików akurat spadła o 1,8 mln w ciągu pięciu lat i o 3,1 mln w ciągu lat 15. Nie tylko ma to związek ze zmniejszaniem się populacji naszego kraju, ale i z odejściami od religii. Według opublikowanych w grudniu danych GUS w 2024 r. katolików było w Polsce jednak aż 91,5 proc. Dla porównania w 2020 r. było to 92,6 proc., a w 2010 r. — 95,9 proc.\nZ kolei ubytek liczby prawosławnych na świecie w ostatnich pięciu latach to głównie efekt spadków na Ukrainie o 4,4 mln i Meksyku o 2,2 mln. W tym pierwszym przypadku to skutek redukcji populacji kraju, bo odsetek Ukraińców prawosławnych wzrósł do 71,6 proc. w bieżącym roku z 67,3 proc. w 2020 r. i 68,1 proc. w 2010 r.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 7,
+      "chunk_hash": "c989a330c176c3e0a3850961495f77a35b63dd45",
+      "chunk_len": 731
+    }
+  },
+  {
+    "id": "56b7e956f10eacc9f116fbb329bc46015b3e9e06",
+    "page_content": "Jeśli chodzi o zmiany procentowe, a nie liczbowe, to najwyższe wzrosty odsetka chrześcijan od 2010 r. miały miejsce na Węgrzech (przyrost katolików z 38,9 proc. w 2010 r. do 60,5 proc. w 2025 r.), na Kubie (przyrost katolików z 26,5 proc. w 2010 r. do 52,9 proc. obecnie) i w Rosji (przyrost prawosławnych z 42,9 proc. w 2010 r. do 67 proc. obecnie).\nWierzą, a do kościoła nie chodzą\nCo innego jednak deklarowane w ankietach wyznanie, a co innego praktyki religijne. W Polsce, choć do katolicyzmu przyznaje się 91,5 proc. osób, to według danych statystyków Kościoła Rzymskokatolickiego na msze święte uczęszcza 29 proc. Polaków, a 14 proc. przystępuje do komunii świętej. To wynik na podstawie danych zbieranych jednej niedzieli w roku. Uczestnictwo w co najmniej jednej mszy w miesiącu w ubiegłym roku deklarowało w Polsce 49 proc. osób — wynika z badania Pew Research Center.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 8,
+      "chunk_hash": "fabf4c1cabb0fe9f2bb1cb9cc123ca937bfad65d",
+      "chunk_len": 877
+    }
+  },
+  {
+    "id": "cc6a8a8e3e8137736e46c080fd876bc0c7bc2722",
+    "page_content": "W Brazylii przynajmniej raz w miesiącu w kościele jest 40 proc. katolików i podobnie jest w USA. W Meksyku 26 proc. uczestniczy we mszy świętej co tydzień. W Czechach, gdzie procent katolików w społeczeństwie skoczył zgodnie z deklaracjami z 10,5 proc. w 2010 r. do 30,6 proc. w 2025 r., we mszy świętej co tydzień uczestniczy zaledwie 2,7 proc. mieszkańców, ale chrzczonych jest 12 proc. dzieci.\nW Norwegii, gdzie protestantów przybyło z 69,2 proc. w 2010 r. do 82,2 proc. w roku bieżącym. Większość członków kościoła państwowego nie jest aktywnymi wyznawcami, z wyjątkiem obrzędów narodzin, konfirmacji, ślubów i pogrzebów. Około 3 proc. uczęszcza do kościoła w niedzielę, a 10 proc. średnio co miesiąc",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 9,
+      "chunk_hash": "be48427caef42f2a22c1be4a41b9552964a19b60",
+      "chunk_len": 704
+    }
+  },
+  {
+    "id": "cc4b0034497676c6d11280d9aaeb992080a03e72",
+    "page_content": "Badacze CARA dwa lata temu, opierając się na danych z World Values Survey, dużego międzynarodowego badania wierzeń religijnych, wskazali, że najniższy wśród katolików poziom cotygodniowej frekwencji odnotowano na Litwie (16 proc. katolików), w Niemczech (14 proc.), Kanadzie (14 proc.), Łotwie (11 proc.), Szwajcarii (11 proc.), Brazylii (8 proc.), Francji (8 proc.) i Holandii (7 proc.). Polska miała tu wtedy wysoki, szósty na świecie wynik 52 proc., a najwyższy — Nigeria z 94 proc. Ale to opierało się na danych do 2022 r.\nZmiany u muzułmanów i w pozostałych religiach\nRównolegle, choć wolniej do populacji chrześcijan rośnie liczba wyznawców Mahometa. Od 2010 r. do chwili obecnej przybyło ich 399 mln do 1 mld 905 mln. Największy wzrost dotyczył Pakistanu (+66 mln), Indonezji (+31,5 mln), Nigerii (+29 mln) i Egiptu (+24 mln).",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 10,
+      "chunk_hash": "d42b91bba84d5fca594df78ac14daf01d212e009",
+      "chunk_len": 833
+    }
+  },
+  {
+    "id": "f84cea51fbee7e5418cac2567c1c35d439d1049a",
+    "page_content": "Procentowo największy przyrost nastąpił w Kazachstanie, gdzie udział sunnitów w społeczeństwie wzrósł z 55 proc. w 2010 r. do 76 proc. obecnie. Znaczący wzrost odnotowała też Francja, gdzie w 15 lat udział sunnitów urósł o 6,5 pkt proc. do 9,5 proc., przy jednoczesnym spadku udziału katolików w populacji o 5,8 pkt proc. do 58,2 proc.\nWiara katolicka wśród Francuzów jest zresztą dość deklaratywna, bo przy 58,2 proc. informujących o przynależności do Kościoła Rzymskokatolickiego tylko 5,5 proc. przynajmniej raz w miesiącu uczestniczyło we mszy świętej.\nChińczycy wracają do wiary przodków",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 11,
+      "chunk_hash": "c29974642ef664f5946e46964f138d66d9a5604f",
+      "chunk_len": 592
+    }
+  },
+  {
+    "id": "44c2dc9e8e9d39d9684a9c7893b1b44941814549",
+    "page_content": "Chińczycy wracają do wiary przodków\nNa kolejnym miejscu jest ciekawostka. Religie etniczne mają o aż 316 mln więcej wyznawców na świecie niż w 2010 r., czyli 712 mln. Tu decydujące są przemiany duchowe u Chińczyków, których aż o 194 mln więcej niż 15 lat temu deklaruje się obecnie wyznawcami lokalnych wierzeń. W 2010 r. takie religie uznawało za własne 21,9 proc. mieszkańców Chin, a obecnie to 34,7 proc. Przybyło też wyznawców lokalnych wierzeń w Indiach (+40 mln) i Nigerii (+16 mln).\nDalej w przyroście populacji są hinduiści, których od 2010 r. przybyło 89 mln do 1 mld 145 mln i to głównie w Indiach (+74 mln). Ale wynika to jedynie z przyrostu populacji Indii, bo udział tej wiary w najludniejszym kraju świata spadł z 80,6 proc. do 73,6 proc.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 12,
+      "chunk_hash": "176a85c707e08963196f57a97e185a1ce6a7a258",
+      "chunk_len": 752
+    }
+  },
+  {
+    "id": "b34b76928dcac780300ccb4c4eae2c70bc8d0d7f",
+    "page_content": "Liczba buddystów na świecie zwiększyła się o 54 mln do 548 mln. Tu decydujący był przyrost w Japonii (+57 mln), gdzie od 2010 r. ich odsetek zwiększył się z 36,2 proc. do 84,1 proc.\nUbywa ateistów. Głównie za sprawą jednego kraju\nNa koniec informacja o ateistach i agnostykach. Przyrost liczby wyznawców różnych religii odbywał się na świecie między innymi kosztem nawróceń z braku wiary. Osób, które nie przyznają się do żadnej wiary ubyło 102 mln w 15 lat i jest ich obecnie 980 mln.\nTu główną rolę grały przemiany w Chinach, gdzie liczba ateistów i agnostyków zmalała o aż 159 mln w 15 lat. To skutek przejść na wspomniane wyżej religie etniczne, ale i na chrześcijański protestantyzm (+81 mln), a w mniejszym stopniu na katolicyzm (+5 mln).",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 13,
+      "chunk_hash": "a2e09d7efb310fd1b3a729b376c809764048ddfa",
+      "chunk_len": 744
+    }
+  },
+  {
+    "id": "ce75c6952fc80c06a528c6dc0e4451cb4b7ce396",
+    "page_content": "Osób bez wiary ubywało też w Brazylii (-9 mln) oraz Argentynie (-5 mln). Znaczące liczbowo wzrosty od 2010 r. widać natomiast w Indiach (+22 mln), Niemczech (+17 mln) i w USA (+11 mln).\nPod względem udziału w populacji największe spadki ateistów/agnostyków widać na Węgrzech (z 45,4 proc. w 2010 r. do 11,9 proc. obecnie), na Kubie (z 44 proc. do 21,6 proc.) i na Jamajce (z 23,5 proc. do 4,2 proc.).\nAutor: Jacek Frączyk, redaktor Business Insider Polska",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/demografia-religijna-swiata-oto-ktora-wiara-rozwija-sie-najszybciej-mapa/d6yg4ct",
+      "title": "Demografia religijna świata. Oto która wiara rozwija się najszybciej [MAPA]",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:16:41.375784Z",
+      "content_hash": "ccf51478cf7886b30e66fb16df8186f6149a2188bf3c5576572ccb98e21ad647",
+      "chunk_index": 14,
+      "chunk_hash": "45a532ff9500dc5e413676cf154cb7578a946daa",
+      "chunk_len": 455
+    }
+  },
+  {
     "id": "47af21d9ac1ac9cce33d36dacd0103607d8019fe",
     "page_content": "Komisja Europejska zaprezentowała swoją wizję wieloletniego budżetu na lata 2028-34. Nowa struktura ma integrować rozproszone dotąd polityki w ramach krajowych i regionalnych planów partnerstwa. Komisarz Piotr Serafin podkreśla, że koncepcja ta nie jest \"KPO 2.0\", choć będzie oparta na systemie kamieni milowych.\nKomisja Europejska zapowiedziała rewizję Zielonego Ładu. — W warstwie deklaratywnej to będzie \"cały czas twardo idziemy naprzód\", natomiast w tej warstwie już wykonawczej to będzie zupełnie co innego — mówi Piotr Soroczyński, główny ekonomista Krajowej Izby Gospodarczej w programie Onet Rano Finansowo.",
     "metadata": {
@@ -2592,6 +2817,96 @@
       "chunk_index": 11,
       "chunk_hash": "ce7961057b7f757a19e1661871c18e64b6b8bd36",
       "chunk_len": 348
+    }
+  },
+  {
+    "id": "4f3e2ff574ea961d5f363f76889413300d45d1a2",
+    "page_content": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"\nWyczerpuje się dotychczasowy model wzrostu gospodarczego Polski, a tempo doganiania najbogatszych gospodarek Europy wyraźnie słabnie — uważają analitycy Warsaw Enterprise Institute. Ich zdaniem, utrzymanie dynamiki wzrostu PKB wymaga bardzo dużych zmian. Specjaliści zwracają też uwagę na najsłabsze ogniwo naszej gospodarki.\nEksperci Instytutu zauważyli, że po trzech dekadach przyspieszonego rozwoju, Polska znalazła się w miejscu, które jeszcze niedawno wydawało się odległym marzeniem. Są jednak i gorsze informacje.\nW ich najnowszym raporcie — \"Bilans Otwarcia\" ocenili, że \"dotychczasowy model wzrostu właśnie się wyczerpuje, a tempo doganiania najbogatszych gospodarek Europy wyraźnie słabnie\".\nDalsza część artykułu pod wideo",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/juz-nie-bedziemy-tak-szybko-gonic-zachodu-model-sie-wyczerpuje/tz03wnb",
+      "title": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:50:35.230297Z",
+      "content_hash": "4a9c3c6a8c5b0bf1fa9d331acf35cd6e17d042068e7ea3da5acd91f56350dac2",
+      "chunk_index": 0,
+      "chunk_hash": "2743eeca9ebd6309cfa233d23d06e8b0acdbc735",
+      "chunk_len": 799
+    }
+  },
+  {
+    "id": "48abecd179eab545fb7458596fe43dea773a6b65",
+    "page_content": "Dalsza część artykułu pod wideo\nIch zdaniem, zapaść inwestycji prywatnych — z 23–24 proc. do 17 proc. PKB — stała się głównym ograniczeniem wzrostu.\nZobacz także: Takie oszczędności powinien mieć 30-, 40- i 50-latek [KWOTY]\n\"Jeszcze gorzej wygląda inwestowanie przedsiębiorstw: stopa inwestycji korporacyjnych spadła z 12 proc. PKB (2000–2004) do zaledwie 9,3 proc. PKB w latach 2020–2024. Tymczasem w Czechach utrzymuje się na poziomie 15–18 proc. PKB, na Słowacji powyżej 12 proc. PKB, a w Niemczech stabilnie ok. 11–12 proc. PKB\" — zauważyli.\nAnalitycy dodali, że innowacje i kapitał niematerialny pozostają \"najsłabszym ogniwem polskiego modelu rozwoju\".\nZwrócili uwagę, że choć nakłady na badania i rozwój (B+R) wzrosły z ok. 0,6 proc. PKB na początku wieku do 1,4-1,5 proc. PKB w najnowszym okresie, to nadal są ok. dwukrotnie niższe niż w Niemczech.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/juz-nie-bedziemy-tak-szybko-gonic-zachodu-model-sie-wyczerpuje/tz03wnb",
+      "title": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:50:35.230297Z",
+      "content_hash": "4a9c3c6a8c5b0bf1fa9d331acf35cd6e17d042068e7ea3da5acd91f56350dac2",
+      "chunk_index": 1,
+      "chunk_hash": "0129222bc0027d1990af5e720d55ffb6f3dade9a",
+      "chunk_len": 856
+    }
+  },
+  {
+    "id": "9c3a5b842356016d64bd8eddda25dd5e40020b9a",
+    "page_content": "Z kolei wydatki przedsiębiorstw na ten cel zwiększyły się z 0,18 proc. PKB (2005–2009) do 0,93 proc. PKB w latach 2020–2023, podczas gdy w Niemczech od lat utrzymują się powyżej 2 proc. PKB, a w Czechach powyżej 1 proc. PKB.\n\"Płytka krajowa baza kapitałowa nie nadąża za ambicjami rozwojowymi państwa. Stopa oszczędności to tylko 7,4 proc. dochodu rozporządzalnego — mniej niż w Czechach i na Węgrzech\" — wskazali autorzy raportu.\nJak podali, stopa oszczędności gospodarstw domowych spadła z 12 proc. dochodu rozporządzalnego w latach 2000–2004 do 7,4 proc. w okresie 2020–2024 — i to mimo chwilowego pandemicznego \"wyskoku\" w górę.\nZobacz także: Tak milionerzy unikają podatków. A etatowcy oddają połowę pensji\nProblem w finansach publicznych",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/juz-nie-bedziemy-tak-szybko-gonic-zachodu-model-sie-wyczerpuje/tz03wnb",
+      "title": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:50:35.230297Z",
+      "content_hash": "4a9c3c6a8c5b0bf1fa9d331acf35cd6e17d042068e7ea3da5acd91f56350dac2",
+      "chunk_index": 2,
+      "chunk_hash": "8ec3dfdc23620d91f36a79a42e5017c774d4b02e",
+      "chunk_len": 743
+    }
+  },
+  {
+    "id": "e840e976dda93a0f54f4a788fe566fb785ce21c1",
+    "page_content": "Zobacz także: Tak milionerzy unikają podatków. A etatowcy oddają połowę pensji\nProblem w finansach publicznych\nOstrzegają też, że finanse publiczne \"zbliżają się do granic bezpiecznej elastyczności\". Relacja długu sektora instytucji rządowych i samorządowych do PKB wzrosła z ok. 36 proc. PKB w 2000 r. do ok. 55 proc. PKB w 2024 r., a koszty obsługi długu były w 2024 r. 2-krotnie wyższe od wydatków budżetu państwa na szkolnictwo wyższe i naukę — podano.\nInstytut rekomenduje, aby priorytetem stało się podniesienie stopy inwestycji przedsiębiorstw oraz przesunięcie struktury nakładów z inwestycji krótkookresowych na projekty zwiększające produktywność (automatyzacja, transformacja energetyczna, cyfryzacja). \"Wymaga to stabilnego, przewidywalnego otoczenia regulacyjnego i ograniczenia nadprodukcji prawa\" — podkreślili.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/juz-nie-bedziemy-tak-szybko-gonic-zachodu-model-sie-wyczerpuje/tz03wnb",
+      "title": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:50:35.230297Z",
+      "content_hash": "4a9c3c6a8c5b0bf1fa9d331acf35cd6e17d042068e7ea3da5acd91f56350dac2",
+      "chunk_index": 3,
+      "chunk_hash": "1326f101492fd401730db9841fa372ef93f43cbe",
+      "chunk_len": 826
+    }
+  },
+  {
+    "id": "87d0ac7bd1845da2e88e98e779ac8590d3fb890c",
+    "page_content": "Apelują też o wzmocnienie długoterminowych oszczędności poprzez \"system zachęt podatkowych (w tym przegląd podatku od zysków kapitałowych dla inwestycji długookresowych) oraz rozwój filarów kapitałowych systemu emerytalnego\". Celem ma być podniesienie stopy oszczędności i udziału krajowego kapitału w finansowaniu inwestycji.\nWEI chciałby też \"przywrócenia równowagi finansów publicznych i podniesienia jakości wydatków\". Jak przekonuje, ograniczenie deficytu strukturalnego, uporządkowanie wydatków poza budżetem oraz przesunięcie części środków z transferów konsumpcyjnych na inwestycje rozwojowe — zwłaszcza w kapitał ludzki, infrastrukturę cyfrową i energetyczną oraz B+R jest niezbędne.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/juz-nie-bedziemy-tak-szybko-gonic-zachodu-model-sie-wyczerpuje/tz03wnb",
+      "title": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:50:35.230297Z",
+      "content_hash": "4a9c3c6a8c5b0bf1fa9d331acf35cd6e17d042068e7ea3da5acd91f56350dac2",
+      "chunk_index": 4,
+      "chunk_hash": "f51032923e73824d271d80966339b103005dca15",
+      "chunk_len": 692
+    }
+  },
+  {
+    "id": "03fd603a92ed26ab19a77f311ab5928813e67061",
+    "page_content": "\"Raport rekomenduje przesunięcie akcentu z finansowania badań dla samych badań na wsparcie wdrożeń, skalowania innowacji i tworzenia środowisk testowych (piaskownice regulacyjne, strefy wysokiej jakości prawa), zwłaszcza w obszarach cyfryzacji, AI, usług wiedzochłonnych i nowoczesnego przemysłu\" — dodali autorzy.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/gospodarka/juz-nie-bedziemy-tak-szybko-gonic-zachodu-model-sie-wyczerpuje/tz03wnb",
+      "title": "Już nie będziemy tak szybko gonić Zachodu. \"Model się wyczerpuje\"",
+      "category": "Gospodarka",
+      "scraped_at": "2025-12-27T06:50:35.230297Z",
+      "content_hash": "4a9c3c6a8c5b0bf1fa9d331acf35cd6e17d042068e7ea3da5acd91f56350dac2",
+      "chunk_index": 5,
+      "chunk_hash": "430cf7a2d158f7cb5c3db8858b309928298d134a",
+      "chunk_len": 314
     }
   },
   {
@@ -5610,17 +5925,17 @@
     }
   },
   {
-    "id": "0123d6253420c790ed61e13bba598c9a872d953f",
-    "page_content": "z dn. 27.12.2025 godz. 03:40",
+    "id": "0235bddb6b485cc549e0bdcedd8e87d88ab810d8",
+    "page_content": "z dn. 27.12.2025 godz. 07:52",
     "metadata": {
       "source": "business_insider_scraper",
       "url": "https://businessinsider.com.pl/poradnik-finansowy/inwestowanie",
       "title": "Inwestowanie",
       "category": "Poradnik Finansowy",
-      "scraped_at": "2025-12-27T02:41:01.717241Z",
-      "content_hash": "a6659064ecbcd4f01f5d6565502216ad595a6ab89b93af8846e70ddb2e92d7fa",
+      "scraped_at": "2025-12-27T06:53:03.486645Z",
+      "content_hash": "930bb75195da27ed179620fdaabd33c7b3cd1d31c7a6de645041c7c19240e7a0",
       "chunk_index": 0,
-      "chunk_hash": "3a4393700712e750aceab87829b509c5ea98ceb2",
+      "chunk_hash": "f36f07e51779ebd138e0324aa63996d8c234451f",
       "chunk_len": 28
     }
   },
@@ -6192,6 +6507,201 @@
       "chunk_index": 3,
       "chunk_hash": "a6ba68b8b67b1ce81251825d65f0cb3ead9e31de",
       "chunk_len": 52
+    }
+  },
+  {
+    "id": "d22368df4c5863462fc893d86ebe1e2718ac29de",
+    "page_content": "Utarło się, że poduszka finansowa w wysokości trzech pensji jest wystarczająca do poczucia ekonomicznej stabilności. Nic bardziej mylnego. Kolejne szacunki pokazują, że w zależności od wieku ta kwota może sięgać nawet równowartości kilkuletniego wynagrodzenia. Teoretycznie trzy pensje powinniśmy odkładać każdego roku. Oszacowaliśmy, jakie oszczędności powinien mieć statystyczny 30-, 40- czy 50-latek.\nPrzypominamy jeden z najchętniej czytanych materiałów w Business Insiderze w 2025 r. Tekst pierwotnie został opublikowany w czerwcu.\nZanim jednak przejdziemy do konkretnych wyliczeń, to musimy zaznaczyć, że oszczędzanie jest kwestią wybitnie indywidualną. I choć są modele zarządzania budżetem domowym, o które w tym materiale się oparliśmy, to należy pamiętać, że sytuacja każdego człowieka może być różna.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 0,
+      "chunk_hash": "10b75449451c7d60803873d32b53c2b73ef282fc",
+      "chunk_len": 811
+    }
+  },
+  {
+    "id": "7a476b4895b6d9a7fdc3a34977e2954190c6b762",
+    "page_content": "Dla jednych odłożenie co miesiąc nawet połowy pensji może nie stanowić problemu, a inny odlicza już do wypłaty i o jakimkolwiek oszczędzaniu nie może być mowy. Kluczowa oczywiście jest wysokość wynagrodzenia, ale też sytuacja rodzinna, poziom zadłużenia czy wartość comiesięcznych wydatków i zobowiązań.\nMimo to postanowiliśmy zbudować model, który oparliśmy o popularne wśród ekspertów modele oszczędzania. Na jego podstawie oszacowaliśmy kwoty, które teoretycznie powinien mieć oszczędzone 30-, 40-, 50- czy 60-latek.\nZobacz także: Nowe progi bogactwa w Polsce. Wystarczy nawet mniej niż 10 tys. zł pensji [KWOTY]\nCzytaj także w BUSINESS INSIDER",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 1,
+      "chunk_hash": "9b175a6e5032800f61ae5f5b217b597ae8e2a69a",
+      "chunk_len": 647
+    }
+  },
+  {
+    "id": "bff6be0461890cd3cc7b797a303e2b1b4fed3d90",
+    "page_content": "Czytaj także w BUSINESS INSIDER\nW naszym materiale wykorzystaliśmy model oszczędności 50/30/20 (czasami modyfikowany jest on do modelu 70/20/10). Budżet oparty na tej zasadzie zakłada podział dochodu na trzy kategorie: 50 proc. zostanie przeznaczone na rzeczy, których potrzebujecie, 30 proc. na tzw. zachcianki, a 20 proc. na oszczędności lub spłatę zadłużenia.\nWięcej na temat modeli oszczędzania pisaliśmy w tym materiale na Business Insider Polska.\nPrzyjęliśmy zatem, że w idealnym świecie każdy powinien odkładać 20 proc. swojego dochodu \"na czarną godzinę\". I znowu, mamy świadomość, że dla sporej grupy Polaków może to być utopia, ale jakieś założenia musieliśmy poczynić.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 2,
+      "chunk_hash": "727d0fa2d6ddc33d460b514354d837f2873538ea",
+      "chunk_len": 679
+    }
+  },
+  {
+    "id": "4f64ee723b6c54e307e720764c976bd4cf82604e",
+    "page_content": "Skoro odkładamy 20 proc., to znaczy, że co piąta złotówka z naszego dochodu powinna trafiać na konto oszczędnościowe, lokatę, zakup obligacji czy do symbolicznej skarpety. Generalnie bierzemy więc pod uwagę środki o wysokim stopniu płynności (czyli np. niekoniecznie nieruchomość). Co piąta złotówka lub — jeszcze prościej — co piąta pensja.\nA jeśli tak, to łatwo policzyć, że co roku nasza poduszka finansowa powinna rosnąć o niespełna 2,5 miesięcznego wynagrodzenia netto (czyli na rękę).\nStan naszych oszczędności w tym modelu w dużej mierze zależy więc od dwóch czynników: wysokości wynagrodzenia i stażu pracy. Badania pokazują, że w Polsce 88 proc. osób swoje pierwsze doświadczenia zawodowe ma przed 25. urodzinami, a statystycznie karierę zaczynamy w wieku 22 lat (to badanie TNS Polska sprzed kilku lat).",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 3,
+      "chunk_hash": "adfc28fcadcbb0b7d738c4c328c8caa8c2c24ce6",
+      "chunk_len": 813
+    }
+  },
+  {
+    "id": "8faad1bdb873e5a296ba3ffd3891bd70e053e764",
+    "page_content": "Na potrzeby tego tekstu przyjmijmy więc 22. urodziny jako moment, w którym rozpoczynamy zarabianie. Drugie założenie już znamy, czyli: \"odkładamy 20 proc. dochodu\". Ostatnie natomiast zakłada, że nie uwzględniamy ewentualnego oprocentowania oszczędności. Stopy zwrotu mogą być bowiem różne w zależności od instrumentów.\nIle powinien mieć zaoszczędzone 30-latek?\nNie powinno być zaskoczeniem, że im człowiek starszy, tym więcej powinien mieć oszczędności. To absolutna oczywistość, choć oczywiście zdarzają się od tej reguły wyjątki.\nSkupmy się jednak na poszczególnych grupach wiekowych. Zgodnie z naszym założeniem 30-latek jest już na rynku pracy statystycznie przez mniej więcej osiem lat.\nTu pora na drugą już oczywistą dygresję: na starcie kariery z reguły nie ma co liczyć na gigantyczne zarobki. Zazwyczaj dwudziestokilkulatkowie mogą liczyć na wynagrodzenia dużo niższe od średniej krajowej.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 4,
+      "chunk_hash": "e8e7f161005f11118886a5a0d39f1d1d5c483dd5",
+      "chunk_len": 899
+    }
+  },
+  {
+    "id": "45b7ef4e90a5416b0554aae393f492bdd2410eed",
+    "page_content": "Sprawdziliśmy to w Głównym Urzędzie Statystycznym. Najnowsze dane mówią o tym, że połowa osób poniżej 24. roku życia zarabia nie więcej niż 5,6 tys. zł miesięcznie brutto (4,4 tys. zł na rękę). W przedziale wiekowym 25-34 mediana rośnie do 7 tys. zł brutto (5,1 tys. zł na rękę).\nW idealnym świecie \"środkowy\" 30-latek powinien więc odkładać ok. 1 tys. zł co miesiąc (20 proc. z 5,1 tys. zł). To daje 12 tys. zł rocznie. Przez osiem lat powinno się więc uzbierać ok. 96 tys. zł. Połowa osób z tego pokolenia powinna — przynajmniej w myśl teorii 50/30/20 — mieć oszczędności mniejsze, a druga połowa jeszcze większe.\nW poniższej tabeli prezentujemy szacunki dla poszczególnych poziomów wynagrodzeń. Dla wyjaśnienia — 5 tys. zł w tabeli oznacza, że 30-latek przez osiem lat swojej kariery zarabiał średnio 5 tys. zł miesięcznie na rękę.\nIle oszczędności w wieku 40 lat?",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 5,
+      "chunk_hash": "7c935e3a53560927bd577c26a6cd63119932d079",
+      "chunk_len": 867
+    }
+  },
+  {
+    "id": "dcf742df363a52ec82a6140ce62cffad8a80b1a9",
+    "page_content": "Ile oszczędności w wieku 40 lat?\nStatystyczny 40-latek powinien odkładać przez dziesięć lat dłużej niż jego dekadę młodszy kolega. To nie ulega wątpliwości. Co więcej, zazwyczaj w takim wieku pensja jest już znacznie wyższa niż na początku drogi zawodowej.\nZ danych GUS wynika, że w wieku 35-44 lata mediana wynagrodzeń wynosi 7,6 tys. zł brutto miesięcznie (5,5 tys. zł na rękę). To znaczy, że połowa tego pokolenia zarabia poniżej tej kwoty, a druga połowa — powyżej.\nCo to oznacza? Mniej więcej tyle, że statystyczny 40-latek powinien odkładać ok. 1,1 tys. zł miesięcznie, czyli 13,2 tys. zł rocznie. Przez 18 lat zawodowej kariery oznaczać to będzie ponad 230 tys. zł potencjalnych oszczędności.\nOszczędności dla 50-latka. Milion dla rekordzistów",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 6,
+      "chunk_hash": "dd4e3eb7142c92d25380760bd2bea383ce163ae9",
+      "chunk_len": 750
+    }
+  },
+  {
+    "id": "b20433a18980a58b87434aef74478765129f66f3",
+    "page_content": "Oszczędności dla 50-latka. Milion dla rekordzistów\nKolejne 10 lat oszczędzania może już zrobić sporą różnicę. Nie dość, że w przedziale wiekowym 45-54 Polacy statystycznie zarabiają najwięcej, to jeszcze mają dekadę więcej na odkładanie pieniędzy.\nPrzykład? Dane GUS mówią o medianie na poziomie 7 tys. 620 zł miesięcznie, co daje niespełna 5,6 tys. zł na rękę. Rocznie daje to niespełna 14 tys. zł możliwych oszczędności, a przez 28 lat uzbiera się już blisko 400 tys. zł.\n50-latkowie, którzy przez całe życie zarabiali średnio po 15 tys. zł, mogą już być milionerami. Z naszych szacunków wynika, że przy zastosowaniu metody 50/30/20 ich stan konta może mieć już siedem cyfr.\nA przypomnijmy, że w naszych szacunkach pomijamy potencjalne oprocentowanie oszczędności (nawet pomniejszone o podatek Belki). Gdyby uwzględnić magię procentu składanego, to te kwoty mogłyby być nawet kilkukrotnie wyższe.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 7,
+      "chunk_hash": "d22a7fad356f0a3c445f65dac17169e8d72afe58",
+      "chunk_len": 898
+    }
+  },
+  {
+    "id": "4f5c6cbe6c5804f57f10c807d59a764aded4e7e5",
+    "page_content": "Oszczędności 60-latka. Każdy chciałby mieć tyle przed emeryturą\nOstatnia grupa wiekowa to osoby, które kończą swoją przygodę na rynku pracy. Blisko 40 lat zarabiania i oszczędzania musiałoby dać imponujące efekty.\nOczywiście po raz kolejny podkreślamy, że tak regularne odkładanie zawsze 20 proc. pensji może być trudne, ale gdyby rzeczywiście się udało, to nawet przy niskich zarobkach oszczędności muszą robić wrażenie.\nW tym wieku mediana zarobków według GUS to nieco mniej, bo 7 tys. 353 zł brutto miesięcznie, co daje ok. 5,3 tys. zł na rękę (czyli nieco ponad 1 tys. zł miesięcznie do \"skarbonki\"). Staż pracy robi jednak swoje i po 38 latach stan oszczędności sięgnąć nawet 450 tys. zł.\nTeoria swoje, praktyka swoje\nTo wszystko brzmi świetnie, dopóki nie zderzymy tego z rzeczywistością. Dane dotyczące Polski i oszczędzania są brutalne. Pisaliśmy o tym w Business Insider Polska.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 8,
+      "chunk_hash": "702e21ee26af5b8fcf8f8de6b99c586caaf22d28",
+      "chunk_len": 887
+    }
+  },
+  {
+    "id": "b83697e4f5cd9ff56905b9b4ef96b61e803d176a",
+    "page_content": "Z najnowszego badania Santander Consumer Banku wynika, że co prawda 66 proc. Polaków deklaruje, że odkłada pieniądze, ale już kwoty takich oszczędności dalekie są od 20 proc. dochodu.\nWidać to, gdy badacze zapytali o wielkość poduszki finansowej. 20 proc. uczestników badania szacuje, że odłożone oszczędności pozwoliłyby im na maksymalnie trzy miesiące życia bez dochodu. W tej grupie dominują młodzi ludzie w wieku 18-29 lat — taką deklarację złożyła jedna trzecia przedstawicieli tej kategorii wiekowej.\nZ kolei 18 proc. Polaków uważa, że ich oszczędności mogłyby zapewnić im stabilność finansową przez okres od trzech do sześciu miesięcy. Najczęściej były to osoby powyżej 60. roku życia — odpowiedziała w ten sposób jedna czwarta badanych z tej grupy wiekowej.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 9,
+      "chunk_hash": "f79d61d00c47e4489ef2ca4e51d19f7599332372",
+      "chunk_len": 765
+    }
+  },
+  {
+    "id": "749f73cc9d57d218e2afee433934b6ce0bee99fe",
+    "page_content": "Na utrzymanie przez siedem do dwunastu miesięcy wskazało 15 proc. respondentów, wśród których dominowali trzydziestolatkowie (21 proc.).\nBlisko jedna piąta uczestników badania deklaruje, że środki odłożone pozwoliłyby im na utrzymanie przez rok lub dłużej, a 17 proc. przyznało, że nie zaoszczędziło na tyle, aby móc polegać na zgromadzonych oszczędnościach.\nLepiej grosze niż nic\nWarto jednak pamiętać, że nawet jeśli nie da się odkładać z każdej pensji 20 proc., to nie należy całkowicie rezygnować z oszczędzania. Lepsze nawet kilkadziesiąt złotych miesięcznie niż nic. Eksperci wskazują metody, które mogą nieco ułatwić planowanie domowego budżetu.\nW Business Insider Polska pisaliśmy już, że można skorzystać z jednego z trzech trików.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 10,
+      "chunk_hash": "2001187f096864b233306cd0c5a83dcd4854291f",
+      "chunk_len": 740
+    }
+  },
+  {
+    "id": "95d40e7b7ee3125209c991d41b4fb5d1a78d0caf",
+    "page_content": "W Business Insider Polska pisaliśmy już, że można skorzystać z jednego z trzech trików.\nPierwszy to zasada \"najpierw płać sobie\". Strategia ta jest często określana mianem odwróconego budżetowania, ponieważ nadaje priorytet celom oszczędnościowym. Na początku każdej wypłaty automatycznie przeznacza się część pieniędzy na oszczędności. Następnie pozostałą część wypłaty przeznacza się na miesięczne wydatki.\nDla innych lepsza może być metoda kopertowa. Stosując tę strategię, ustala się budżet i odkłada określone kwoty gotówki na każdą kategorię. Pieniądze trafiają do koperty i są wykorzystywane na pokrycie miesięcznych wydatków. Jeśli zabraknie pieniędzy na konkretną kategorię, to aby wydać więcej, trzeba poczekać do następnego miesiąca. Jeśli jednak w kopercie zostaną pieniądze, to można je zachować do wykorzystania w przyszłości.",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 11,
+      "chunk_hash": "5909102f793723984b3d7f4600001ac5bead23dd",
+      "chunk_len": 840
+    }
+  },
+  {
+    "id": "31a5a43f5a6c84af96367f94b83c41c0b02e4c0e",
+    "page_content": "Metoda zerowego budżetu zakłada z kolei przypisanie jasnego celu do każdej zarobionej złotówki. Strategia ta jest podobna do metody kopertowej, ale nie trzeba trzymać pieniędzy w gotówce.\nNa koniec jeszcze jedno. Samo oszczędzanie to dobry nawyk, ale po jakimś czasie warto też pomyśleć o inwestycjach. Dzięki temu pieniądze zamiast \"leżeć\" mogą \"pracować\", dzięki czemu kwoty w skali kilkudziesięciu lat będą znacznie wyższe.\nZobacz także: Jak pomnożyć swoje oszczędności? Wszystko, co musisz wiedzieć",
+    "metadata": {
+      "source": "business_insider_scraper",
+      "url": "https://businessinsider.com.pl/poradnik-finansowy/tyle-oszczednosci-powinien-miec-40-latek-zapomnij-o-trzech-pensjach-kwoty/rq666bm",
+      "title": "Tyle oszczędności powinien mieć 40-latek. Zapomnij o trzech pensjach [KWOTY]",
+      "category": "Poradnik Finansowy",
+      "scraped_at": "2025-12-27T06:19:02.543971Z",
+      "content_hash": "00e3a929e0180ca54299e883e644954a8909c8c3c6cfb39f56273496cc7b62c4",
+      "chunk_index": 12,
+      "chunk_hash": "3d45d9e82dd7f6c74b5b72080f262f5af8b66d61",
+      "chunk_len": 502
     }
   },
   {

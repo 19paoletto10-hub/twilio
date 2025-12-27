@@ -404,8 +404,8 @@
 
       <div class="tab-pane fade" id="tab-ai" role="tabpanel" aria-labelledby="tab-ai-btn" tabindex="0">
         <div class="row g-4">
-          <div class="col-lg-5">
-            <div class="card shadow-sm border-0 h-100">
+          <div class="col-12">
+            <div class="card shadow-sm border-0">
               <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
                 <div>
                   <p class="text-uppercase text-muted fs-6 mb-1">Integracja z AI</p>
@@ -417,13 +417,7 @@
                 <form id="ai-config-form" novalidate>
                   <div class="form-check form-switch mb-3">
                     <input class="form-check-input" type="checkbox" role="switch" id="ai-enabled">
-                    <label class="form-check-label" for="ai-enabled">Włącz prowadzenie rozmowy z wybranym numerem przez AI</label>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="ai-target-number" class="form-label">Numer uczestnika rozmowy</label>
-                    <input type="tel" class="form-control" id="ai-target-number" placeholder="np. +48123456789">
-                    <div class="form-text">Wszystkie nowe wiadomości z tego numeru będą obsługiwane przez AI.</div>
+                    <label class="form-check-label" for="ai-enabled">Włącz automatyczne odpowiedzi AI na wszystkie przychodzące wiadomości</label>
                   </div>
 
                   <div class="mb-3">
@@ -462,8 +456,7 @@
                 <div>
                   <p class="text-uppercase text-muted fs-6 mb-1">Test połączenia</p>
                   <p class="small text-muted mb-3">
-                    Wyślij przykładową wiadomość tylko do OpenAI, aby upewnić się, że konfiguracja działa (bez wysyłki SMS).
-                    Gdy pozostawisz pole puste, użyjemy ostatniej wiadomości otrzymanej od numeru obsługiwanego przez AI.
+                    Wyślij przykładową wiadomość do OpenAI, aby upewnić się, że konfiguracja działa (bez wysyłki SMS).
                     Możesz wkleić klucz API w polu powyżej i użyć go do testu bez zapisywania.
                   </p>
 
@@ -486,281 +479,248 @@
               </div>
             </div>
           </div>
-
-          <div class="col-lg-7">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-white border-0 pb-0">
-                <p class="text-uppercase text-muted fs-6 mb-1">Podgląd konwersacji</p>
-                <h2 class="h5 mb-0">Historia czatu z AI</h2>
-              </div>
-              <div class="card-body d-flex flex-column chat-shell">
-                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
-                  <div class="small text-muted">
-                    Rozmowa z:
-                    <strong id="ai-conversation-participant">Brak skonfigurowanego numeru</strong>
-                  </div>
-                  <div class="small">
-                    <span class="badge bg-light text-muted border">Tryb tylko do podglądu</span>
-                  </div>
-                </div>
-                <div class="small text-muted mb-2">
-                  Wyświetlane są wiadomości z historii rozmowy z wybranym numerem obsługiwanym przez AI. Nowe wpisy pojawiają się automatycznie po zapisaniu konfiguracji.
-                </div>
-                <div id="ai-conversation" class="chat-thread chat-thread--ai">
-                  <div class="text-center text-muted py-4">Brak danych. Skonfiguruj AI i wybierz numer rozmówcy.</div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       <div class="tab-pane fade" id="tab-news" role="tabpanel" aria-labelledby="tab-news-btn" tabindex="0">
+        
+        <!-- Nagłówek sekcji z akcjami -->
+        <div class="news-section-header mb-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h1 class="news-section-title">Baza wiedzy FAISS</h1>
+              <p class="news-section-subtitle mb-0">Zarządzaj newsami i bazą wektorową AI</p>
+            </div>
+            <div class="news-quick-actions">
+              <div class="news-action-wrapper">
+                <button class="btn btn-primary" id="news-scrape-btn">
+                  <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="news-scrape-spinner"></span>
+                  <i class="bi bi-cloud-arrow-down me-1"></i>Pobierz newsy
+                </button>
+                <!-- Dynamiczny dymek logów -->
+                <div class="news-log-bubble d-none" id="news-log-bubble">
+                  <div class="news-log-bubble__arrow"></div>
+                  <div class="news-log-bubble__header">
+                    <div class="news-log-bubble__title">
+                      <span class="news-log-bubble__icon"><i class="bi bi-terminal-fill"></i></span>
+                      <span>Log operacji</span>
+                    </div>
+                    <div class="news-log-bubble__actions">
+                      <div class="news-log-bubble__status" id="news-log-bubble-status">
+                        <span class="news-log-bubble__dot"></span>
+                        <span id="news-log-bubble-status-text">Oczekuje</span>
+                      </div>
+                      <button class="news-log-bubble__toggle" id="news-log-bubble-toggle" title="Zwiń/rozwiń">
+                        <i class="bi bi-chevron-up"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="news-log-bubble__collapsible" id="news-log-bubble-collapsible">
+                    <div class="news-log-bubble__progress">
+                      <div class="news-log-bubble__progress-bar" id="news-log-progress-bar"></div>
+                    </div>
+                    <div class="news-log-bubble__content" id="news-log-bubble-content">
+                      <div class="news-log-bubble__message" id="news-log-bubble-message">Gotowy do operacji...</div>
+                      <div class="news-log-bubble__categories" id="news-log-bubble-categories"></div>
+                    </div>
+                    <div class="news-log-bubble__footer">
+                      <button class="btn btn-sm btn-outline-danger d-none" id="news-scrape-stop-btn">
+                        <i class="bi bi-stop-circle me-1"></i>Zatrzymaj
+                      </button>
+                      <button class="btn btn-sm btn-ghost" id="news-log-bubble-close">
+                        <i class="bi bi-x-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-outline-secondary" id="news-faiss-status-refresh-btn">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="news-status-bar mb-4">
+          <div class="news-status-item">
+            <span class="news-status-label">Status</span>
+            <span class="news-status-badge" id="news-faiss-status-pill">Ładowanie...</span>
+          </div>
+          <div class="news-status-divider"></div>
+          <div class="news-status-item">
+            <span class="news-status-label">Wektory</span>
+            <span class="news-status-value" id="news-faiss-vectors">0</span>
+          </div>
+          <div class="news-status-divider"></div>
+          <div class="news-status-item">
+            <span class="news-status-label">Model</span>
+            <span class="news-status-value" id="news-faiss-embedding">—</span>
+          </div>
+          <div class="news-status-divider"></div>
+          <div class="news-status-item">
+            <span class="news-status-label">Aktualizacja</span>
+            <span class="news-status-value" id="news-faiss-status-updated">—</span>
+          </div>
+          <div class="news-status-actions ms-auto">
+            <button class="btn btn-sm btn-outline-secondary" id="news-faiss-backup-btn" title="Pobierz backup">
+              <i class="bi bi-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" id="news-faiss-restore-btn" title="Wczytaj backup">
+              <i class="bi bi-upload"></i>
+            </button>
+            <input type="file" class="d-none" id="news-faiss-restore-input" accept=".zip">
+          </div>
+        </div>
+
         <div class="row g-4">
-          <div class="col-12">
-            <div class="card shadow-sm border-0">
-              <div class="card-header bg-white border-0 pb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div>
-                  <p class="text-uppercase text-muted fs-6 mb-1">FAISS + OpenAI</p>
-                  <h2 class="h5 mb-0">Status bazy wiedzy</h2>
-                </div>
-                <div class="d-flex flex-wrap gap-2">
-                  <button class="btn btn-outline-secondary btn-sm" id="news-faiss-status-refresh-btn">Odśwież status</button>
-                  <button class="btn btn-outline-primary btn-sm" id="news-faiss-quick-test-btn">Szybki test</button>
-                  <button class="btn btn-outline-secondary btn-sm" id="news-faiss-backup-btn">Pobierz backup</button>
-                  <button class="btn btn-outline-secondary btn-sm" id="news-faiss-restore-btn">Wczytaj backup</button>
-                  <input type="file" class="d-none" id="news-faiss-restore-input" accept=".zip">
-                </div>
-                <small class="text-muted d-block mt-2" id="news-faiss-backup-status">Backup: oczekiwanie...</small>
-              </div>
-              <div class="card-body">
-                <div class="row g-3 align-items-center">
-                  <div class="col-md-4">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                      <span class="badge bg-secondary-subtle text-secondary-emphasis" id="news-faiss-status-pill">Ładowanie...</span>
-                      <small class="text-muted" id="news-faiss-status-updated">—</small>
-                    </div>
-                    <div class="small text-muted" id="news-faiss-status-meta">Ścieżka: —</div>
-                    <div class="small text-muted" id="news-faiss-status-size">Rozmiar: —</div>
-                  </div>
-                  <div class="col-md-4">
-                    <ul class="list-unstyled small mb-0">
-                      <li>Embedding: <strong id="news-faiss-embedding">—</strong></li>
-                      <li>Chat model: <strong id="news-faiss-chat">—</strong></li>
-                      <li>Wektory w indeksie: <strong id="news-faiss-vectors">0</strong></li>
-                    </ul>
-                  </div>
-                  <div class="col-md-4 text-md-end">
-                    <div class="small text-muted">Plik indeksu: <span id="news-faiss-index-path">—</span></div>
-                    <div class="small text-muted">Snapshot dokumentów: <span id="news-faiss-snapshot">—</span></div>
-                  </div>
-                </div>
-                <div class="alert alert-danger d-none mt-3" id="news-faiss-status-error"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-white border-0 pb-0">
-                <p class="text-uppercase text-muted fs-6 mb-1">News / RAG</p>
-                <h2 class="h5 mb-0">Dodaj odbiorce powiadomień</h2>
-              </div>
-              <div class="card-body">
-                <form id="news-add-recipient-form" novalidate>
-                  <div class="mb-3">
-                    <label for="news-recipient-phone" class="form-label">Numer telefonu</label>
-                    <input type="tel" class="form-control" id="news-recipient-phone" placeholder="np. +48123456789" required>
-                    <div class="invalid-feedback">Podaj numer w formacie E.164.</div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="news-recipient-time" class="form-label">Godzina wysyłki (24h)</label>
-                    <input type="time" class="form-control" id="news-recipient-time" value="08:00" required>
-                    <div class="form-text">Powiadomienie zostanie wysłane o wybranej godzinie</div>
-                  </div>
-
-                  <div class="mb-3">
-                    <label for="news-recipient-prompt" class="form-label">Prompt dla AI</label>
-                    <textarea class="form-control" id="news-recipient-prompt" rows="3" required>{{ news_all_categories_prompt }}</textarea>
-                    <div class="form-text">Opisz jak AI ma wygenerować wiadomość</div>
-                  </div>
-
-                  <div class="form-check form-switch mb-4">
-                    <input class="form-check-input" type="checkbox" id="news-recipient-allcat" checked>
-                    <label class="form-check-label" for="news-recipient-allcat">
-                      Użyj profesjonalnego raportu dla wszystkich kategorii
-                    </label>
-                    <div class="form-text">
-                      Zablokuje prompt i użyje gotowego wzorca opisującego każdą kategorię osobno.
+          <!-- Lewa kolumna: Pliki + Skrapowanie -->
+          <div class="col-lg-5">
+            <!-- Pobrane pliki -->
+            <div class="news-panel mb-4">
+              <div class="news-panel-header">
+                <h3 class="news-panel-title">
+                  <i class="bi bi-folder2 me-2"></i>Pobrane kategorie
+                </h3>
+                <div class="news-panel-actions">
+                  <div class="news-action-wrapper news-action-wrapper--small">
+                    <button class="btn btn-sm btn-success" id="news-build-index-btn" title="Zbuduj indeks FAISS">
+                      <span class="spinner-border spinner-border-sm d-none" id="news-build-index-spinner"></span>
+                      <i class="bi bi-lightning-charge"></i>
+                    </button>
+                    <!-- Dymek logów dla budowania indeksu -->
+                    <div class="news-log-bubble news-log-bubble--compact d-none" id="news-build-log-bubble">
+                      <div class="news-log-bubble__arrow"></div>
+                      <div class="news-log-bubble__header">
+                        <div class="news-log-bubble__title">
+                          <span class="news-log-bubble__icon news-log-bubble__icon--success"><i class="bi bi-lightning-charge-fill"></i></span>
+                          <span>Budowanie FAISS</span>
+                        </div>
+                        <div class="news-log-bubble__status" id="news-build-log-status">
+                          <span class="news-log-bubble__dot"></span>
+                          <span id="news-build-log-status-text">Oczekuje</span>
+                        </div>
+                      </div>
+                      <div class="news-log-bubble__progress">
+                        <div class="news-log-bubble__progress-bar" id="news-build-progress-bar"></div>
+                      </div>
+                      <div class="news-log-bubble__content" id="news-build-log-content">
+                        <div class="news-log-bubble__message" id="news-build-log-message">Gotowy...</div>
+                        <div class="news-log-bubble__steps" id="news-build-log-steps"></div>
+                      </div>
                     </div>
                   </div>
-
-                  <button type="submit" class="btn btn-primary">
-                    <span class="spinner-border spinner-border-sm me-2 d-none" id="news-add-spinner"></span>
-                    Dodaj odbiorce
+                  <button class="btn btn-sm btn-outline-secondary" id="news-files-refresh-btn" title="Odśwież">
+                    <i class="bi bi-arrow-clockwise"></i>
                   </button>
-                </form>
+                  <button class="btn btn-sm btn-outline-danger" id="news-files-delete-all-btn" title="Usuń wszystkie">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="news-panel-body">
+                <div id="news-files-grid">
+                  <div class="news-files-empty-state" id="news-files-empty">
+                    <i class="bi bi-inbox"></i>
+                    <span>Brak pobranych plików</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-6">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
-                <div>
-                  <p class="text-uppercase text-muted fs-6 mb-1">Menedżer</p>
-                  <h2 class="h5 mb-0">Aktywni odbiorcy (<span id="news-recipients-count">0</span>)</h2>
-                </div>
-                <button class="btn btn-sm btn-outline-secondary" id="news-recipients-refresh-btn">
-                  <i class="bi bi-arrow-clockwise"></i>
+          <!-- Prawa kolumna: Testowanie -->
+          <div class="col-lg-7">
+            <div class="news-panel news-panel-query">
+              <div class="news-panel-header">
+                <h3 class="news-panel-title">
+                  <i class="bi bi-chat-dots me-2"></i>Testuj zapytania
+                </h3>
+                <button class="btn btn-sm btn-outline-primary" id="news-faiss-quick-test-btn">
+                  <i class="bi bi-lightning me-1"></i>Szybki test
                 </button>
               </div>
-              <div class="card-body">
-                <div id="news-recipients-list">
-                  <p class="text-muted text-center py-4">Brak odbiorców</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-7">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-white border-0 pb-0">
-                <p class="text-uppercase text-muted fs-6 mb-1">Test FAISS</p>
-                <h2 class="h5 mb-0">Testuj zapytania do bazy newsów</h2>
-              </div>
-              <div class="card-body">
-                <p class="small text-muted">Zadaj pytanie do bazy FAISS aby sprawdzić jak AI odpowiada na podstawie zeskrapowanych newsów.</p>
-                
-                <div class="mb-3">
-                  <label for="news-faiss-query" class="form-label">Zapytanie testowe</label>
-                  <textarea class="form-control" id="news-faiss-query" rows="3" placeholder="np. Jakie są najważniejsze informacje ekonomiczne?"></textarea>
-                  <div class="form-text">Wpisz pytanie lub prompt, a AI wygeneruje odpowiedź na podstawie newsów.</div>
-                </div>
-
-                <div class="form-check form-switch mb-3">
-                  <input class="form-check-input" type="checkbox" id="news-faiss-allcat">
-                  <label class="form-check-label" for="news-faiss-allcat">
-                    Profesjonalne streszczenie wszystkich kategorii
-                  </label>
-                  <div class="form-text">
-                    Używa gotowego promptu i funkcji pokrywającej każdą kategorię osobną sekcją.
-                  </div>
-                </div>
-
-                <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-                  <button type="button" class="btn btn-success" id="news-faiss-test-btn">
-                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
-                    Testuj FAISS
+              <div class="news-panel-body">
+                <div class="news-query-input">
+                  <textarea class="form-control" id="news-faiss-query" rows="2" placeholder="Zadaj pytanie do bazy newsów..."></textarea>
+                  <button type="button" class="btn btn-primary" id="news-faiss-test-btn">
+                    <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    <i class="bi bi-send"></i>
                   </button>
+                </div>
+
+                <div class="news-query-options">
+                  <label class="news-option-switch">
+                    <input type="checkbox" id="news-faiss-allcat">
+                    <span class="news-option-slider"></span>
+                    <span class="news-option-label">Streszczenie wszystkich kategorii</span>
+                  </label>
                 </div>
 
                 <div id="news-faiss-result" class="d-none">
-                  <div class="card bg-light border-0">
-                    <div class="card-body">
-                      <p class="text-muted small mb-2">Odpowiedź AI:</p>
-                      <div id="news-faiss-answer" class="text-dark" style="white-space: pre-wrap;"></div>
-                      <div class="mt-2 small text-muted">
-                        <span id="news-faiss-meta"></span>
-                      </div>
+                  <div class="news-result-card">
+                    <div class="news-result-header">
+                      <i class="bi bi-robot"></i>
+                      <span>Odpowiedź AI</span>
+                      <span class="news-result-meta" id="news-faiss-meta"></span>
+                    </div>
+                    <div class="news-result-content" id="news-faiss-answer"></div>
+                    <!-- Sekcja wysyłania SMS -->
+                    <div class="news-sms-section">
+                      <span class="news-sms-label"><i class="bi bi-send-fill me-2"></i>Wyślij jako SMS:</span>
+                      <input type="tel" class="form-control" id="news-sms-recipient" placeholder="+48..." pattern="\+?[0-9]{9,15}">
+                      <button type="button" class="btn btn-info" id="news-sms-send-btn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status"></span>
+                        <i class="bi bi-chat-dots me-1"></i>Wyślij SMS
+                      </button>
                     </div>
                   </div>
                 </div>
 
                 <div class="mt-3 d-none" id="news-faiss-snippets">
-                  <p class="text-muted small mb-2">Fragmenty użyte w odpowiedzi:</p>
-                  <div class="list-group small" id="news-faiss-snippets-list"></div>
+                  <details class="news-snippets-details">
+                    <summary>Źródła (<span id="news-faiss-snippets-count">0</span>)</summary>
+                    <div class="news-snippets-list" id="news-faiss-snippets-list"></div>
+                  </details>
                 </div>
-
-                <div class="mt-3 small text-muted">
-                  <div>Ostatnia budowa: <span id="news-last-build">—</span></div>
-                  <div>Ostatnie powiadomienie: <span id="news-last-notification">—</span></div>
-                </div>
+              </div>
+              <div class="news-panel-footer">
+                <span><i class="bi bi-clock me-1"></i>Ostatnia budowa: <strong id="news-last-build">—</strong></span>
+                <span><i class="bi bi-bell me-1"></i>Powiadomienie: <strong id="news-last-notification">—</strong></span>
               </div>
             </div>
           </div>
 
-          <div class="col-lg-5">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-white border-0 pb-0">
-                <p class="text-uppercase text-muted fs-6 mb-1">Skrapowanie + FAISS</p>
-                <h2 class="h5 mb-0">Uruchom pobieranie newsów</h2>
-              </div>
-              <div class="card-body">
-                <p class="small text-muted mb-3">Kliknij, aby pobrać kategorie Business Insider, zapisać pliki i odbudować bazę FAISS.</p>
-                <div class="d-flex align-items-center gap-2 mb-3">
-                  <button class="btn btn-success" id="news-scrape-btn">
-                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status" id="news-scrape-spinner"></span>
-                    Pobierz i zbuduj
-                  </button>
-                  <button class="btn btn-outline-danger d-none" id="news-scrape-stop-btn" title="Zatrzymaj skrapowanie">
-                    <i class="bi bi-stop-circle"></i> Zatrzymaj
-                  </button>
-                  <span class="badge bg-light text-muted border" id="news-scrape-status">Oczekuje</span>
-                </div>
-                <div class="alert alert-light border small d-none" id="news-scrape-log">
-                  <div id="news-scrape-log-text">Rozpoczynam skrapowanie kategorii...</div>
-                  <div id="news-scrape-categories" class="mt-2"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-lg-7">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
-                <div>
-                  <p class="text-uppercase text-muted fs-6 mb-1">Zapisane pliki</p>
-                  <h2 class="h5 mb-0">Kategorie po skrapowaniu</h2>
-                </div>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-success btn-sm" id="news-build-index-btn" title="Zbuduj indeks FAISS z istniejących plików">
-                    <span class="spinner-border spinner-border-sm me-1 d-none" role="status" id="news-build-index-spinner"></span>
-                    🔨 Zbuduj Indeks FAISS
-                  </button>
-                  <button class="btn btn-outline-danger btn-sm" id="news-files-delete-all-btn" title="Usuń wszystkie pliki">
-                    <i class="bi bi-trash3"></i> Usuń wszystkie
-                  </button>
-                  <button class="btn btn-outline-secondary btn-sm" id="news-files-refresh-btn"><i class="bi bi-arrow-clockwise"></i></button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="row g-3" id="news-files-grid">
-                  <div class="col-12 text-center text-muted py-4" id="news-files-empty">Brak plików. Uruchom skrapowanie, aby zobaczyć kafelki.</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
+          <!-- Tabela indeksów -->
           <div class="col-12">
-            <div class="card shadow-sm border-0">
-              <div class="card-header bg-white border-0 pb-0 d-flex justify-content-between align-items-center">
-                <div>
-                  <p class="text-uppercase text-muted fs-6 mb-1">Bazy FAISS</p>
-                  <h2 class="h5 mb-0">Wybierz aktywną bazę / podgląd</h2>
-                </div>
-                <div class="d-flex gap-2">
-                  <button class="btn btn-outline-secondary btn-sm" id="news-refresh-indices-btn">Odśwież</button>
-                  <span class="badge bg-light text-muted border" id="news-indices-count">0</span>
+            <div class="news-panel">
+              <div class="news-panel-header">
+                <h3 class="news-panel-title">
+                  <i class="bi bi-database me-2"></i>Indeksy FAISS
+                </h3>
+                <div class="news-panel-actions">
+                  <span class="news-count-badge" id="news-indices-count">0</span>
+                  <button class="btn btn-sm btn-outline-secondary" id="news-refresh-indices-btn">
+                    <i class="bi bi-arrow-clockwise"></i>
+                  </button>
                 </div>
               </div>
-              <div class="card-body">
-                <div class="alert alert-danger d-none" id="news-indices-error"></div>
+              <div class="news-panel-body p-0">
+                <div class="alert alert-danger m-3 d-none" id="news-indices-error"></div>
                 <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0" id="news-indices-table">
-                    <thead class="table-light">
+                  <table class="table news-table mb-0" id="news-indices-table">
+                    <thead>
                       <tr>
-                        <th scope="col">Nazwa</th>
-                        <th scope="col" class="text-nowrap">Utworzono</th>
-                        <th scope="col" class="text-nowrap">Rozmiar</th>
-                        <th scope="col" class="text-nowrap">Status</th>
-                        <th scope="col" class="text-nowrap">Akcje</th>
+                        <th>Nazwa</th>
+                        <th>Utworzono</th>
+                        <th>Rozmiar</th>
+                        <th>Status</th>
+                        <th class="text-end">Akcje</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
-                        <td colspan="5" class="text-center text-muted py-4">Brak danych.</td>
+                        <td colspan="5" class="text-center text-muted py-4">Brak indeksów</td>
                       </tr>
                     </tbody>
                   </table>
@@ -768,6 +728,14 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- Ukryte pola meta -->
+        <div class="d-none">
+          <span id="news-faiss-chat">—</span>
+          <span id="news-faiss-status-meta">—</span>
+          <span id="news-faiss-status-size">—</span>
+          <span id="news-faiss-backup-status">—</span>
         </div>
       </div>
 
@@ -959,16 +927,31 @@
       <div class="news-overlay d-none" id="news-file-overlay">
         <div class="news-overlay__backdrop"></div>
         <div class="news-overlay__panel">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <p class="text-uppercase text-muted fs-6 mb-1">Podgląd pliku</p>
-              <h3 class="h5 mb-0" id="news-overlay-title">—</h3>
-              <div class="small text-muted" id="news-overlay-meta">—</div>
+          <div class="news-overlay__header">
+            <div class="news-overlay__header-info">
+              <div class="news-overlay__category-icon" id="news-overlay-icon">
+                <i class="bi bi-newspaper"></i>
+              </div>
+              <div class="news-overlay__title-group">
+                <h3 id="news-overlay-title">Kategoria</h3>
+                <div class="news-overlay__meta" id="news-overlay-meta">
+                  <span class="news-overlay__meta-item"><i class="bi bi-file-text"></i><span id="news-overlay-articles">0</span> artykułów</span>
+                  <span class="news-overlay__meta-item"><i class="bi bi-hdd"></i><span id="news-overlay-size">0 KB</span></span>
+                  <span class="news-overlay__meta-item"><i class="bi bi-clock"></i><span id="news-overlay-updated">—</span></span>
+                </div>
+              </div>
             </div>
-            <button class="btn btn-outline-secondary btn-sm" id="news-overlay-close-btn">Zamknij</button>
+            <div class="news-overlay__actions">
+              <button class="news-overlay__close-btn" id="news-overlay-close-btn" title="Zamknij">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </div>
           </div>
           <div class="news-overlay__content" id="news-overlay-content">
-            <div class="text-center text-muted py-4">Wybierz kafelek, aby zobaczyć dane.</div>
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-newspaper fs-1 d-block mb-3 text-muted"></i>
+              <p>Wybierz kategorię, aby zobaczyć artykuły.</p>
+            </div>
           </div>
         </div>
       </div>

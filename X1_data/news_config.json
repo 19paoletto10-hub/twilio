@@ -13,7 +13,7 @@
       "use_all_categories": true
     }
   ],
-  "updated_at": "2025-12-27T02:41:54.342649Z",
-  "last_build_at": "2025-12-27T02:41:37.009682Z",
+  "updated_at": "2025-12-27T06:53:34.438561Z",
+  "last_build_at": "2025-12-27T06:53:34.438537Z",
   "active_index": "faiss_openai_index"
 }
