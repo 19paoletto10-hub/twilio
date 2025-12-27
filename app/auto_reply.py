@@ -208,6 +208,58 @@ def start_auto_reply_worker(app: Flask, force_restart: bool = False) -> None:
                             app.logger.debug(
                                 "/news command received but listener is disabled"
                             )
+                            disabled_msg = "Funkcja /news jest chwilowo niedostępna."
+                            origin_number = to_number or twilio_client.settings.default_from
+                            if not origin_number:
+                                app.logger.error("/news disabled notice: No origin number configured")
+                                continue
+                            if not from_number:
+                                app.logger.error("/news disabled notice: Missing recipient number")
+                                continue
+                            try:
+                                message = twilio_client.send_chunked_sms(
+                                    from_=origin_number,
+                                    to=from_number,  # type: ignore[arg-type]
+                                    body=disabled_msg,
+                                )
+                                if message.get("success"):
+                                    if sid:
+                                        processed_sids.append(sid)
+                                    for msg_sid in message.get("sids", []):
+                                        insert_message(
+                                            direction="outbound",
+                                            sid=msg_sid,
+                                            to_number=from_number,
+                                            from_number=origin_number,
+                                            body=disabled_msg,
+                                            status="news-disabled",
+                                        )
+                                    app.logger.info(
+                                        "/news disabled notice sent to %s", from_number
+                                    )
+                                else:
+                                    app.logger.error("/news disabled notice failed: %s", message.get("error"))
+                                    insert_message(
+                                        direction="outbound",
+                                        sid=None,
+                                        to_number=from_number,
+                                        from_number=origin_number,
+                                        body=disabled_msg,
+                                        status="failed",
+                                        error=message.get("error"),
+                                    )
+                            except Exception as exc:
+                                app.logger.exception("/news disabled notice send error: %s", exc)
+                                insert_message(
+                                    direction="outbound",
+                                    sid=None,
+                                    to_number=from_number,
+                                    from_number=origin_number,
+                                    body=disabled_msg,
+                                    status="failed",
+                                    error=str(exc),
+                                )
+                            continue
 
                     # ─────────────────────────────────────────────────────────
                     # Standard AI/Auto-reply processing

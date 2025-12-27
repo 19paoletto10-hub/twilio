@@ -948,6 +948,18 @@ def inbound_message():
                     app.logger.exception("Failed to send /news help: %s", exc)
             # Listener /news obsłużył komendę
             return Response("OK", mimetype="text/plain")
+        disabled_msg = "Funkcja /news jest chwilowo niedostępna."
+        try:
+            message = twilio_client.send_reply_to_inbound(
+                inbound_from=from_number,
+                inbound_to=to_number,
+                body=disabled_msg,
+            )
+            _persist_twilio_message(message)
+            app.logger.info("/news listener disabled notice sent to %s", from_number)
+        except Exception as exc:
+            app.logger.exception("Failed to send /news disabled notice: %s", exc)
+        return Response("OK", mimetype="text/plain")
 
     # Dla wszystkich innych wiadomości (nie /news) - sprawdź AI i auto-reply
     # Listener * kontroluje tylko auto-reply, AI działa niezależnie gdy włączone
