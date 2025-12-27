@@ -6,108 +6,237 @@
 ![Python](https://img.shields.io/badge/python-3.10+-green.svg)
 ![Flask](https://img.shields.io/badge/flask-3.x-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
+![Type Safety](https://img.shields.io/badge/pylance-0%20errors-brightgreen.svg)
+![Docker](https://img.shields.io/badge/docker-ready-blue.svg)
 
-**Profesjonalny hub SMS z panelem WWW, AI auto-reply i wyszukiwaniem semantycznym (FAISS)**
+### 🚀 Enterprise-Grade SMS Communication Hub
 
-[Dokumentacja](#dokumentacja-mdhtml) • [Szybki start](#szybki-start-lokalnie) • [Docker](#uruchomienie-w-dockerze) • [API](#cli--kontrola-z-konsoli)
+**Panel WWW • AI Auto-Reply • Semantic Search (FAISS) • Multi-SMS Campaigns**
+
+[🏃 Quick Start](#-5-minutowy-quick-start) • [📖 Dokumentacja](#-dokumentacja) • [🐳 Docker](#-docker) • [🔧 Troubleshooting](#-troubleshooting)
 
 </div>
 
 ---
 
-## ✨ Highlights
+## 📋 Co to jest?
 
-- 🔒 **Type Safety** – profesjonalny kod z pełną obsługą typów i błędów
-- 🎧 **Listeners** – interaktywne komendy SMS z odpowiedziami z bazy wiedzy
-- 🔐 **Secrets Manager** – centralne zarządzanie kluczami API z hot reload
-- 💬 **Nowoczesny czat** – animowane dymki, ikony statusu, responsywny design
-- 🤖 **AI Auto-reply** – OpenAI GPT dla inteligentnych odpowiedzi
-- 📰 **RAG/FAISS** – semantyczne wyszukiwanie i podsumowania newsów
-- 📱 **Multi-SMS** – batch wysyłka do wielu odbiorców
-- 🐳 **Docker Ready** – compose dla dev/prod/SSL
+**Twilio Chat App** to kompletne rozwiązanie do zarządzania komunikacją SMS, które łączy:
+
+| Moduł | Opis | Status |
+|-------|------|--------|
+| 📱 **Panel WWW** | Dashboard z historią, statystykami i czatem 1:1 | ✅ Production |
+| 🤖 **AI Auto-Reply** | Inteligentne odpowiedzi przez OpenAI GPT | ✅ Production |
+| 📰 **RAG/FAISS** | Baza wiedzy z semantic search dla komend `/news` | ✅ Production |
+| 📨 **Multi-SMS** | Kampanie batch do wielu odbiorców | ✅ Production |
+| 🔐 **Secrets Manager** | Hot-reload kluczy API bez restartu | ✅ Production |
+| 🎧 **Listeners** | Interaktywne komendy SMS (`/news`, custom) | ✅ Production |
 
 ---
 
-> Zaprojektowana aplikacja to panel do **zarządzania komunikacją SMS** (Twilio), który umożliwia wysyłkę pojedynczych i masowych wiadomości, automatyczne odpowiedzi oraz cykliczne przypomnienia z jednego miejsca. Zawiera **moduł AI** oparty o OpenAI, który może prowadzić rozmowy, generować treści oraz tworzyć raporty/summaries na podstawie zebranych danych. Dodatkowo wykorzystuje **bazę wiedzy FAISS (RAG)** zasilaną skrapowanymi newsami, dzięki czemu potrafi odpowiadać na pytania i wysyłać odbiorcom uporządkowane powiadomienia tematyczne.
+## ✨ Kluczowe wyróżniki
+
+<table>
+<tr>
+<td width="50%">
+
+### 🔒 Enterprise Quality
+- **Type Safety** – zero błędów Pylance w strict mode
+- **Defensive Programming** – walidacja na każdym poziomie
+- **Professional Docstrings** – pełna dokumentacja kodu
+- **Error Handling** – graceful degradation bez crashy
+
+</td>
+<td width="50%">
+
+### ⚡ Developer Experience
+- **5-minutowy setup** – od zera do działającej aplikacji
+- **Hot Reload** – zmiany konfiguracji bez restartu
+- **Docker Ready** – compose dla dev/prod/SSL
+- **CI/CD** – GitHub Actions z auto-deploy
+
+</td>
+</tr>
+<tr>
+<td>
+
+### 🧠 Inteligentna komunikacja
+- **AI Context** – historia rozmów w kontekście GPT
+- **Semantic Search** – FAISS embeddings dla /news
+- **Smart Chunking** – auto-podział długich wiadomości
+- **Deduplication** – ochrona przed duplikatami
+
+</td>
+<td>
+
+### 📊 Operacyjna gotowość
+- **Healthcheck API** – monitoring stanu systemu
+- **Backup/Restore** – export ZIP z manifestem
+- **Logging** – strukturalne logi z poziomami
+- **Metrics** – statystyki w real-time
+
+</td>
+</tr>
+</table>
+
 ---
 
-## Spis treści
-- [TL;DR / kontekst biznesowy](#tldr--kontekst-biznesowy)
-- [Dokumentacja (MD/HTML)](#dokumentacja-mdhtml)
-- [Opis systemu](#opis-systemu)
-- [Architektura i komponenty](#architektura-i-komponenty)
-- [Szybki start (lokalnie)](#szybki-start-lokalnie)
-- [Uruchomienie w Dockerze](#uruchomienie-w-dockerze)
-- [Uruchomienie w GitHub Codespaces](#uruchomienie-w-github-codespaces)
-- [Konfiguracja środowiska (.env)](#konfiguracja-środowiska-env)
-- [Dane i backup](#dane-i-backup)
+## 📚 Spis treści
+
+<table>
+<tr>
+<td width="50%">
+
+**🚀 Pierwsze kroki**
+- [Quick Start (5 min)](#-5-minutowy-quick-start)
+- [Konfiguracja .env](#konfiguracja-środowiska-env)
+- [Docker](#uruchomienie-w-dockerze)
+- [GitHub Codespaces](#uruchomienie-w-github-codespaces)
+
+**📖 Funkcjonalność**
 - [Panel WWW](#panel-www)
 - [News / FAISS / RAG](#news--faiss--rag)
-- [CLI – kontrola z konsoli](#cli--kontrola-z-konsoli)
-- [Operacyjny runbook (prod)](#operacyjny-runbook-prod)
-- [Dla deweloperów](#dla-deweloperów)
-- [Debugowanie i dobre praktyki](#debugowanie-i-dobre-praktyki)
+- [CLI](#cli--kontrola-z-konsoli)
+
+</td>
+<td width="50%">
+
+**🔧 Operacje**
+- [Troubleshooting](#-troubleshooting)
+- [API Reference](#-api-quick-reference)
+- [Runbook produkcyjny](#operacyjny-runbook-prod)
+- [Backup i dane](#dane-i-backup)
+
+**👨‍💻 Dla developerów**
+- [Architektura](#architektura-i-komponenty)
+- [Diagram systemu](#-diagram-architektury)
+- [Przewodnik deweloperski](#dla-deweloperów)
+
+</td>
+</tr>
+</table>
 
 ---
 
-## TL;DR / kontekst biznesowy
+## 🏃 5-minutowy Quick Start
 
-- Cel: spójny hub SMS (i WhatsApp, jeśli numer Twilio to wspiera) z prostym panelem www, automatycznymi odpowiedziami (szablon + AI), cykliczną dystrybucją newsów i prostym RAG opartym o lokalny FAISS.
-- Wartość: redukcja czasu obsługi klientów, możliwość szybkiego broadcastu streszczeń newsów, przewidywalne SLA dzięki workerom i SQLite (brak zewnętrznych baz).
-- Wymagania: konto Twilio (numery / Messaging Service), klucz OpenAI (dla AI i embeddings), Python 3.10+, sieć z dostępem do platform Twilio i OpenAI.
-- Kluczowe procesy: webhook inbound/status Twilio, worker auto-reply, worker przypomnień, scheduler newsów (RAG + SMS), panel do operacji ręcznych i diagnostyki.
+<table>
+<tr>
+<td width="33%">
 
-## Dokumentacja (MD/HTML)
+**1️⃣ Instalacja**
+```bash
+git clone https://github.com/\
+19paoletto10-hub/twilio.git
+cd twilio
 
-Repo zawiera kilka poziomów dokumentacji – zależnie od tego, czy jesteś operatorem, devem czy robisz wdrożenie:
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
+</td>
+<td width="33%">
+
+**2️⃣ Konfiguracja**
+```bash
+cp .env.example .env
+
+# Edytuj .env:
+TWILIO_ACCOUNT_SID=ACxxx
+TWILIO_AUTH_TOKEN=xxx
+TWILIO_DEFAULT_FROM=+48...
+```
+
+</td>
+<td width="33%">
+
+**3️⃣ Uruchomienie**
+```bash
+python run.py
+
+# Panel:
+# http://localhost:3000
+
+# Health check:
+curl localhost:3000/api/health
+```
+
+</td>
+</tr>
+</table>
+
+> 💡 **Następny krok:** Skonfiguruj webhooki Twilio na `PUBLIC_BASE_URL/twilio/inbound` i `/twilio/status`
+
+---
+
+## 📋 TL;DR / kontekst biznesowy
+
+| Aspekt | Opis |
+|--------|------|
+| **Cel** | Spójny hub SMS z panelem WWW, automatycznymi odpowiedziami (AI), dystrybucją newsów (RAG) |
+| **Wartość** | Redukcja czasu obsługi klientów, broadcast podsumowań newsów, przewidywalne SLA |
+| **Wymagania** | Konto Twilio, klucz OpenAI (opcjonalnie), Python 3.10+, Docker (opcjonalnie) |
+| **Procesy** | Webhook Twilio → Worker auto-reply → Scheduler newsów → Panel do diagnostyki |
+
+## 📖 Dokumentacja
+
+<table>
+<tr>
+<td width="50%">
+
+**📚 Przewodniki**
 | Dokument | Opis |
 |----------|------|
-| [README.md](README.md) | Start i uruchomienie (ten plik) |
-| [docs/docker-guide.md](docs/docker-guide.md) | **Kompletny przewodnik Docker** – od instalacji po produkcję z SSL |
-| [docs/developer-guide.md](docs/developer-guide.md) | Przewodnik dla deweloperów – architektura, baza danych, API |
-| [docs/architecture-notes.md](docs/architecture-notes.md) | Przegląd architektury i modułów |
-| [docs/changes-and-capabilities.md](docs/changes-and-capabilities.md) | Zmiany i capability map + skrócony runbook |
-| [docs/app-overview.html](docs/app-overview.html) | Przegląd rozwiązania w HTML (lekki, gotowy do PDF) |
-| [deploy/releases/full_documentation.html](deploy/releases/full_documentation.html) | Pełna dokumentacja (HTML, responsywna, przygotowana pod druk/PDF) |
-| [deploy/releases/](deploy/releases/) | Release notes (MD/HTML) dla każdej wersji |
-| [release/](release/) | Release bundle i manifesty paczek |
+| [docker-guide.md](docs/docker-guide.md) | Docker od A do Z |
+| [developer-guide.md](docs/developer-guide.md) | Architektura, API, DB |
+| [architecture-notes.md](docs/architecture-notes.md) | Przegląd modułów |
 
-### Skrypty pomocnicze
+</td>
+<td width="50%">
 
-| Skrypt | Opis |
-|--------|------|
-| `scripts/backup_db.sh` | Backup bazy SQLite (Docker + lokalnie) |
-| `scripts/prepare_release_bundle.sh` | Budowanie paczki release |
-| `scripts/demo_send.sh` | Wysyłka testowego SMS |
+**📋 Release**
+| Dokument | Opis |
+|----------|------|
+| [README.html](README.html) | 🆕 Interaktywny HTML |
+| [deploy/releases/](deploy/releases/) | Release notes (MD/HTML) |
+| [CHANGELOG.md](CHANGELOG.md) | Historia zmian |
 
-## Najważniejsze wyróżniki produktu
+</td>
+</tr>
+</table>
 
-- **Jedno źródło prawdy dla komunikacji** – webhooki Twilio, panel www i CLI korzystają z tej samej bazy SQLite; pełna historia jest dostępna w dashboardzie i w `manage.py`.
-- **Tryby odpowiedzi 1:1** – klasyczny auto‑reply, AI auto‑reply (OpenAI) oraz fallbackowy bot; przepinanie trybów odbywa się jednym przyciskiem i natychmiastowo aktualizuje worker.
-- **News / RAG na sterydach** – scheduler newsów, scraper kategorii Business Insider, indeks FAISS, tryb podsumowania wszystkich kategorii, testowe zapytania i ręczna wysyłka.
-- **Backup FAISS klasy enterprise** – eksport ZIP z manifestem, import z walidacją rozmiaru, automatyczne odtwarzanie plików oraz pełne czyszczenie indeksu wraz z raportem `removed/missing/failed` (UI i API).
-- **Gotowość do operacji** – docker-compose (dev/prod), healthcheck, rozpisany runbook i checklisty post‑deploy, kompatybilność z Codespaces.
-- **Przejrzysty panel** – zakładki dla Wiadomości, Auto‑reply, AI, Przypomnień, News, **Listeners** oraz Multi‑SMS (batch); skeletony ładowania, toasty, badge statusów i konsekwentne strefy czasowe (lokalny czas w każdej tabeli, także w wykazie indeksów FAISS).
-- **Interaktywne komendy SMS (Listeners)** – odbiorcy mogą wysłać `/news [pytanie]` i otrzymać odpowiedź z bazy wiedzy FAISS; dynamiczne włączanie/wyłączanie komend z panelu.
-- **Multi‑SMS worker** – kolejkuje wysyłki do wielu numerów (free‑form input, deduplikacja, walidacja E.164), zapisuje każdy wynik w SQLite i przetwarza w tle w jednym wątku na proces.
-- **Bezpieczna wysyłka długich treści** – wiadomości generowane przez AI/News są automatycznie dzielone na części (domyślnie 1500 znaków), aby uniknąć limitu Twilio dla pojedynczego SMS.
+**Skrypty:** `scripts/backup_db.sh` (backup SQLite) • `scripts/demo_send.sh` (test SMS) • `scripts/prepare_release_bundle.sh` (paczka release)
 
-## Opis systemu
+## 🌟 Wyróżniki produktu
 
-Aplikacja realizuje kompletny „hub SMS” dla jednego konta Twilio:
+<table>
+<tr>
+<td width="50%">
 
-- przyjmuje webhooki z Twilio (`/twilio/inbound`, `/twilio/status`),
-- zapisuje wszystkie wiadomości w SQLite,
-- pozwala z panelu www prowadzić konwersacje 1:1,
-- obsługuje trzy tryby odpowiedzi: klasyczny auto‑reply, AI auto‑reply (OpenAI) oraz prostego chat‑bota,
-- potrafi cyklicznie wysyłać newsy / podsumowania (RAG) opierając się o lokalny indeks FAISS.
+- 🔗 **Jedno źródło prawdy** – webhooki, panel i CLI korzystają z tej samej bazy SQLite
+- 🔄 **Tryby odpowiedzi** – klasyczny template, AI GPT, fallback bot
+- 📰 **RAG na sterydach** – scheduler newsów, scraper, FAISS, cross-category
+- 💾 **Enterprise Backup** – eksport ZIP z manifestem, import z walidacją
 
-System jest „lekki” (Flask + SQLite), ale architektura jest modularna i gotowa na produkcję (Docker, docker‑compose, osobne workery, logowanie).
+</td>
+<td width="50%">
+
+- 🎧 **Listeners** – interaktywne komendy SMS (`/news [pytanie]`)
+- 📨 **Multi-SMS** – kampanie batch z deduplikacją i statusami
+- ✂️ **Smart Chunking** – auto-podział długich wiadomości (1500 znaków)
+- 🐳 **Docker Ready** – compose dla dev/prod/SSL
+
+</td>
+</tr>
+</table>
 
 ---
 
-## Architektura i komponenty
+## 📝 Opis systemu
+
+Aplikacja realizuje kompletny „hub SMS" dla konta Twilio: przyjmuje webhooki, zapisuje wiadomości w SQLite, prowadzi konwersacje 1:1 z panelu, obsługuje trzy tryby odpowiedzi (template, AI, bot) i cyklicznie wysyła newsy przez RAG/FAISS. System lekki (Flask + SQLite), architektura modularna i gotowa na produkcję.
+Aplikacja realizuje kompletny „hub SMS" dla konta Twilio: przyjmuje webhooki, zapisuje wiadomości w SQLite, prowadzi konwersacje 1:1 z panelu, obsługuje trzy tryby odpowiedzi (template, AI, bot) i cyklicznie wysyła newsy przez RAG/FAISS. System lekki (Flask + SQLite), architektura modularna i gotowa na produkcję.
 
 Najważniejsze moduły:
 
@@ -137,64 +266,6 @@ Dane:
 - snapshot dokumentów RAG: `X1_data/documents.json`,
 - pliki scrapów (surowe teksty / JSON): `X1_data/business_insider_scrapes/`.
 
----
-
-## Szybki start (lokalnie)
-
-Minimalne wymagania (workstation / dev):
-
-- Python 3.10+,
-- konto Twilio z numerem SMS lub Messaging Service,
-- (opcjonalnie) konto OpenAI z aktywnym kluczem API dla AI / embeddings.
-
-Procedura:
-
-```bash
-# 1) środowisko
-python -m venv venv
-source venv/bin/activate              # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env                  # wypełnij wartości obowiązkowe
-
-# 2) uruchomienie w dev
-python run.py                         # lub: make run-dev
-```
-
-Adres panelu: http://0.0.0.0:3000
-
-> Reloader Flask jest wyłączony (`use_reloader=False`), aby nie startować workerów dwukrotnie i nie potrzebować drugiego uruchomienia komendy. Po zmianach kodu zrestartuj proces ręcznie.
-
-Po starcie skonfiguruj webhooki Twilio (Incoming i Status Callback) na `PUBLIC_BASE_URL/twilio/inbound` oraz `PUBLIC_BASE_URL/twilio/status`.
-
----
-
-## Konfiguracja środowiska (.env)
-
-Najważniejsze zmienne (pełna lista w `app/config.py`):
-
-```ini
-# Twilio
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_DEFAULT_FROM=+48123456789       # numer SMS w formacie E.164
-TWILIO_MESSAGING_SERVICE_SID=...       # (opcjonalnie) Messaging Service SID
-
-# OpenAI – AI auto-reply do rozmów SMS
-OPENAI_MODEL=gpt-4o-mini
-OPENAI_TEMPERATURE=0.7
-
-# OpenAI – News/FAISS (RAG)
-SECOND_OPENAI=sk-...
-SECOND_MODEL=gpt-4o-mini
-
-# Aplikacja
-APP_HOST=0.0.0.0
-APP_PORT=3000
-APP_DEBUG=true
-DB_PATH=data/app.db
-PUBLIC_BASE_URL=https://twoja-domena.pl
-TWILIO_VALIDATE_SIGNATURE=true         # w dev możesz ustawić false
-```
 
 ### Jak zdobyć i ustawić klucz OpenAI (SECOND_OPENAI)
 
@@ -550,26 +621,189 @@ make run-dev
 
 ---
 
-## Debugowanie i dobre praktyki
+## 🔧 Troubleshooting
 
-- **Webhooki Twilio**
-  - przy 403 w dev ustaw `TWILIO_VALIDATE_SIGNATURE=false` i korzystaj z tunelu (ngrok, Cloudflare Tunnel),
-  - sprawdzaj logi dla wpisów: `Inbound webhook hit...`, `Message status update...`.
+<details>
+<summary><strong>❌ Webhook zwraca 403 Forbidden</strong></summary>
 
-- **Auto‑reply / AI**
-  - brak odpowiedzi → upewnij się, że odpowiedni tryb jest włączony w panelu oraz że numer jest w formacie E.164,
-  - AI wymaga poprawnie ustawionego klucza (w panelu i/lub `.env`).
+**Przyczyna:** Twilio signature validation jest włączona, ale podpis nie pasuje.
 
-- **FAISS / News**
-  - brak wyników → sprawdź, czy indeks został zbudowany (scraping + build),
-  - jeśli ręcznie usuniesz pliki indeksu, aplikacja spróbuje go odbudować z `documents.json`.
+```bash
+# Development - wyłącz walidację
+TWILIO_VALIDATE_SIGNATURE=false
 
-- **Bezpieczeństwo**
-  - `.env` nigdy nie commitujemy do repozytorium,
-  - produkcyjny `PUBLIC_BASE_URL` powinien wskazywać na HTTPS za reverse proxy (nginx),
-  - w środowisku produkcyjnym trzymaj `APP_DEBUG=false` i włącz `TWILIO_VALIDATE_SIGNATURE`.
+# Production - ustaw poprawny PUBLIC_BASE_URL
+PUBLIC_BASE_URL=https://twoja-domena.com
+```
+
+**Checklist:**
+- ✅ Czy `PUBLIC_BASE_URL` zgadza się z adresem webhooków w konsoli Twilio?
+- ✅ Czy używasz HTTPS w produkcji?
+- ✅ Czy ngrok/tunnel URL jest aktualny?
+
+</details>
+
+<details>
+<summary><strong>❌ AI nie odpowiada na SMS</strong></summary>
+
+**Checklist:**
+1. ✅ Czy AI jest włączone w panelu → zakładka AI?
+2. ✅ Czy `OPENAI_API_KEY` jest ustawiony w `.env`?
+3. ✅ Czy `AI_TARGET_NUMBER` pasuje do numeru odbiorcy?
+4. ✅ Sprawdź logi: `docker compose logs -f | grep -i ai`
+
+**Test połączenia:**
+```bash
+curl -X POST http://localhost:3000/api/ai/test
+```
+
+</details>
+
+<details>
+<summary><strong>❌ /news nie zwraca wyników</strong></summary>
+
+**Przyczyna:** Indeks FAISS nie jest zbudowany lub jest pusty.
+
+**Rozwiązanie:**
+1. Przejdź do panelu → zakładka **News**
+2. Kliknij **"Pobierz i zbuduj"**
+3. Poczekaj na zakończenie (progress bar)
+4. Przetestuj w polu "Test FAISS"
+
+**API test:**
+```bash
+curl -X POST http://localhost:3000/api/news/test-faiss \
+  -H "Content-Type: application/json" \
+  -d '{"query": "test"}'
+```
+
+</details>
+
+<details>
+<summary><strong>❌ SMS nie są wysyłane</strong></summary>
+
+**Checklist:**
+- ✅ `TWILIO_ACCOUNT_SID` i `TWILIO_AUTH_TOKEN` poprawne
+- ✅ `TWILIO_DEFAULT_FROM` w formacie E.164 (`+48123456789`)
+- ✅ Lub `TWILIO_MESSAGING_SERVICE_SID` ustawiony
+- ✅ Sprawdź saldo na [console.twilio.com](https://console.twilio.com)
+
+**Test wysyłki:**
+```bash
+python manage.py send --to +48123456789 --body "Test"
+```
+
+</details>
+
+<details>
+<summary><strong>❌ Baza danych pusta po restarcie Docker</strong></summary>
+
+**Przyczyna:** Wolumeny nie są zamontowane.
+
+**Rozwiązanie:** Dodaj w `docker-compose.yml`:
+```yaml
+volumes:
+  - ./data:/app/data        # Baza SQLite
+  - ./X1_data:/app/X1_data  # Indeks FAISS
+```
+
+</details>
+
+<details>
+<summary><strong>❌ Port 3000 zajęty</strong></summary>
+
+```bash
+# Znajdź proces
+lsof -i :3000
+
+# Lub zmień port w .env
+APP_PORT=3001
+```
+
+</details>
 
 ---
 
-> Ten README jest utrzymywany jak kod – jeśli zmienisz coś w API, CLI albo strukturze FAISS, zaktualizuj dokumentację w tym pliku, żeby kolejny deweloper (a często: Ty za 3 miesiące) nie musiał odtwarzać kontekstu z historii gita.
+## 📊 API Quick Reference
+
+| Metoda | Endpoint | Opis |
+|--------|----------|------|
+| `GET` | `/api/health` | Status systemu i healthcheck |
+| `GET` | `/api/messages` | Lista wiadomości z filtrowaniem |
+| `POST` | `/api/messages/send` | Wyślij pojedynczy SMS |
+| `GET` | `/api/ai/config` | Konfiguracja AI auto-reply |
+| `POST` | `/api/ai/test` | Test połączenia z OpenAI |
+| `GET` | `/api/listeners` | Lista aktywnych listenerów |
+| `POST` | `/api/news/indices/build` | Buduj indeks FAISS |
+| `POST` | `/api/news/test-faiss` | Test zapytania RAG |
+| `GET` | `/api/news/faiss/export` | Eksport backup (ZIP) |
+| `POST` | `/api/news/faiss/import` | Import backup |
+| `GET` | `/api/news/faiss/status` | Status indeksu FAISS |
+
+Szczegółowa dokumentacja API: [docs/developer-guide.md](docs/developer-guide.md)
+
+---
+
+## 🏛️ Diagram architektury
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                         TWILIO CLOUD                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │ Inbound SMS │  │ Status Hook │  │ Messaging Service       │  │
+│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
+└─────────┼────────────────┼─────────────────────┼────────────────┘
+          │                │                     │
+          ▼                ▼                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      FLASK APPLICATION                          │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    webhooks.py                              ││
+│  │  /twilio/inbound  │  /twilio/status  │  /api/*             ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                              │                                  │
+│  ┌───────────┬───────────┬───┴───────┬─────────────┐           │
+│  │           │           │           │             │           │
+│  ▼           ▼           ▼           ▼             ▼           │
+│ ┌─────┐   ┌─────┐   ┌─────────┐   ┌─────┐   ┌──────────┐      │
+│ │ AI  │   │Auto │   │Listeners│   │News │   │ Multi    │      │
+│ │Reply│   │Reply│   │ /news   │   │Sched│   │ SMS      │      │
+│ └──┬──┘   └──┬──┘   └────┬────┘   └──┬──┘   └────┬─────┘      │
+│    │         │           │           │           │             │
+│    └─────────┴───────────┴───────────┴───────────┘             │
+│                          │                                      │
+│  ┌───────────────────────┴────────────────────────────────────┐│
+│  │                    twilio_client.py                        ││
+│  │  send_message()  │  send_chunked_sms()  │  send_reply()   ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+          │                              │
+          ▼                              ▼
+┌─────────────────────┐      ┌────────────────────────┐
+│    SQLite (data/)   │      │   FAISS (X1_data/)     │
+│  ├── messages       │      │  ├── index.faiss       │
+│  ├── ai_config      │      │  ├── documents.jsonl   │
+│  ├── listeners      │      │  └── articles.jsonl    │
+│  └── multi_sms      │      │                        │
+└─────────────────────┘      └────────────────────────┘
+```
+
+---
+
+## 🤝 Wsparcie i społeczność
+
+- 📖 **Dokumentacja HTML:** [README.html](README.html) - responsywna wersja z interaktywnym UI
+- 🐛 **Issues:** [github.com/19paoletto10-hub/twilio/issues](https://github.com/19paoletto10-hub/twilio/issues)
+- 📋 **Releases:** [github.com/19paoletto10-hub/twilio/releases](https://github.com/19paoletto10-hub/twilio/releases)
+- 📜 **Changelog:** [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [19paoletto10-hub](https://github.com/19paoletto10-hub)**
+
+© 2025 Twilio Chat App • MIT License
+
+</div>
 

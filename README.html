@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twilio Chat App - Dokumentacja</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-dim: #64748b;
+            --border: #334155;
+            
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-success: linear-gradient(135deg, #10b981, #059669);
+            --gradient-hero: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        
+        /* ========================================
+           NAVIGATION
+           ======================================== */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            padding: 0 2rem;
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+        
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--text);
+        }
+        
+        .nav-cta {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+        
+        /* ========================================
+           HERO SECTION
+           ======================================== */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 2rem 4rem;
+            background: var(--gradient-hero);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero-content {
+            max-width: 900px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-badges {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
+        }
+        
+        .badge-primary { border-color: var(--primary); color: var(--primary-light); }
+        .badge-success { border-color: var(--success); color: var(--success); }
+        .badge-info { border-color: var(--info); color: var(--info); }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto 2.5rem;
+        }
+        
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+        
+        .btn-outline:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+        
+        /* ========================================
+           SECTIONS
+           ======================================== */
+        section {
+            padding: 5rem 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .section-header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* ========================================
+           FEATURES GRID
+           ======================================== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15);
+        }
+        
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        
+        /* ========================================
+           QUICK START
+           ======================================== */
+        .quickstart {
+            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-card) 50%, var(--bg-dark) 100%);
+        }
+        
+        .quickstart-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .step {
+            position: relative;
+            padding-left: 4rem;
+        }
+        
+        .step-number {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+        
+        .step h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        /* ========================================
+           CODE BLOCKS
+           ======================================== */
+        pre {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        
+        code {
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            color: #e6edf3;
+        }
+        
+        .code-comment { color: #8b949e; }
+        .code-string { color: #a5d6ff; }
+        .code-keyword { color: #ff7b72; }
+        .code-variable { color: #ffa657; }
+        
+        /* ========================================
+           TROUBLESHOOTING
+           ======================================== */
+        .troubleshoot-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .troubleshoot-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .troubleshoot-header {
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: background 0.2s;
+        }
+        
+        .troubleshoot-header:hover {
+            background: var(--bg-hover);
+        }
+        
+        .troubleshoot-icon {
+            font-size: 1.25rem;
+        }
+        
+        .troubleshoot-title {
+            flex: 1;
+            font-weight: 600;
+        }
+        
+        .troubleshoot-toggle {
+            color: var(--text-muted);
+            transition: transform 0.3s;
+        }
+        
+        .troubleshoot-content {
+            padding: 0 1.5rem 1.5rem;
+            display: none;
+        }
+        
+        .troubleshoot-item.active .troubleshoot-content {
+            display: block;
+        }
+        
+        .troubleshoot-item.active .troubleshoot-toggle {
+            transform: rotate(180deg);
+        }
+        
+        /* ========================================
+           ARCHITECTURE
+           ======================================== */
+        .architecture-diagram {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            overflow-x: auto;
+        }
+        
+        .architecture-diagram pre {
+            background: transparent;
+            border: none;
+            padding: 0;
+            font-size: 0.75rem;
+            line-height: 1.4;
+        }
+        
+        /* ========================================
+           API TABLE
+           ======================================== */
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .api-table th {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 1rem 1.25rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--primary-light);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .api-table td {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+        
+        .api-table tr:hover td {
+            background: rgba(99, 102, 241, 0.05);
+        }
+        
+        .method-badge {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+        
+        .method-get { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .method-post { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .method-delete { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        
+        /* ========================================
+           FOOTER
+           ======================================== */
+        footer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-light);
+        }
+        
+        .footer-copy {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+        
+        /* ========================================
+           RESPONSIVE
+           ======================================== */
+        @media (max-width: 768px) {
+            nav {
+                padding: 0 1rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .hero {
+                padding: 5rem 1.5rem 3rem;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            section {
+                padding: 3rem 1.5rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .step {
+                padding-left: 3.5rem;
+            }
+            
+            .step-number {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* ========================================
+           ANIMATIONS
+           ======================================== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-logo">
+                <span class="nav-logo-icon">📱</span>
+                Twilio Chat App
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Funkcje</a></li>
+                <li><a href="#quickstart">Quick Start</a></li>
+                <li><a href="#architecture">Architektura</a></li>
+                <li><a href="#api">API</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+            </ul>
+            <a href="https://github.com/19paoletto10-hub/twilio" class="nav-cta" target="_blank">
+                ⭐ GitHub
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badges">
+                <span class="badge badge-primary">📦 v3.2.5</span>
+                <span class="badge badge-success">✅ 0 Pylance Errors</span>
+                <span class="badge badge-info">🐳 Docker Ready</span>
+            </div>
+            
+            <h1>Enterprise-Grade SMS Communication Hub</h1>
+            
+            <p class="hero-subtitle">
+                Panel WWW • AI Auto-Reply • Semantic Search (FAISS) • Multi-SMS Campaigns
+                <br>
+                Kompletne rozwiązanie do zarządzania komunikacją SMS z Twilio
+            </p>
+            
+            <div class="hero-cta">
+                <a href="#quickstart" class="btn btn-primary">
+                    🚀 Quick Start
+                </a>
+                <a href="https://github.com/19paoletto10-hub/twilio" class="btn btn-outline" target="_blank">
+                    📖 Dokumentacja
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>✨ Kluczowe funkcje</h2>
+                <p>Wszystko czego potrzebujesz do profesjonalnej komunikacji SMS</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Auto-Reply</h3>
+                    <p>Inteligentne odpowiedzi przez OpenAI GPT z pełnym kontekstem historii rozmowy. Automatyczne generowanie odpowiedzi 24/7.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📰</div>
+                    <h3>RAG / FAISS</h3>
+                    <p>Baza wiedzy z semantic search. Odbiorcy mogą wysłać /news i otrzymać odpowiedź z indeksu wektorowego.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📨</div>
+                    <h3>Multi-SMS Campaigns</h3>
+                    <p>Kampanie batch do wielu odbiorców z deduplikacją, walidacją E.164 i śledzeniem statusów.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎧</div>
+                    <h3>Listeners</h3>
+                    <p>Interaktywne komendy SMS. Włącz/wyłącz z panelu, testuj bez wysyłki, definiuj własne handlery.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Secrets Manager</h3>
+                    <p>Centralne zarządzanie kluczami API z hot reload. Zmień konfigurację bez restartu serwera.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Type Safety</h3>
+                    <p>Zero błędów Pylance w strict mode. Defensive programming, professional docstrings, graceful error handling.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quickstart" class="quickstart">
+        <div class="container">
+            <div class="section-header">
+                <h2>🏃 5-minutowy Quick Start</h2>
+                <p>Od zera do działającej aplikacji w trzech krokach</p>
+            </div>
+            
+            <div class="quickstart-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Sklonuj i zainstaluj</h3>
+                    <p>Przygotuj środowisko Python i zainstaluj zależności</p>
+                    <pre><code><span class="code-comment"># Klonuj repozytorium</span>
+git clone https://github.com/19paoletto10-hub/twilio.git
+cd twilio
+
+<span class="code-comment"># Utwórz i aktywuj venv</span>
+python -m venv .venv
+source .venv/bin/activate
+
+<span class="code-comment"># Zainstaluj zależności</span>
+pip install -r requirements.txt</code></pre>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Skonfiguruj</h3>
+                    <p>Skopiuj .env.example i uzupełnij klucze</p>
+                    <pre><code><span class="code-comment"># Skopiuj przykładową konfigurację</span>
+cp .env.example .env
+
+<span class="code-comment"># Edytuj plik .env</span>
+<span class="code-variable">TWILIO_ACCOUNT_SID</span>=<span class="code-string">ACxxx...</span>
+<span class="code-variable">TWILIO_AUTH_TOKEN</span>=<span class="code-string">xxx...</span>
+<span class="code-variable">TWILIO_DEFAULT_FROM</span>=<span class="code-string">+48123456789</span></code></pre>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Uruchom</h3>
+                    <p>Startuj serwer i otwórz panel</p>
+                    <pre><code><span class="code-comment"># Uruchom aplikację</span>
+python run.py
+
+<span class="code-comment"># Panel dostępny na:</span>
+<span class="code-string">http://localhost:3000</span>
+
+<span class="code-comment"># Test healthcheck:</span>
+curl http://localhost:3000/api/health</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Architecture Section -->
+    <section id="architecture">
+        <div class="container">
+            <div class="section-header">
+                <h2>🏛️ Architektura</h2>
+                <p>Modułowa architektura z workerami w tle</p>
+            </div>
+            
+            <div class="architecture-diagram">
+                <pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                         TWILIO CLOUD                            │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │ Inbound SMS │  │ Status Hook │  │ Messaging Service       │  │
+│  └──────┬──────┘  └──────┬──────┘  └───────────┬─────────────┘  │
+└─────────┼────────────────┼─────────────────────┼────────────────┘
+          │                │                     │
+          ▼                ▼                     ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      FLASK APPLICATION                          │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                    webhooks.py                              ││
+│  │  /twilio/inbound  │  /twilio/status  │  /api/*             ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                              │                                  │
+│  ┌───────────┬───────────┬───┴───────┬─────────────┐           │
+│  │           │           │           │             │           │
+│  ▼           ▼           ▼           ▼             ▼           │
+│ ┌─────┐   ┌─────┐   ┌─────────┐   ┌─────┐   ┌──────────┐      │
+│ │ AI  │   │Auto │   │Listeners│   │News │   │ Multi    │      │
+│ │Reply│   │Reply│   │ /news   │   │Sched│   │ SMS      │      │
+│ └──┬──┘   └──┬──┘   └────┬────┘   └──┬──┘   └────┬─────┘      │
+│    │         │           │           │           │             │
+│    └─────────┴───────────┴───────────┴───────────┘             │
+│                          │                                      │
+│  ┌───────────────────────┴────────────────────────────────────┐│
+│  │                    twilio_client.py                        ││
+│  │  send_message()  │  send_chunked_sms()  │  send_reply()   ││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+          │                              │
+          ▼                              ▼
+┌─────────────────────┐      ┌────────────────────────┐
+│    SQLite (data/)   │      │   FAISS (X1_data/)     │
+│  ├── messages       │      │  ├── index.faiss       │
+│  ├── ai_config      │      │  ├── documents.jsonl   │
+│  ├── listeners      │      │  └── articles.jsonl    │
+│  └── multi_sms      │      │                        │
+└─────────────────────┘      └────────────────────────┘</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section id="api">
+        <div class="container">
+            <div class="section-header">
+                <h2>📊 API Reference</h2>
+                <p>Najważniejsze endpointy REST API</p>
+            </div>
+            
+            <table class="api-table">
+                <thead>
+                    <tr>
+                        <th>Metoda</th>
+                        <th>Endpoint</th>
+                        <th>Opis</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td><code>/api/health</code></td>
+                        <td>Status systemu i healthcheck</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td><code>/api/messages</code></td>
+                        <td>Lista wiadomości z filtrowaniem</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-post">POST</span></td>
+                        <td><code>/api/messages/send</code></td>
+                        <td>Wyślij pojedynczy SMS</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td><code>/api/ai/config</code></td>
+                        <td>Konfiguracja AI auto-reply</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-post">POST</span></td>
+                        <td><code>/api/ai/test</code></td>
+                        <td>Test połączenia z OpenAI</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td><code>/api/listeners</code></td>
+                        <td>Lista aktywnych listenerów</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-post">POST</span></td>
+                        <td><code>/api/news/indices/build</code></td>
+                        <td>Buduj indeks FAISS</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-post">POST</span></td>
+                        <td><code>/api/news/test-faiss</code></td>
+                        <td>Test zapytania RAG</td>
+                    </tr>
+                    <tr>
+                        <td><span class="method-badge method-get">GET</span></td>
+                        <td><code>/api/news/faiss/export</code></td>
+                        <td>Eksport backup (ZIP)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Troubleshooting Section -->
+    <section id="troubleshooting">
+        <div class="container">
+            <div class="section-header">
+                <h2>🔧 Troubleshooting</h2>
+                <p>Rozwiązania najczęstszych problemów</p>
+            </div>
+            
+            <div class="troubleshoot-grid">
+                <div class="troubleshoot-item">
+                    <div class="troubleshoot-header" onclick="this.parentElement.classList.toggle('active')">
+                        <span class="troubleshoot-icon">❌</span>
+                        <span class="troubleshoot-title">Webhook zwraca 403 Forbidden</span>
+                        <span class="troubleshoot-toggle">▼</span>
+                    </div>
+                    <div class="troubleshoot-content">
+                        <p><strong>Przyczyna:</strong> Twilio signature validation jest włączona, ale podpis nie pasuje.</p>
+                        <pre><code><span class="code-comment"># W development - wyłącz walidację</span>
+<span class="code-variable">TWILIO_VALIDATE_SIGNATURE</span>=<span class="code-string">false</span>
+
+<span class="code-comment"># W production - poprawny PUBLIC_BASE_URL</span>
+<span class="code-variable">PUBLIC_BASE_URL</span>=<span class="code-string">https://twoja-domena.com</span></code></pre>
+                    </div>
+                </div>
+                
+                <div class="troubleshoot-item">
+                    <div class="troubleshoot-header" onclick="this.parentElement.classList.toggle('active')">
+                        <span class="troubleshoot-icon">❌</span>
+                        <span class="troubleshoot-title">AI nie odpowiada na SMS</span>
+                        <span class="troubleshoot-toggle">▼</span>
+                    </div>
+                    <div class="troubleshoot-content">
+                        <p><strong>Checklist:</strong></p>
+                        <ul style="margin-left: 1.5rem; color: var(--text-muted);">
+                            <li>✅ Sprawdź czy AI jest włączone w panelu</li>
+                            <li>✅ Sprawdź czy OPENAI_API_KEY jest ustawiony</li>
+                            <li>✅ Sprawdź czy AI_TARGET_NUMBER pasuje</li>
+                            <li>✅ Sprawdź logi: <code>docker compose logs -f | grep ai</code></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="troubleshoot-item">
+                    <div class="troubleshoot-header" onclick="this.parentElement.classList.toggle('active')">
+                        <span class="troubleshoot-icon">❌</span>
+                        <span class="troubleshoot-title">/news nie zwraca wyników</span>
+                        <span class="troubleshoot-toggle">▼</span>
+                    </div>
+                    <div class="troubleshoot-content">
+                        <p><strong>Przyczyna:</strong> Indeks FAISS nie jest zbudowany lub jest pusty.</p>
+                        <p><strong>Rozwiązanie:</strong></p>
+                        <ol style="margin-left: 1.5rem; color: var(--text-muted);">
+                            <li>Przejdź do panelu → zakładka <strong>News</strong></li>
+                            <li>Kliknij <strong>"Pobierz i zbuduj"</strong></li>
+                            <li>Poczekaj na zakończenie (progress bar)</li>
+                            <li>Przetestuj w polu "Test FAISS"</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="troubleshoot-item">
+                    <div class="troubleshoot-header" onclick="this.parentElement.classList.toggle('active')">
+                        <span class="troubleshoot-icon">❌</span>
+                        <span class="troubleshoot-title">SMS nie są wysyłane</span>
+                        <span class="troubleshoot-toggle">▼</span>
+                    </div>
+                    <div class="troubleshoot-content">
+                        <p><strong>Checklist:</strong></p>
+                        <ul style="margin-left: 1.5rem; color: var(--text-muted);">
+                            <li>✅ TWILIO_ACCOUNT_SID i AUTH_TOKEN poprawne</li>
+                            <li>✅ TWILIO_DEFAULT_FROM w formacie E.164</li>
+                            <li>✅ Lub TWILIO_MESSAGING_SERVICE_SID</li>
+                            <li>✅ Sprawdź saldo na console.twilio.com</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="troubleshoot-item">
+                    <div class="troubleshoot-header" onclick="this.parentElement.classList.toggle('active')">
+                        <span class="troubleshoot-icon">❌</span>
+                        <span class="troubleshoot-title">Baza danych pusta po restarcie Docker</span>
+                        <span class="troubleshoot-toggle">▼</span>
+                    </div>
+                    <div class="troubleshoot-content">
+                        <p><strong>Przyczyna:</strong> Wolumeny nie są zamontowane.</p>
+                        <p><strong>Rozwiązanie:</strong> Dodaj w docker-compose.yml:</p>
+                        <pre><code>volumes:
+  - ./data:/app/data        <span class="code-comment"># Baza SQLite</span>
+  - ./X1_data:/app/X1_data  <span class="code-comment"># Indeks FAISS</span></code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="https://github.com/19paoletto10-hub/twilio">GitHub</a>
+            <a href="https://github.com/19paoletto10-hub/twilio/issues">Issues</a>
+            <a href="https://github.com/19paoletto10-hub/twilio/releases">Releases</a>
+            <a href="docs/docker-guide.md">Docker Guide</a>
+            <a href="docs/developer-guide.md">Developer Guide</a>
+        </div>
+        <p class="footer-copy">
+            Made with ❤️ by <a href="https://github.com/19paoletto10-hub">19paoletto10-hub</a>
+            <br>
+            © 2025 Twilio Chat App • MIT License
+        </p>
+    </footer>
+</body>
+</html>
