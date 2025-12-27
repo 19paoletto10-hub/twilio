@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <title>Twilio Chat App – Enterprise SMS Platform | Broszura produktowa</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Profesjonalna platforma do zarządzania komunikacją SMS z AI, automatyzacją i analizą danych biznesowych" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #a5b4fc;
+            --secondary: #06b6d4;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --dark: #0f172a;
+            --dark-light: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --gradient-hero: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+            --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+            --gradient-secondary: linear-gradient(135deg, #06b6d4, #0891b2);
+            --gradient-accent: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--dark);
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        /* ===== HERO SECTION ===== */
+        .hero {
+            min-height: 100vh;
+            background: var(--gradient-hero);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse at 30% 20%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(6, 182, 212, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236366f1' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary-light);
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+        }
+        
+        .hero-logo {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-primary);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            margin: 0 auto 2rem;
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.4);
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 50%, #fff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-tagline {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--text-muted);
+            margin-bottom: 3rem;
+            letter-spacing: 0.05em;
+        }
+        
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            display: block;
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .hero-cta {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        
+        /* ===== CONTAINER ===== */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        /* ===== SECTIONS ===== */
+        section {
+            padding: 6rem 0;
+        }
+        
+        .section-dark { background: var(--dark); }
+        .section-darker { background: var(--dark-light); }
+        .section-gradient { background: linear-gradient(180deg, var(--dark) 0%, var(--dark-light) 50%, var(--dark) 100%); }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+        
+        .section-header p {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* ===== FEATURES GRID ===== */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+        }
+        
+        .feature-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: 20px;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 20px 60px rgba(99, 102, 241, 0.15);
+        }
+        
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: var(--gradient-primary);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .feature-icon.secondary { background: var(--gradient-secondary); box-shadow: 0 8px 30px rgba(6, 182, 212, 0.3); }
+        .feature-icon.accent { background: var(--gradient-accent); box-shadow: 0 8px 30px rgba(245, 158, 11, 0.3); }
+        .feature-icon.success { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 8px 30px rgba(16, 185, 129, 0.3); }
+        
+        .feature-card h3 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+        
+        .feature-list {
+            list-style: none;
+        }
+        
+        .feature-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        .feature-list li::before {
+            content: '✓';
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        
+        /* ===== USE CASES ===== */
+        .use-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .use-case {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .use-case:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: rgba(99, 102, 241, 0.2);
+            transform: scale(1.02);
+        }
+        
+        .use-case-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .use-case h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .use-case p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        /* ===== TECHNOLOGY STACK ===== */
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 3rem;
+        }
+        
+        .tech-item {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .tech-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .tech-item span:first-child {
+            font-size: 1.5rem;
+        }
+        
+        .tech-item span:last-child {
+            font-weight: 600;
+        }
+        
+        /* ===== PRICING/PLANS ===== */
+        .plans {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .plan-card {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 3rem;
+            text-align: center;
+            position: relative;
+            transition: all 0.4s ease;
+        }
+        
+        .plan-card.featured {
+            border-color: var(--primary);
+            box-shadow: 0 0 60px rgba(99, 102, 241, 0.2);
+        }
+        
+        .plan-card.featured::before {
+            content: 'POPULARNE';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.35rem 1rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-8px);
+        }
+        
+        .plan-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-desc {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .plan-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 2rem;
+        }
+        
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+        
+        .plan-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-features li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        /* ===== CONTACT ===== */
+        .contact-section {
+            background: var(--gradient-hero);
+            text-align: center;
+            position: relative;
+        }
+        
+        .contact-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 100%, rgba(99, 102, 241, 0.2) 0%, transparent 60%);
+        }
+        
+        .contact-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .contact-section h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-section p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: var(--text-muted);
+        }
+        
+        .contact-item span:first-child {
+            width: 48px;
+            height: 48px;
+            background: rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+        
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--dark);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-logo span:first-child {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-light);
+        }
+        
+        .footer-copy {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .hero { padding: 3rem 1.5rem; }
+            .hero h1 { font-size: 2rem; }
+            .hero-tagline { font-size: 1.125rem; }
+            .hero-stats { gap: 2rem; }
+            .stat-value { font-size: 2rem; }
+            section { padding: 4rem 0; }
+            .section-header h2 { font-size: 1.75rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .contact-info { gap: 1.5rem; }
+        }
+        
+        /* ===== PRINT ===== */
+        @media print {
+            body { 
+                background: white; 
+                color: #1e293b;
+                font-size: 12pt;
+            }
+            .hero { 
+                background: white; 
+                min-height: auto; 
+                padding: 2rem;
+                page-break-after: always;
+            }
+            .hero h1 { 
+                -webkit-text-fill-color: #1e293b; 
+                background: none;
+            }
+            .hero-tagline, .section-header p, .feature-card p, .use-case p {
+                color: #64748b;
+            }
+            section { padding: 2rem 0; page-break-inside: avoid; }
+            .feature-card, .plan-card, .use-case {
+                background: #f8fafc;
+                border-color: #e2e8f0;
+                box-shadow: none;
+            }
+            .feature-card:hover, .plan-card:hover, .use-case:hover {
+                transform: none;
+            }
+            .btn { display: none; }
+            .section-gradient, .section-dark, .section-darker {
+                background: white;
+            }
+            .hero-badge { border-color: #6366f1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== HERO ===== -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="hero-badge">🚀 Enterprise Edition v3.2.7</span>
+            <div class="hero-logo">📱</div>
+            <h1>Twilio Chat App</h1>
+            <p class="hero-tagline">Enterprise SMS Communication Hub</p>
+            
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">24/7</span>
+                    <span class="stat-label">Automatyzacja</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">AI</span>
+                    <span class="stat-label">Inteligentne odpowiedzi</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">8</span>
+                    <span class="stat-label">Kategorii newsów</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">∞</span>
+                    <span class="stat-label">Skalowalność</span>
+                </div>
+            </div>
+            
+            <div class="hero-cta">
+                <a href="https://github.com/19paoletto10-hub/twilio" class="btn btn-primary">
+                    <span>📥</span> Zobacz na GitHub
+                </a>
+                <a href="app-overview.html" class="btn btn-outline">
+                    <span>📄</span> Dokumentacja
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FEATURES ===== -->
+    <section class="section-gradient">
+        <div class="container">
+            <div class="section-header">
+                <h2>🎯 Kluczowe funkcje</h2>
+                <p>Kompletna platforma do profesjonalnej komunikacji SMS z zaawansowaną automatyzacją i sztuczną inteligencją</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Auto-Reply</h3>
+                    <p>Inteligentne odpowiedzi automatyczne oparte na modelach OpenAI z kontekstem konwersacji.</p>
+                    <ul class="feature-list">
+                        <li>OpenAI GPT-4o / GPT-4o-mini</li>
+                        <li>Konfigurowalne prompty systemowe</li>
+                        <li>Pamięć kontekstu rozmowy</li>
+                        <li>Tryb klasyczny lub AI</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon secondary">📰</div>
+                    <h3>News RAG System</h3>
+                    <p>Semantyczne wyszukiwanie w bazie wiedzy z automatycznym scrapingiem newsów biznesowych.</p>
+                    <ul class="feature-list">
+                        <li>FAISS indeks wektorowy</li>
+                        <li>8 kategorii biznesowych</li>
+                        <li>Profesjonalne streszczenia</li>
+                        <li>Dzienne podsumowania SMS</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon accent">📱</div>
+                    <h3>Smart Chunked SMS</h3>
+                    <p>Automatyczne dzielenie długich wiadomości z pełnym śledzeniem dostawy każdej części.</p>
+                    <ul class="feature-list">
+                        <li>Limit 1500 znaków per SMS</li>
+                        <li>Bufor bezpieczeństwa 100 zn.</li>
+                        <li>Wielokrotne SID dla trackingu</li>
+                        <li>100% kompatybilność wsteczna</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon success">⚙️</div>
+                    <h3>Background Workers</h3>
+                    <p>Niezawodne przetwarzanie w tle z kolejkami i automatycznym restart po awarii.</p>
+                    <ul class="feature-list">
+                        <li>Auto-reply worker (AI/klasyczny)</li>
+                        <li>Multi-SMS batch campaigns</li>
+                        <li>News scheduler (dzienne)</li>
+                        <li>Reminder worker (cykliczne)</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🖥️</div>
+                    <h3>Panel administracyjny</h3>
+                    <p>Nowoczesny interfejs webowy z real-time aktualizacjami i responsywnym designem.</p>
+                    <ul class="feature-list">
+                        <li>Dashboard ze statystykami</li>
+                        <li>Chat view z konwersacjami</li>
+                        <li>Konfiguracja AI i auto-reply</li>
+                        <li>Zarządzanie listenerami</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon secondary">🔌</div>
+                    <h3>REST API</h3>
+                    <p>Kompletne API REST dla integracji z systemami zewnętrznymi i automatyzacji.</p>
+                    <ul class="feature-list">
+                        <li>Webhooki Twilio z walidacją</li>
+                        <li>CRUD dla wiadomości</li>
+                        <li>API konfiguracji</li>
+                        <li>Endpointy News/FAISS</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== USE CASES ===== -->
+    <section class="section-darker">
+        <div class="container">
+            <div class="section-header">
+                <h2>💼 Przypadki użycia</h2>
+                <p>Rozwiązanie idealne dla wielu branż i scenariuszy biznesowych</p>
+            </div>
+            
+            <div class="use-cases">
+                <div class="use-case">
+                    <div class="use-case-icon">🏢</div>
+                    <h4>Obsługa klienta</h4>
+                    <p>Automatyczne odpowiedzi 24/7 z AI i eskalacją do operatora</p>
+                </div>
+                <div class="use-case">
+                    <div class="use-case-icon">📊</div>
+                    <h4>Briefing biznesowy</h4>
+                    <p>Codzienne podsumowania newsów dla kadry zarządzającej</p>
+                </div>
+                <div class="use-case">
+                    <div class="use-case-icon">🔔</div>
+                    <h4>Powiadomienia</h4>
+                    <p>Automatyczne przypomnienia i alerty dla klientów</p>
+                </div>
+                <div class="use-case">
+                    <div class="use-case-icon">📣</div>
+                    <h4>Kampanie SMS</h4>
+                    <p>Masowe wysyłki do wielu odbiorców z trackingiem</p>
+                </div>
+                <div class="use-case">
+                    <div class="use-case-icon">🤖</div>
+                    <h4>Chatbot SMS</h4>
+                    <p>Interaktywne komendy i inteligentne odpowiedzi</p>
+                </div>
+                <div class="use-case">
+                    <div class="use-case-icon">📈</div>
+                    <h4>Analityka</h4>
+                    <p>Statystyki wiadomości, trendy i raporty</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== TECHNOLOGY ===== -->
+    <section class="section-dark">
+        <div class="container">
+            <div class="section-header">
+                <h2>🛠️ Technologie</h2>
+                <p>Zbudowane na sprawdzonych, enterprise-grade technologiach</p>
+            </div>
+            
+            <div class="tech-stack">
+                <div class="tech-item"><span>🐍</span><span>Python 3.12+</span></div>
+                <div class="tech-item"><span>⚗️</span><span>Flask 3.x</span></div>
+                <div class="tech-item"><span>📞</span><span>Twilio SDK</span></div>
+                <div class="tech-item"><span>🧠</span><span>OpenAI GPT</span></div>
+                <div class="tech-item"><span>🔍</span><span>FAISS</span></div>
+                <div class="tech-item"><span>🗄️</span><span>SQLite</span></div>
+                <div class="tech-item"><span>🐳</span><span>Docker</span></div>
+                <div class="tech-item"><span>🎨</span><span>Bootstrap 5</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PLANS ===== -->
+    <section class="section-gradient">
+        <div class="container">
+            <div class="section-header">
+                <h2>📦 Opcje wdrożenia</h2>
+                <p>Elastyczne opcje dostosowane do potrzeb Twojej organizacji</p>
+            </div>
+            
+            <div class="plans">
+                <div class="plan-card">
+                    <div class="plan-icon">🖥️</div>
+                    <h3 class="plan-name">Self-Hosted</h3>
+                    <p class="plan-desc">Pełna kontrola na własnej infrastrukturze</p>
+                    <ul class="plan-features">
+                        <li>Open source (MIT License)</li>
+                        <li>Docker / Docker Compose</li>
+                        <li>Własne klucze API</li>
+                        <li>Pełna dokumentacja</li>
+                        <li>Wsparcie community</li>
+                    </ul>
+                    <a href="https://github.com/19paoletto10-hub/twilio" class="btn btn-outline" style="width:100%;">Pobierz z GitHub</a>
+                </div>
+                
+                <div class="plan-card featured">
+                    <div class="plan-icon">☁️</div>
+                    <h3 class="plan-name">Enterprise</h3>
+                    <p class="plan-desc">Pełne wsparcie i customizacja</p>
+                    <ul class="plan-features">
+                        <li>Wszystko z Self-Hosted</li>
+                        <li>Dedykowane wdrożenie</li>
+                        <li>Customowe integracje</li>
+                        <li>SLA 99.9% uptime</li>
+                        <li>Wsparcie 24/7</li>
+                        <li>Szkolenia zespołu</li>
+                    </ul>
+                    <a href="mailto:contact@example.com" class="btn btn-primary" style="width:100%;">Skontaktuj się</a>
+                </div>
+                
+                <div class="plan-card">
+                    <div class="plan-icon">🔧</div>
+                    <h3 class="plan-name">Consulting</h3>
+                    <p class="plan-desc">Wsparcie w integracji i rozwoju</p>
+                    <ul class="plan-features">
+                        <li>Audyt architektury</li>
+                        <li>Pomoc we wdrożeniu</li>
+                        <li>Rozwój nowych funkcji</li>
+                        <li>Code review</li>
+                        <li>Elastyczne godziny</li>
+                    </ul>
+                    <a href="mailto:contact@example.com" class="btn btn-outline" style="width:100%;">Zapytaj o ofertę</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CONTACT CTA ===== -->
+    <section class="contact-section">
+        <div class="container contact-content">
+            <h2>Gotowy na transformację komunikacji SMS?</h2>
+            <p>Skontaktuj się z nami, aby dowiedzieć się więcej o możliwościach platformy</p>
+            
+            <div class="hero-cta">
+                <a href="https://github.com/19paoletto10-hub/twilio" class="btn btn-primary">
+                    <span>⭐</span> GitHub Repository
+                </a>
+                <a href="app-overview.html" class="btn btn-outline">
+                    <span>📚</span> Pełna dokumentacja
+                </a>
+            </div>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <span>📧</span>
+                    <span>contact@example.com</span>
+                </div>
+                <div class="contact-item">
+                    <span>🌐</span>
+                    <span>github.com/19paoletto10-hub/twilio</span>
+                </div>
+                <div class="contact-item">
+                    <span>📱</span>
+                    <span>Twilio SMS Platform</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="footer-logo">
+            <span>📱</span>
+            <span>Twilio Chat App</span>
+        </div>
+        <div class="footer-links">
+            <a href="app-overview.html">Dokumentacja</a>
+            <a href="developer-guide.md">Developer Guide</a>
+            <a href="docker-guide.md">Docker Guide</a>
+            <a href="https://github.com/19paoletto10-hub/twilio">GitHub</a>
+        </div>
+        <p class="footer-copy">
+            Twilio Chat App v3.2.7 • © 2025 • Enterprise SMS Communication Platform<br>
+            <small>Dokument wygenerowany: Grudzień 2025</small>
+        </p>
+    </footer>
+</body>
+</html>

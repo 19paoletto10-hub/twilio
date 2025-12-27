@@ -2,8 +2,9 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8" />
-    <title>Twilio Chat App v3.2.5 – Dokumentacja rozwiązania</title>
+    <title>Twilio Chat App v3.2.7 – Dokumentacja rozwiązania</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Enterprise SMS Communication Hub - profesjonalna platforma do zarządzania komunikacją SMS z AI, RAG i automatyzacją" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -25,6 +26,7 @@
             
             --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
             --gradient-success: linear-gradient(135deg, #10b981, #059669);
+            --gradient-info: linear-gradient(135deg, #3b82f6, #1d4ed8);
         }
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -106,6 +108,7 @@
         .badge-primary { border-color: var(--primary); color: var(--primary-light); }
         .badge-success { border-color: var(--success); color: var(--success); }
         .badge-info { border-color: var(--info); color: var(--info); }
+        .badge-warning { border-color: var(--warning); color: var(--warning); }
         
         .hero h1 { font-size: clamp(2rem, 5vw, 3rem); font-weight: 800; margin-bottom: 1rem; background: linear-gradient(135deg, #fff 0%, #94a3b8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; }
@@ -120,11 +123,16 @@
         .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s; }
         .card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 8px 30px rgba(99, 102, 241, 0.15); }
         .card-icon { width: 48px; height: 48px; background: var(--gradient-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+        .card-icon.success { background: var(--gradient-success); }
+        .card-icon.info { background: var(--gradient-info); }
         .card h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.75rem; }
         .card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; }
         .card ul { list-style: none; padding: 0; }
         .card ul li { position: relative; padding-left: 1.5rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
         .card ul li::before { content: '✓'; position: absolute; left: 0; color: var(--success); font-weight: 600; }
+        
+        .new-feature { position: relative; }
+        .new-feature::after { content: 'NEW'; position: absolute; top: 1rem; right: 1rem; background: var(--gradient-success); color: white; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
         
         .architecture { background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-card) 50%, var(--bg-dark) 100%); }
         .arch-diagram { background: #0d1117; border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; overflow-x: auto; }
@@ -146,6 +154,12 @@
         .module-item h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
         .module-item h4 code { font-size: 0.8rem; }
         .module-item p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
+        
+        .changelog { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 2rem; margin-top: 2rem; }
+        .changelog h3 { font-size: 1.3rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .changelog-item { border-left: 3px solid var(--primary); padding-left: 1rem; margin-bottom: 1.5rem; }
+        .changelog-item h4 { font-size: 1rem; margin-bottom: 0.5rem; color: var(--primary-light); }
+        .changelog-item p { font-size: 0.9rem; color: var(--text-muted); }
         
         footer { background: var(--bg-card); border-top: 1px solid var(--border); padding: 3rem 2rem; text-align: center; }
         .footer-links { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
@@ -175,24 +189,86 @@
             <a href="#" class="nav-logo"><span class="nav-logo-icon">📱</span>Twilio Chat App</a>
             <ul class="nav-links">
                 <li><a href="#features">Funkcje</a></li>
+                <li><a href="#whats-new">Nowości</a></li>
                 <li><a href="#architecture">Architektura</a></li>
                 <li><a href="#modules">Moduły</a></li>
                 <li><a href="#database">Baza danych</a></li>
                 <li><a href="#deployment">Deployment</a></li>
             </ul>
-            <span class="nav-version">v3.2.5</span>
+            <span class="nav-version">v3.2.7</span>
         </div>
     </nav>
 
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badges">
-                <span class="badge badge-primary">📦 v3.2.5</span>
+                <span class="badge badge-primary">📦 v3.2.7</span>
                 <span class="badge badge-success">✅ 0 Pylance Errors</span>
                 <span class="badge badge-info">🐳 Docker Ready</span>
+                <span class="badge badge-warning">🆕 Chunked SMS</span>
             </div>
             <h1>Dokumentacja rozwiązania</h1>
-            <p class="hero-subtitle">Enterprise-Grade SMS Communication Hub<br>Python 3.10+ • Flask 3.x • Twilio • OpenAI • SQLite • Docker</p>
+            <p class="hero-subtitle">Enterprise-Grade SMS Communication Hub<br>Python 3.12+ • Flask 3.x • Twilio • OpenAI • FAISS • Docker</p>
+        </div>
+    </section>
+
+    <section id="whats-new">
+        <div class="container">
+            <div class="section-header">
+                <h2>🆕 Co nowego w v3.2.7</h2>
+                <p>Najnowsze ulepszenia i nowe funkcje</p>
+            </div>
+            <div class="grid">
+                <div class="card new-feature">
+                    <div class="card-icon success">📱</div>
+                    <h3>Chunked SMS (v3.2.6)</h3>
+                    <p>Automatyczne dzielenie długich wiadomości SMS</p>
+                    <ul>
+                        <li>Wiadomości >1500 znaków dzielone na części</li>
+                        <li>Bufor bezpieczeństwa (100 zn. przed limitem)</li>
+                        <li>Wielokrotne SID-y dla śledzenia dostawy</li>
+                        <li>Pełna kompatybilność wsteczna</li>
+                    </ul>
+                </div>
+                <div class="card new-feature">
+                    <div class="card-icon info">🎯</div>
+                    <h3>FAISS All-Categories (v3.2.6)</h3>
+                    <p>Gwarantowane pokrycie wszystkich 8 kategorii newsów</p>
+                    <ul>
+                        <li>Skanowanie docstore zamiast MMR search</li>
+                        <li>Profesjonalne streszczenia w stylu reportera</li>
+                        <li>Emoji nagłówki dla kategorii</li>
+                        <li>2 dokumenty per kategoria</li>
+                    </ul>
+                </div>
+                <div class="card new-feature">
+                    <div class="card-icon">💬</div>
+                    <h3>Dynamic Chat Headers (v3.2.7)</h3>
+                    <p>Dynamiczna aktualizacja nagłówków konwersacji</p>
+                    <ul>
+                        <li>Nagłówek wątku aktualizuje się przy przełączaniu</li>
+                        <li>Data ostatniej aktywności w czasie rzeczywistym</li>
+                        <li>Synchronizacja wszystkich elementów UI</li>
+                        <li>Lepsze UX przy wielokrotnych rozmowach</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="changelog">
+                <h3>📋 Historia zmian</h3>
+                <div class="changelog-item">
+                    <h4>v3.2.7 - Dynamic Chat Headers</h4>
+                    <p>Dynamiczna aktualizacja nagłówków wątku i daty ostatniej aktywności przy przełączaniu konwersacji. Synchronizacja wszystkich elementów UI.</p>
+                </div>
+                <div class="changelog-item">
+                    <h4>v3.2.6 - Chunked SMS & Professional RAG</h4>
+                    <p>Automatyczne dzielenie długich SMS-ów. Profesjonalne streszczenia newsów z gwarancją pokrycia wszystkich 8 kategorii.</p>
+                </div>
+                <div class="changelog-item">
+                    <h4>v3.2.5 - Code Quality & Type Safety</h4>
+                    <p>Profesjonalny refaktoring. 0 błędów Pylance w strict mode. Database-level deduplication.</p>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -231,13 +307,13 @@
                     <div class="card-icon">📰</div>
                     <h3>RAG / FAISS</h3>
                     <p>Semantic search i baza wiedzy</p>
-                    <ul><li>Indeks wektorowy FAISS</li><li>Listener /news [pytanie]</li><li>Scraper Business Insider</li><li>Backup ZIP z manifestem</li></ul>
+                    <ul><li>Indeks wektorowy FAISS</li><li>Listener /news [pytanie]</li><li>Scraper Business Insider</li><li>8 kategorii newsów</li></ul>
                 </div>
                 <div class="card">
                     <div class="card-icon">🔒</div>
-                    <h3>Type Safety (v3.2.5)</h3>
-                    <p>Enterprise-grade code quality</p>
-                    <ul><li>0 błędów Pylance w strict mode</li><li>Professional docstrings</li><li>Defensive programming</li><li>Graceful error handling</li></ul>
+                    <h3>Enterprise Quality</h3>
+                    <p>Kod na poziomie produkcyjnym</p>
+                    <ul><li>0 błędów Pylance w strict mode</li><li>Professional docstrings</li><li>Defensive programming</li><li>Database deduplication</li></ul>
                 </div>
             </div>
         </div>
@@ -280,13 +356,14 @@
 └─────────────────────────────────────────────────────────────────┘
           │                              │
           ▼                              ▼
-┌─────────────────────┐      ┌────────────────────────┐
-│    SQLite (data/)   │      │   FAISS (X1_data/)     │
-│  ├── messages       │      │  ├── index.faiss       │
-│  ├── ai_config      │      │  ├── documents.jsonl   │
-│  ├── listeners      │      │  └── articles.jsonl    │
-│  └── multi_sms      │      │                        │
-└─────────────────────┘      └────────────────────────┘</pre>
+┌─────────────────────────┐      ┌────────────────────────┐
+│    SQLite (data/)       │      │   FAISS (X1_data/)     │
+│  ├── messages           │      │  ├── index.faiss       │
+│  ├── ai_config          │      │  ├── documents.jsonl   │
+│  ├── listeners          │      │  └── articles.jsonl    │
+│  ├── multi_sms          │      │                        │
+│  └── news_recipients    │      │                        │
+└─────────────────────────┘      └────────────────────────┘</pre>
             </div>
         </div>
     </section>
@@ -299,17 +376,19 @@
             </div>
             <div class="module-list">
                 <div class="module-item"><h4>🔧 <code>app/__init__.py</code></h4><p>Fabryka Flask create_app(): konfiguracja, inicjalizacja, workery</p></div>
-                <div class="module-item"><h4>🌐 <code>app/webhooks.py</code></h4><p>REST API, webhooki Twilio, endpointy News/FAISS</p></div>
+                <div class="module-item"><h4>🌐 <code>app/webhooks.py</code></h4><p>REST API, webhooki Twilio, endpointy News/FAISS, chunked SMS</p></div>
                 <div class="module-item"><h4>🎨 <code>app/ui.py</code></h4><p>Blueprint UI: dashboard, chat, templates Jinja2</p></div>
                 <div class="module-item"><h4>📞 <code>app/twilio_client.py</code></h4><p>TwilioService: wysyłka SMS, chunking, Messaging Service</p></div>
                 <div class="module-item"><h4>🤖 <code>app/ai_service.py</code></h4><p>AIResponder: kontekst rozmowy, OpenAI Chat Completions</p></div>
                 <div class="module-item"><h4>🔁 <code>app/auto_reply.py</code></h4><p>Worker auto-reply: kolejka, AI vs klasyczny tryb</p></div>
                 <div class="module-item"><h4>🗄️ <code>app/database.py</code></h4><p>SQLite: schemat, migracje, helpery CRUD (SCHEMA_VERSION=9)</p></div>
-                <div class="module-item"><h4>🔍 <code>app/faiss_service.py</code></h4><p>FAISS: indeks wektorowy, semantic search, RAG</p></div>
-                <div class="module-item"><h4>🕷️ <code>app/scraper_service.py</code></h4><p>Scraper: Business Insider, artykuły, kategorie</p></div>
+                <div class="module-item"><h4>🔍 <code>app/faiss_service.py</code></h4><p>FAISS: indeks wektorowy, semantic search, RAG all-categories</p></div>
+                <div class="module-item"><h4>🕷️ <code>app/scraper_service.py</code></h4><p>Scraper: Business Insider, artykuły, 8 kategorii</p></div>
                 <div class="module-item"><h4>📅 <code>app/news_scheduler.py</code></h4><p>Scheduler newsów: dzienne SMS do odbiorców</p></div>
                 <div class="module-item"><h4>⏰ <code>app/reminder.py</code></h4><p>Worker przypomnień: cykliczne SMS z harmonogramu</p></div>
                 <div class="module-item"><h4>📨 <code>app/multi_sms.py</code></h4><p>Worker batch SMS: kampanie do wielu odbiorców</p></div>
+                <div class="module-item"><h4>💬 <code>app/message_utils.py</code></h4><p>Narzędzia SMS: chunking, MAX_SMS_CHARS, formatowanie</p></div>
+                <div class="module-item"><h4>🔐 <code>app/security.py</code></h4><p>Walidacja podpisów Twilio, bezpieczeństwo webhooków</p></div>
             </div>
         </div>
     </section>
@@ -345,8 +424,8 @@
                 <p>Lokalne środowisko deweloperskie i Docker</p>
             </div>
             <div class="grid">
-                <div class="card"><h3>🖥️ Lokalnie</h3><pre><code>python -m venv .venv
-source .venv/bin/activate
+                <div class="card"><h3>🖥️ Lokalnie</h3><pre><code>python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python run.py</code></pre><p style="margin-top:1rem">Panel: <code>http://localhost:3000</code></p></div>
@@ -378,9 +457,10 @@ docker compose up --build</code></pre><p style="margin-top:1rem">Panel: <code>ht
             <a href="developer-guide.md">Developer Guide</a>
             <a href="docker-guide.md">Docker Guide</a>
             <a href="architecture-notes.md">Architecture</a>
+            <a href="app-brochure.html">Broszura</a>
             <a href="https://github.com/19paoletto10-hub/twilio">GitHub</a>
         </div>
-        <p class="footer-copy">Twilio Chat App v3.2.5 • © 2025 • MIT License</p>
+        <p class="footer-copy">Twilio Chat App v3.2.7 • © 2025 • Dokumentacja techniczna</p>
     </footer>
 </body>
 </html>
