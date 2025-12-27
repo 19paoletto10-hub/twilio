@@ -1,5 +1,59 @@
 # Changelog
 
+## ver3.2.6 (Chunked SMS & Professional FAISS RAG)
+
+📅 Data wydania: 2025-12-27
+
+### Podsumowanie
+
+Release 3.2.6 wprowadza automatyczne dzielenie długich SMS-ów (>1500 znaków) na części oraz 
+profesjonalne streszczenia RAG w stylu reportera biznesowego z gwarancją pokrycia wszystkich 
+8 kategorii newsów.
+
+### Najważniejsze zmiany
+
+#### 📱 Chunked SMS
+- **Automatyczne dzielenie** – wiadomości >1500 znaków dzielone na części przez `send_chunked_sms()`
+- **POST /api/messages** – automatycznie wykrywa długie wiadomości i używa chunked send
+- **Nowe pola odpowiedzi** – `parts`, `sids[]`, `characters` w JSON response
+- **Limit bezpieczeństwa** – 1500 znaków (bufor 100 znaków przed limitem Twilio 1600)
+
+#### 🎯 FAISS All-Categories Improvements
+- **Gwarancja pokrycia** – każda z 8 kategorii zawsze obecna w odpowiedzi
+- **Skanowanie docstore** – bezpośredni dostęp do dokumentów zamiast MMR search
+- **Nowe pola** – `categories_found`, `categories_with_data`, `categories_empty`
+- **per_category_k=2** – zwiększono z 1 do 2 dokumentów per kategoria
+
+#### 📰 Profesjonalne streszczenia
+- **Styl reportera** – koherentna proza zamiast bullet points
+- **System prompt** – "doświadczony dziennikarz biznesowy przygotowujący poranny briefing"
+- **Emoji nagłówki** – 📊 BIZNES, 📈 GIEŁDA, 🏠 NIERUCHOMOŚCI etc.
+- **max_tokens=2000** – zapewnia miejsce na wszystkie kategorie
+
+#### 🔧 API Enhancements
+- **POST /api/news/test-faiss** – nowa opcja `send_sms: true` z chunked delivery
+- **Szczegółowe logowanie** – ilość kategorii, długość odpowiedzi, błędy per kategoria
+
+### Zaktualizowane pliki
+
+```
+app/faiss_service.py    # search_all_categories(), answer_query_all_categories()
+app/webhooks.py         # POST /api/messages (chunked), POST /api/news/test-faiss (send_sms)
+```
+
+### Przykład użycia
+
+```bash
+# Test FAISS z wysyłką SMS
+curl -X POST /api/news/test-faiss \
+  -d '{"mode": "all_categories", "send_sms": true}'
+
+# Odpowiedź:
+# {"sms_sent": true, "sms_result": {"parts": 3, "sids": [...]}, "categories_found": 8}
+```
+
+---
+
 ## ver3.2.5 (Code Quality & Type Safety: Senior-Level Refactoring)
 
 📅 Data wydania: 2025-12-27

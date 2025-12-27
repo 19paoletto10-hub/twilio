@@ -1,6 +1,6 @@
-# Developer Guide – v3.2.5
+# Developer Guide – v3.2.6
 
-> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **SCHEMA_VERSION**: 9 • **Type Safety**: 0 Pylance errors
+> 🏷️ **Wersja**: 3.2.6 (2025-12-27) • **SCHEMA_VERSION**: 9 • **Chunked SMS**: ✅ • **FAISS All-Categories**: ✅
 
 Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak działa przepływ
 żądania, jakie są granice modułów i jak testować funkcje ręcznie.
@@ -27,7 +27,7 @@ Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak 
   - `auto_reply.py`, `reminder.py`, `news_scheduler.py`, `multi_sms.py` – workery w tle.
   - `faiss_service.py`, `scraper_service.py` – RAG/FAISS i scraping newsów.
   - `database.py` – SQLite + migracje `SCHEMA_VERSION`.
-  - `message_utils.py` – wspólne utilsy SMS (limit znaków, dzielenie na części).
+  - `message_utils.py` – wspólne utilsy SMS (limit znaków `MAX_SMS_CHARS=1500`, dzielenie na części).
 - `templates/`, `static/js/`, `static/css/` – UI (Jinja2 + Bootstrap 5 + JS bez bundlera).
 - `data/` – baza SQLite (nie trafia do publicznych paczek release).
 - `X1_data/` – indeks FAISS, snapshoty dokumentów, surowe scrapes (nie publikować).
@@ -42,9 +42,44 @@ Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak 
    wiadomość w `messages` i – dla inbound – enqueuje auto-reply/AI.
 3. Worker auto-reply/AI (`auto_reply.py`) pobiera z kolejki i decyduje, czy użyć AI, klasycznego
    auto-reply czy fallback bota. Odpowiedź jest wysyłana przez `TwilioService`.
-4. Wysyłka korzysta z `send_message` lub, dla długich treści, z `send_chunked_sms` (limit 1500 znaków
-   na część; kilka SID-ów na jedną logiczną odpowiedź).
+4. Wysyłka korzysta z `send_message` lub, dla długich treści (>1500 znaków), z `send_chunked_sms`
+   (limit 1500 znaków na część; kilka SID-ów na jedną logiczną odpowiedź).
 5. Statusy dostarczenia trafiają do `/twilio/status` i aktualizują rekordy w `messages`.
+
+## Chunked SMS – wysyłka długich wiadomości
+
+Od v3.2.6 aplikacja automatycznie dzieli długie wiadomości:
+
+```python
+# POST /api/messages - automatyczne wykrywanie
+if len(body) > MAX_SMS_CHARS:  # 1500 znaków
+    result = twilio_client.send_chunked_sms(to, body, max_length=1500)
+    # Zwraca: {"parts": 3, "sids": ["SM...", "SM...", "SM..."]}
+```
+
+Każda część SMS to osobna wiadomość Twilio z własnym SID. Odpowiedź API zawiera:
+- `parts` – liczba części
+- `sids` – tablica wszystkich SID-ów
+- `characters` – łączna długość wiadomości
+
+## FAISS All-Categories – gwarancja pokrycia
+
+Tryb `all_categories` w `answer_query_all_categories()` zapewnia:
+
+1. **8 kategorii**: Biznes, Giełda, Gospodarka, Nieruchomości, Poradnik Finansowy, Praca, Prawo, Technologie
+2. **Skanowanie docstore**: Bezpośredni dostęp do wszystkich dokumentów (nie MMR search)
+3. **Eksplicytna lista**: Każda kategoria zostanie uwzględniona, nawet jeśli brak danych
+
+```bash
+# Test FAISS z gwarancją kategorii
+curl -X POST /api/news/test-faiss \
+  -d '{"mode": "all_categories", "send_sms": true}'
+
+# Odpowiedź zawiera:
+# "categories_found": 8
+# "categories_with_data": ["Biznes", "Giełda", ...]
+# "categories_empty": []
+```
 
 ## UI/Frontend: gdzie dodać nową funkcję
 

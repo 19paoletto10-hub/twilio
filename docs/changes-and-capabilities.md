@@ -1,8 +1,15 @@
-# Zmiany i aktualne możliwości – v3.2.5
+# Zmiany i aktualne możliwości – v3.2.6
 
-> 🏷️ **Wersja**: 3.2.5 (2025-01-27) • **SCHEMA_VERSION**: 9 • **Type Safety**: 0 Pylance errors
+> 🏷️ **Wersja**: 3.2.6 (2025-12-27) • **SCHEMA_VERSION**: 9 • **Chunked SMS**: ✅ • **FAISS All-Categories**: ✅
 
 Dokument podsumowuje wprowadzone zmiany oraz aktualny zakres funkcji aplikacji Twilio Chat App. Skupia się na perspektywie technicznej i operacyjnej (co zostało dodane, jak działa, jak używać w biznesie/utrzymaniu).
+
+## Nowości w v3.2.6 – Chunked SMS & Professional FAISS RAG
+
+- **Chunked SMS**: Automatyczne dzielenie długich wiadomości (>1500 znaków) na części
+- **FAISS All-Categories**: Gwarancja pokrycia wszystkich 8 kategorii w streszczeniach
+- **Profesjonalne streszczenia**: Styl reportera biznesowego, koherentna proza
+- **API Enhancements**: `send_sms` w test-faiss, szczegółowe `sms_result` w odpowiedziach
 
 ## Nowości w v3.2.5 – Enterprise Code Quality
 
