@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
     <meta charset="utf-8" />
-    <title>Twilio Chat App v3.2.7 – Dokumentacja rozwiązania</title>
+    <title>Twilio Chat App v3.2.8 – Dokumentacja rozwiązania</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Enterprise SMS Communication Hub - profesjonalna platforma do zarządzania komunikacją SMS z AI, RAG i automatyzacją" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -195,17 +195,17 @@
                 <li><a href="#database">Baza danych</a></li>
                 <li><a href="#deployment">Deployment</a></li>
             </ul>
-            <span class="nav-version">v3.2.7</span>
+            <span class="nav-version">v3.2.8</span>
         </div>
     </nav>
 
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badges">
-                <span class="badge badge-primary">📦 v3.2.7</span>
+                <span class="badge badge-primary">📦 v3.2.8</span>
                 <span class="badge badge-success">✅ 0 Pylance Errors</span>
                 <span class="badge badge-info">🐳 Docker Ready</span>
-                <span class="badge badge-warning">🆕 Chunked SMS</span>
+                <span class="badge badge-warning">🆕 News Fallback</span>
             </div>
             <h1>Dokumentacja rozwiązania</h1>
             <p class="hero-subtitle">Enterprise-Grade SMS Communication Hub<br>Python 3.12+ • Flask 3.x • Twilio • OpenAI • FAISS • Docker</p>
@@ -215,10 +215,21 @@
     <section id="whats-new">
         <div class="container">
             <div class="section-header">
-                <h2>🆕 Co nowego w v3.2.7</h2>
+                <h2>🆕 Co nowego w v3.2.8</h2>
                 <p>Najnowsze ulepszenia i nowe funkcje</p>
             </div>
             <div class="grid">
+                <div class="card new-feature">
+                    <div class="card-icon warning">📰</div>
+                    <h3>/news Fallback (v3.2.8)</h3>
+                    <p>Graceful degradation dla wyłączonego listenera</p>
+                    <ul>
+                        <li>Automatyczna informacja gdy /news niedostępne</li>
+                        <li>Status tracking: news-disabled</li>
+                        <li>Pełne logowanie diagnostyczne</li>
+                        <li>Lepsze UX dla użytkowników</li>
+                    </ul>
+                </div>
                 <div class="card new-feature">
                     <div class="card-icon success">📱</div>
                     <h3>Chunked SMS (v3.2.6)</h3>
@@ -228,17 +239,6 @@
                         <li>Bufor bezpieczeństwa (100 zn. przed limitem)</li>
                         <li>Wielokrotne SID-y dla śledzenia dostawy</li>
                         <li>Pełna kompatybilność wsteczna</li>
-                    </ul>
-                </div>
-                <div class="card new-feature">
-                    <div class="card-icon info">🎯</div>
-                    <h3>FAISS All-Categories (v3.2.6)</h3>
-                    <p>Gwarantowane pokrycie wszystkich 8 kategorii newsów</p>
-                    <ul>
-                        <li>Skanowanie docstore zamiast MMR search</li>
-                        <li>Profesjonalne streszczenia w stylu reportera</li>
-                        <li>Emoji nagłówki dla kategorii</li>
-                        <li>2 dokumenty per kategoria</li>
                     </ul>
                 </div>
                 <div class="card new-feature">
@@ -257,16 +257,16 @@
             <div class="changelog">
                 <h3>📋 Historia zmian</h3>
                 <div class="changelog-item">
+                    <h4>v3.2.8 - News Command Fallback</h4>
+                    <p>Graceful fallback dla komendy /news gdy listener jest wyłączony. Użytkownicy otrzymują jasną informację o niedostępności funkcji.</p>
+                </div>
+                <div class="changelog-item">
                     <h4>v3.2.7 - Dynamic Chat Headers</h4>
                     <p>Dynamiczna aktualizacja nagłówków wątku i daty ostatniej aktywności przy przełączaniu konwersacji. Synchronizacja wszystkich elementów UI.</p>
                 </div>
                 <div class="changelog-item">
                     <h4>v3.2.6 - Chunked SMS & Professional RAG</h4>
                     <p>Automatyczne dzielenie długich SMS-ów. Profesjonalne streszczenia newsów z gwarancją pokrycia wszystkich 8 kategorii.</p>
-                </div>
-                <div class="changelog-item">
-                    <h4>v3.2.5 - Code Quality & Type Safety</h4>
-                    <p>Profesjonalny refaktoring. 0 błędów Pylance w strict mode. Database-level deduplication.</p>
                 </div>
             </div>
         </div>
@@ -460,7 +460,7 @@ docker compose up --build</code></pre><p style="margin-top:1rem">Panel: <code>ht
             <a href="app-brochure.html">Broszura</a>
             <a href="https://github.com/19paoletto10-hub/twilio">GitHub</a>
         </div>
-        <p class="footer-copy">Twilio Chat App v3.2.7 • © 2025 • Dokumentacja techniczna</p>
+        <p class="footer-copy">Twilio Chat App v3.2.8 • © 2025 • Dokumentacja techniczna</p>
     </footer>
 </body>
 </html>

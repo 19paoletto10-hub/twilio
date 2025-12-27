@@ -1,5 +1,48 @@
 # Changelog
 
+## ver3.2.8 (News Command Fallback & Consolidation)
+
+📅 Data wydania: 2025-12-27
+
+### Podsumowanie
+
+Release 3.2.8 wprowadza graceful fallback dla komendy `/news` gdy listener jest wyłączony,
+zapewniając użytkownikom jasną informację o niedostępności funkcji.
+
+### Najważniejsze zmiany
+
+#### 📰 /news Disabled Fallback
+- **Graceful degradation** – gdy listener `/news` jest wyłączony, użytkownik otrzymuje informację
+- **Automatyczna odpowiedź** – "Funkcja /news jest chwilowo niedostępna."
+- **Status tracking** – wiadomości oznaczane statusem `news-disabled` w bazie
+- **Pełne logowanie** – szczegółowe logi dla diagnozy problemów z konfiguracją
+
+#### 🔧 Improvements
+- **Branch consolidation** – wszystkie feature branches zmergowane do main
+- **Clean repository** – usunięcie nieużywanych gałęzi
+
+### Zaktualizowane pliki
+
+```
+app/auto_reply.py           # Obsługa /news disabled fallback
+CHANGELOG.md                # Dokumentacja v3.2.8
+```
+
+### Zmiany w auto_reply.py
+
+```python
+# Obsługa wyłączonego listenera /news
+if not listener_enabled:
+    app.logger.info("/news command received but listener is disabled")
+    disabled_msg = "Funkcja /news jest chwilowo niedostępna."
+    # Wysłanie informacji do użytkownika
+    send_sms(to=from_number, body=disabled_msg)
+    # Zapis ze statusem news-disabled
+    db_save_reply(from_number, disabled_msg, status="news-disabled")
+```
+
+---
+
 ## ver3.2.7 (Dynamic Chat UI & Documentation Update)
 
 📅 Data wydania: 2025-12-27
