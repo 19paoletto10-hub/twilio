@@ -382,7 +382,7 @@
     // Update main header title and subtitle
     if (chatCurrentTitle) chatCurrentTitle.textContent = display || 'Nieznany numer';
     if (chatCurrentSubtitle) {
-      // Show participant number in subtitle if different from display, else generic label
+      // Show E.164 number in subtitle if different from display, else generic label
       const subtitleText = (participant && participant !== display) 
         ? participant 
         : 'Rozmowa SMS';
