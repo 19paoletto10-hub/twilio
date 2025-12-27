@@ -648,10 +648,11 @@
     <!-- ===== HERO ===== -->
     <section class="hero">
         <div class="hero-content">
-            <span class="hero-badge">🚀 Enterprise Edition v3.2.7</span>
+            <span class="hero-badge">🚀 Enterprise Edition v3.2.9</span>
             <div class="hero-logo">📱</div>
             <h1>Twilio Chat App</h1>
             <p class="hero-tagline">Enterprise SMS Communication Hub</p>
+            <p class="hero-tagline" style="font-size:1rem; color: var(--text-muted);">Autor: Pawel Tanski • tanski.pawel@icloud.com</p>
             
             <div class="hero-stats">
                 <div class="stat">
@@ -679,6 +680,51 @@
                 <a href="app-overview.html" class="btn btn-outline">
                     <span>📄</span> Dokumentacja
                 </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== WHAT'S NEW 3.2.9 ===== -->
+    <section class="section-dark">
+        <div class="container">
+            <div class="section-header">
+                <h2>🆕 Nowości w v3.2.9</h2>
+                <p>Zaawansowane wzorce projektowe, optymalizacje wydajności i odporności platformy.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛤️</div>
+                    <h3>Railway-Oriented Core</h3>
+                    <p>Result Type (Success/Failure), retry z backoffem i circuit breaker dla połączeń zewnętrznych.</p>
+                    <ul class="feature-list">
+                        <li>Deterministyczne przepływy bez wyjątków</li>
+                        <li>Retry + jitter, kontrola progu błędów</li>
+                        <li>Chain of Responsibility dla wiadomości</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon secondary">⚡</div>
+                    <h3>Performance Suite</h3>
+                    <p>WAL w SQLite, cache zapytań, embedding cache z TTL, metryki czasu i Lazy init.</p>
+                    <ul class="feature-list">
+                        <li>Transakcje z auto rollback</li>
+                        <li>TTL cache dla embeddings (FAISS)</li>
+                        <li>@timed i MetricsCollector dla endpointów</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon accent">🧭</div>
+                    <h3>Clean Architecture</h3>
+                    <p>Value Objects (PhoneNumber, InboundMessage), kompozycyjne walidatory i DI-ready handlery.</p>
+                    <ul class="feature-list">
+                        <li>Command Pattern dla /news, AI, template</li>
+                        <li>Fluent validators z wynikami Success/Failure</li>
+                        <li>Łatwe testy i mocki zależności</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </section>
@@ -866,7 +912,7 @@
                         <li>Wsparcie 24/7</li>
                         <li>Szkolenia zespołu</li>
                     </ul>
-                    <a href="mailto:contact@example.com" class="btn btn-primary" style="width:100%;">Skontaktuj się</a>
+                    <a href="mailto:tanski.pawel@icloud.com" class="btn btn-primary" style="width:100%;">Skontaktuj się</a>
                 </div>
                 
                 <div class="plan-card">
@@ -880,7 +926,7 @@
                         <li>Code review</li>
                         <li>Elastyczne godziny</li>
                     </ul>
-                    <a href="mailto:contact@example.com" class="btn btn-outline" style="width:100%;">Zapytaj o ofertę</a>
+                    <a href="mailto:tanski.pawel@icloud.com" class="btn btn-outline" style="width:100%;">Zapytaj o ofertę</a>
                 </div>
             </div>
         </div>
@@ -903,8 +949,12 @@
             
             <div class="contact-info">
                 <div class="contact-item">
+                    <span>👤</span>
+                    <span><a href="mailto:tanski.pawel@icloud.com">Pawel Tanski (author)</a></span>
+                </div>
+                <div class="contact-item">
                     <span>📧</span>
-                    <span>contact@example.com</span>
+                    <span><a href="mailto:tanski.pawel@icloud.com">tanski.pawel@icloud.com</a></span>
                 </div>
                 <div class="contact-item">
                     <span>🌐</span>
@@ -931,9 +981,14 @@
             <a href="https://github.com/19paoletto10-hub/twilio">GitHub</a>
         </div>
         <p class="footer-copy">
-            Twilio Chat App v3.2.7 • © 2025 • Enterprise SMS Communication Platform<br>
+            Twilio Chat App v3.2.9 • © 2025 • Enterprise SMS Communication Platform<br>
             <small>Dokument wygenerowany: Grudzień 2025</small>
         </p>
     </footer>
+
+    <section class="author-data" style="padding: 24px; text-align: center; background: #0a0a0f; color: #e5e7eb;">
+        <p style="margin: 0; font-weight: 600;">Autor: Pawel Tanski</p>
+        <p style="margin: 4px 0 0 0;">Kontakt: <a href="mailto:tanski.pawel@icloud.com" style="color: #9cc5ff;">tanski.pawel@icloud.com</a></p>
+    </section>
 </body>
 </html>

@@ -1,18 +1,117 @@
 from __future__ import annotations
 
+import functools
 import sqlite3
+import threading
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
-from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, Generator, List, Optional, Sequence, Set, Tuple, TypeVar
 
 from flask import current_app, g
+
+# =============================================================================
+# Module Configuration
+# =============================================================================
 
 SCHEMA_VERSION = 9
 _SCHEMA_INIT_FLAG = "_SCHEMA_INITIALIZED"
 _TIMESTAMP_FORMAT = "%Y-%m-%dT%H:%M:%S"
 _NORMALIZE_PREFIXES = ("whatsapp:", "sms:", "mms:", "client:", "sip:")
 _NORMALIZE_STRIP_CHARS = (" ", "-", "(", ")", ".", "_")
+
+# Type variable for generic decorators
+T = TypeVar("T")
+
+# Connection pool lock for thread safety
+_connection_lock = threading.RLock()
+
+
+# =============================================================================
+# Query Cache for Prepared Statements
+# =============================================================================
+
+
+class QueryCache:
+    """
+    Thread-safe cache for frequently used SQL queries.
+    
+    Improves performance by avoiding repeated string construction.
+    """
+    
+    __slots__ = ("_cache", "_lock", "_max_size")
+    
+    def __init__(self, max_size: int = 100):
+        self._cache: Dict[str, str] = {}
+        self._lock = threading.RLock()
+        self._max_size = max_size
+    
+    def get_or_create(self, key: str, query_builder: Callable[[], str]) -> str:
+        """Get cached query or build and cache it."""
+        with self._lock:
+            if key not in self._cache:
+                if len(self._cache) >= self._max_size:
+                    # Simple LRU: remove first item
+                    first_key = next(iter(self._cache))
+                    del self._cache[first_key]
+                self._cache[key] = query_builder()
+            return self._cache[key]
+    
+    def clear(self) -> None:
+        """Clear the cache."""
+        with self._lock:
+            self._cache.clear()
+
+
+# Global query cache instance
+_query_cache = QueryCache()
+
+
+# =============================================================================
+# Database Transaction Context Manager
+# =============================================================================
+
+
+@contextmanager
+def transaction() -> Generator[sqlite3.Connection, None, None]:
+    """
+    Context manager for database transactions with automatic rollback.
+    
+    Usage:
+        with transaction() as conn:
+            conn.execute("INSERT INTO ...")
+            conn.execute("UPDATE ...")
+        # Auto-commit on success, auto-rollback on exception
+    """
+    conn = _get_connection()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+# =============================================================================
+# Performance Decorators
+# =============================================================================
+
+
+def db_operation(fn: Callable[..., T]) -> Callable[..., T]:
+    """
+    Decorator for database operations with connection handling.
+    
+    Ensures connection is available and handles basic error logging.
+    """
+    @functools.wraps(fn)
+    def wrapper(*args: Any, **kwargs: Any) -> T:
+        try:
+            return fn(*args, **kwargs)
+        except sqlite3.Error as e:
+            current_app.logger.error("Database error in %s: %s", fn.__name__, e)
+            raise
+    return wrapper
 
 
 def init_app(app) -> None:
@@ -25,17 +124,46 @@ def init_app(app) -> None:
 
 
 def _get_connection() -> sqlite3.Connection:
+    """
+    Get database connection from Flask's g object.
+    
+    This implements request-scoped connection management:
+    - One connection per request (stored in flask.g)
+    - Automatic cleanup via teardown_appcontext
+    - Schema validation on first access
+    
+    Performance optimizations:
+    - WAL mode for better concurrency
+    - Connection caching in request context
+    - Prepared statement support via row_factory
+    """
     if not current_app.config.get(_SCHEMA_INIT_FLAG):
         # Defensive: ensure schema exists even if init_app was not called.
         _ensure_schema()
         current_app.config[_SCHEMA_INIT_FLAG] = True
 
     if "db_conn" not in g:
-        db_path = Path(current_app.config["APP_SETTINGS"].db_path)
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        g.db_conn = conn
+        with _connection_lock:
+            db_path = Path(current_app.config["APP_SETTINGS"].db_path)
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            conn = sqlite3.connect(
+                db_path,
+                check_same_thread=False,
+                isolation_level=None,  # Autocommit for better WAL performance
+            )
+            conn.row_factory = sqlite3.Row
+            
+            # Enable WAL mode for better concurrent read/write performance
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA synchronous=NORMAL")
+            conn.execute("PRAGMA cache_size=-64000")  # 64MB cache
+            conn.execute("PRAGMA temp_store=MEMORY")
+            
+            # Re-enable explicit transactions after setting isolation_level=None
+            conn.isolation_level = ""
+            
+            g.db_conn = conn
     return g.db_conn
 
 

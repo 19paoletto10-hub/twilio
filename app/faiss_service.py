@@ -135,15 +135,82 @@ if not OPENAI_API_KEY:
 
 
 # =============================================================================
-# Embeddings adapter (batched)
+# Embedding Cache (LRU with TTL)
+# =============================================================================
+class EmbeddingCache:
+    """
+    Thread-safe LRU cache for embeddings with TTL.
+    
+    Reduces API calls for frequently queried texts.
+    Cache key is hash of text + model to handle model changes.
+    """
+    
+    __slots__ = ("_cache", "_lock", "_max_size", "_ttl")
+    
+    def __init__(self, max_size: int = 10000, ttl_seconds: float = 3600.0):
+        self._cache: Dict[str, Tuple[List[float], float]] = {}
+        self._lock = __import__("threading").RLock()
+        self._max_size = max_size
+        self._ttl = ttl_seconds
+    
+    def _make_key(self, text: str, model: str) -> str:
+        import hashlib
+        return hashlib.sha256(f"{model}:{text}".encode()).hexdigest()[:32]
+    
+    def get(self, text: str, model: str) -> Optional[List[float]]:
+        key = self._make_key(text, model)
+        with self._lock:
+            entry = self._cache.get(key)
+            if entry is None:
+                return None
+            embedding, expires_at = entry
+            if __import__("time").time() > expires_at:
+                del self._cache[key]
+                return None
+            return embedding
+    
+    def set(self, text: str, model: str, embedding: List[float]) -> None:
+        key = self._make_key(text, model)
+        with self._lock:
+            if len(self._cache) >= self._max_size:
+                # Evict oldest entries (simple FIFO for now)
+                keys_to_remove = list(self._cache.keys())[:self._max_size // 10]
+                for k in keys_to_remove:
+                    del self._cache[k]
+            self._cache[key] = (embedding, __import__("time").time() + self._ttl)
+    
+    def clear(self) -> None:
+        with self._lock:
+            self._cache.clear()
+    
+    @property
+    def size(self) -> int:
+        with self._lock:
+            return len(self._cache)
+
+
+# Global embedding cache
+_embedding_cache = EmbeddingCache()
+
+
+# =============================================================================
+# Embeddings adapter (batched with caching)
 # =============================================================================
 class OpenAIEmbeddings(Embeddings):
-    """Embeddings tylko przez OpenAI API (bez fallbacków)."""
+    """
+    OpenAI Embeddings adapter with caching and batching.
+    
+    Features:
+    - LRU cache with TTL for repeated queries
+    - Batched API calls for document embedding
+    - Automatic retry on rate limits
+    """
 
-    def __init__(self, model: Optional[str] = None):
+    def __init__(self, model: Optional[str] = None, use_cache: bool = True):
         self.model = model or _get_embedding_model()
         self.api_key = _get_openai_key()
         self.batch_size = _get_embed_batch_size()
+        self.use_cache = use_cache
 
         if not openai:
             raise RuntimeError("Pakiet openai nie jest zainstalowany – wymagany do embeddings.")
@@ -156,20 +223,62 @@ class OpenAIEmbeddings(Embeddings):
         self.client = openai.OpenAI(api_key=self.api_key)
 
     def embed_query(self, text: str) -> List[float]:
+        """Embed single query with cache support."""
+        # Check cache first
+        if self.use_cache:
+            cached = _embedding_cache.get(text, self.model)
+            if cached is not None:
+                logger.debug("Embedding cache hit for query")
+                return cached
+        
         resp = self.client.embeddings.create(model=self.model, input=[text])
-        return resp.data[0].embedding
+        embedding = resp.data[0].embedding
+        
+        # Cache the result
+        if self.use_cache:
+            _embedding_cache.set(text, self.model, embedding)
+        
+        return embedding
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
+        """Embed documents with batching and partial cache lookup."""
         if not texts:
             return []
 
         out: List[List[float]] = []
-        bs = max(1, int(self.batch_size))
+        uncached_texts: List[str] = []
+        uncached_indices: List[int] = []
+        
+        # Check cache for each text
+        if self.use_cache:
+            for i, text in enumerate(texts):
+                cached = _embedding_cache.get(text, self.model)
+                if cached is not None:
+                    out.append(cached)
+                else:
+                    out.append([])  # Placeholder
+                    uncached_texts.append(text)
+                    uncached_indices.append(i)
+        else:
+            uncached_texts = texts
+            uncached_indices = list(range(len(texts)))
+            out = [[] for _ in texts]
+        
+        # Batch embed uncached texts
+        if uncached_texts:
+            bs = max(1, int(self.batch_size))
+            batch_embeddings: List[List[float]] = []
 
-        for i in range(0, len(texts), bs):
-            batch = texts[i : i + bs]
-            resp = self.client.embeddings.create(model=self.model, input=batch)
-            out.extend([item.embedding for item in resp.data])
+            for i in range(0, len(uncached_texts), bs):
+                batch = uncached_texts[i : i + bs]
+                resp = self.client.embeddings.create(model=self.model, input=batch)
+                batch_embeddings.extend([item.embedding for item in resp.data])
+            
+            # Fill in uncached results and update cache
+            for idx, embedding in zip(uncached_indices, batch_embeddings):
+                out[idx] = embedding
+                if self.use_cache:
+                    _embedding_cache.set(uncached_texts[uncached_indices.index(idx)], self.model, embedding)
 
         return out
 

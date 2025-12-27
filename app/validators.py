@@ -3,15 +3,80 @@ Input validation utilities for the Twilio Chat Application.
 
 This module provides centralized validation functions for phone numbers,
 message bodies, and other user inputs to ensure security and data integrity.
+
+Design Principles:
+- Fail-fast validation with descriptive errors
+- Type safety with explicit return types
+- Composable validators for complex inputs
+- Immutable validation results
 """
 
 from __future__ import annotations
 
 import re
-from typing import Optional
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar, Union
 
+# =============================================================================
+# Constants
+# =============================================================================
 
 # E.164 phone number format: +[country code][number] (7-15 digits after +)
+E164_PATTERN = re.compile(r"^\+[1-9]\d{6,14}$")
+
+# Common regex patterns
+SLUG_PATTERN = re.compile(r"^[a-z0-9][a-z0-9\-_]*[a-z0-9]$|^[a-z0-9]$")
+EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+URL_PATTERN = re.compile(r"^https?://[^\s/$.?#].[^\s]*$", re.IGNORECASE)
+
+# Type variable for generic validators
+T = TypeVar("T")
+
+
+# =============================================================================
+# Validation Result Types
+# =============================================================================
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationSuccess(Generic[T]):
+    """Represents a successful validation."""
+    value: T
+    
+    def is_valid(self) -> bool:
+        return True
+    
+    def get_value(self) -> T:
+        return self.value
+    
+    def get_error(self) -> None:
+        return None
+
+
+@dataclass(frozen=True, slots=True)
+class ValidationFailure:
+    """Represents a failed validation."""
+    message: str
+    field: Optional[str] = None
+    code: Optional[str] = None
+    
+    def is_valid(self) -> bool:
+        return False
+    
+    def get_value(self) -> None:
+        return None
+    
+    def get_error(self) -> str:
+        return self.message
+
+
+# Union type for validation results
+ValidationResult = Union[ValidationSuccess[T], ValidationFailure]
+
+
+# =============================================================================
+# Exception Classes
+# =============================================================================
 E164_PATTERN = re.compile(r"^\+[1-9]\d{6,14}$")
 
 
@@ -221,3 +286,200 @@ def validate_temperature(
         )
 
     return temperature
+
+
+# =============================================================================
+# Composable Validators (Builder Pattern)
+# =============================================================================
+
+
+@dataclass
+class Validator(Generic[T]):
+    """
+    Composable validator using the Builder pattern.
+    
+    Allows chaining multiple validation rules:
+        result = (Validator(phone_input)
+            .not_empty("Phone is required")
+            .matches(E164_PATTERN, "Invalid phone format")
+            .max_length(15)
+            .validate())
+    """
+    
+    value: Any
+    field_name: str = "value"
+    _errors: List[str] = field(default_factory=list)
+    _transformed: Any = None
+    
+    def __post_init__(self) -> None:
+        self._transformed = self.value
+    
+    def not_empty(self, message: Optional[str] = None) -> "Validator[T]":
+        """Validate that value is not empty/None."""
+        if not self._transformed:
+            self._errors.append(message or f"{self.field_name} is required")
+        return self
+    
+    def not_none(self, message: Optional[str] = None) -> "Validator[T]":
+        """Validate that value is not None."""
+        if self._transformed is None:
+            self._errors.append(message or f"{self.field_name} cannot be None")
+        return self
+    
+    def min_length(self, length: int, message: Optional[str] = None) -> "Validator[T]":
+        """Validate minimum length for strings."""
+        if self._transformed and len(str(self._transformed)) < length:
+            self._errors.append(
+                message or f"{self.field_name} must be at least {length} characters"
+            )
+        return self
+    
+    def max_length(self, length: int, message: Optional[str] = None) -> "Validator[T]":
+        """Validate maximum length for strings."""
+        if self._transformed and len(str(self._transformed)) > length:
+            self._errors.append(
+                message or f"{self.field_name} cannot exceed {length} characters"
+            )
+        return self
+    
+    def matches(self, pattern: re.Pattern[str], message: Optional[str] = None) -> "Validator[T]":
+        """Validate that value matches regex pattern."""
+        if self._transformed and not pattern.match(str(self._transformed)):
+            self._errors.append(
+                message or f"{self.field_name} has invalid format"
+            )
+        return self
+    
+    def in_range(
+        self, 
+        min_val: Union[int, float], 
+        max_val: Union[int, float],
+        message: Optional[str] = None
+    ) -> "Validator[T]":
+        """Validate numeric range."""
+        try:
+            num = float(self._transformed)
+            if not (min_val <= num <= max_val):
+                self._errors.append(
+                    message or f"{self.field_name} must be between {min_val} and {max_val}"
+                )
+        except (TypeError, ValueError):
+            self._errors.append(f"{self.field_name} must be a number")
+        return self
+    
+    def transform(self, fn: Callable[[Any], T]) -> "Validator[T]":
+        """Apply transformation function to value."""
+        try:
+            self._transformed = fn(self._transformed)
+        except Exception as e:
+            self._errors.append(f"Transformation failed: {e}")
+        return self
+    
+    def strip(self) -> "Validator[T]":
+        """Strip whitespace from string values."""
+        if isinstance(self._transformed, str):
+            self._transformed = self._transformed.strip()
+        return self
+    
+    def lowercase(self) -> "Validator[T]":
+        """Convert to lowercase."""
+        if isinstance(self._transformed, str):
+            self._transformed = self._transformed.lower()
+        return self
+    
+    def custom(
+        self, 
+        predicate: Callable[[Any], bool], 
+        message: str
+    ) -> "Validator[T]":
+        """Apply custom validation predicate."""
+        if self._transformed and not predicate(self._transformed):
+            self._errors.append(message)
+        return self
+    
+    def validate(self) -> ValidationResult[T]:
+        """Execute validation and return result."""
+        if self._errors:
+            return ValidationFailure(
+                message="; ".join(self._errors),
+                field=self.field_name,
+            )
+        return ValidationSuccess(self._transformed)
+    
+    def validate_or_raise(self) -> T:
+        """Execute validation and raise on failure."""
+        result = self.validate()
+        if isinstance(result, ValidationFailure):
+            raise ValidationError(result.message, field=result.field)
+        return result.value
+
+
+# =============================================================================
+# Specialized Validators
+# =============================================================================
+
+
+def validate_phone_numbers(
+    numbers: List[str],
+    *,
+    skip_invalid: bool = False
+) -> Tuple[List[str], List[str]]:
+    """
+    Validate a list of phone numbers.
+    
+    Args:
+        numbers: List of phone numbers to validate
+        skip_invalid: If True, return valid numbers and invalid separately
+        
+    Returns:
+        Tuple of (valid_numbers, invalid_numbers)
+    """
+    valid: List[str] = []
+    invalid: List[str] = []
+    
+    for number in numbers:
+        try:
+            validated = validate_e164_phone(number)
+            valid.append(validated)
+        except ValidationError:
+            if skip_invalid:
+                invalid.append(number)
+            else:
+                raise
+    
+    return valid, invalid
+
+
+def validate_json_payload(
+    data: Dict[str, Any],
+    required_fields: List[str],
+    optional_fields: Optional[List[str]] = None,
+) -> ValidationResult[Dict[str, Any]]:
+    """
+    Validate JSON payload structure.
+    
+    Args:
+        data: JSON data to validate
+        required_fields: List of required field names
+        optional_fields: List of allowed optional fields
+        
+    Returns:
+        ValidationResult with validated data or error
+    """
+    if not isinstance(data, dict):
+        return ValidationFailure("Payload must be a JSON object")
+    
+    missing = [f for f in required_fields if f not in data]
+    if missing:
+        return ValidationFailure(
+            f"Missing required fields: {', '.join(missing)}",
+            code="MISSING_FIELDS",
+        )
+    
+    # Filter to allowed fields if optional_fields specified
+    if optional_fields is not None:
+        allowed = set(required_fields) | set(optional_fields)
+        filtered = {k: v for k, v in data.items() if k in allowed}
+        return ValidationSuccess(filtered)
+    
+    return ValidationSuccess(data)
