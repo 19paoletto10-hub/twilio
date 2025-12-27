@@ -2687,13 +2687,42 @@ def api_messages():
 
 @webhooks_bp.get("/api/conversations")
 def api_conversations():
+    """
+    Return list of conversations with last message metadata.
+    
+    Query params:
+        limit (int): Maximum conversations to return (1-200, default 30)
+    
+    Returns:
+        JSON with items array containing conversation objects with:
+        - participant: The contact number
+        - message_count: Total messages in conversation
+        - last_message: Object with body, direction, status, created_at
+    """
     limit_raw = request.args.get("limit", "30")
     try:
         limit = max(1, min(int(limit_raw), 200))
     except ValueError:
         limit = 30
 
-    conversations = list_conversations(limit=limit)
+    raw_conversations = list_conversations(limit=limit)
+    
+    # Transform to structured format for frontend
+    conversations = []
+    for conv in raw_conversations:
+        conversations.append({
+            "participant": conv.get("participant", ""),
+            "message_count": conv.get("total_messages", 0),
+            "last_message": {
+                "body": conv.get("last_body", ""),
+                "direction": conv.get("last_direction", "outbound"),
+                "status": conv.get("last_status", ""),
+                "error": conv.get("last_error"),
+                "created_at": conv.get("last_created_at", ""),
+                "updated_at": conv.get("last_updated_at", ""),
+            }
+        })
+    
     return jsonify({"items": conversations, "count": len(conversations)})
 
 
