@@ -13,7 +13,7 @@
 
 **Panel WWW • AI Auto-Reply • Semantic Search (FAISS) • Multi-SMS Campaigns**
 
-[🏃 Quick Start](#-5-minutowy-quick-start) • [📖 Dokumentacja](#-dokumentacja) • [🐳 Docker](#-docker) • [🔧 Troubleshooting](#-troubleshooting)
+[🏃 Quick Start](#-5-minutowy-quick-start) • [📖 Dokumentacja](#-dokumentacja) • [🐳 Docker](#-docker)
 
 </div>
 
@@ -104,7 +104,6 @@
 <td width="50%">
 
 **🔧 Operacje**
-- [Troubleshooting](#-troubleshooting)
 - [API Reference](#-api-quick-reference)
 - [Runbook produkcyjny](#operacyjny-runbook-prod)
 - [Backup i dane](#dane-i-backup)
@@ -633,109 +632,6 @@ make run-dev
 - Python: PEP‑8, bez nadmiernej magii, dużo jawnych logów przy obsłudze błędów integracji (Twilio, OpenAI).
 - Wyjątki z zewnętrznych serwisów zawsze logujemy (z `exc_info=True`) i zwracamy bezpieczny komunikat użytkownikowi.
 - Wszędzie, gdzie to możliwe, moduły są odporne na brak kluczy API – zamiast się wywrócić, przechodzą w tryb „no‑LLM” z czytelną informacją w odpowiedzi.
-
----
-
-## 🔧 Troubleshooting
-
-<details>
-<summary><strong>❌ Webhook zwraca 403 Forbidden</strong></summary>
-
-**Przyczyna:** Twilio signature validation jest włączona, ale podpis nie pasuje.
-
-```bash
-# Development - wyłącz walidację
-TWILIO_VALIDATE_SIGNATURE=false
-
-# Production - ustaw poprawny PUBLIC_BASE_URL
-PUBLIC_BASE_URL=https://twoja-domena.com
-```
-
-**Checklist:**
-- ✅ Czy `PUBLIC_BASE_URL` zgadza się z adresem webhooków w konsoli Twilio?
-- ✅ Czy używasz HTTPS w produkcji?
-- ✅ Czy ngrok/tunnel URL jest aktualny?
-
-</details>
-
-<details>
-<summary><strong>❌ AI nie odpowiada na SMS</strong></summary>
-
-**Checklist:**
-1. ✅ Czy AI jest włączone w panelu → zakładka AI?
-2. ✅ Czy `OPENAI_API_KEY` jest ustawiony w `.env`?
-3. ✅ Czy `AI_TARGET_NUMBER` pasuje do numeru odbiorcy?
-4. ✅ Sprawdź logi: `docker compose logs -f | grep -i ai`
-
-**Test połączenia:**
-```bash
-curl -X POST http://localhost:3000/api/ai/test
-```
-
-</details>
-
-<details>
-<summary><strong>❌ /news nie zwraca wyników</strong></summary>
-
-**Przyczyna:** Indeks FAISS nie jest zbudowany lub jest pusty.
-
-**Rozwiązanie:**
-1. Przejdź do panelu → zakładka **News**
-2. Kliknij **"Pobierz i zbuduj"**
-3. Poczekaj na zakończenie (progress bar)
-4. Przetestuj w polu "Test FAISS"
-
-**API test:**
-```bash
-curl -X POST http://localhost:3000/api/news/test-faiss \
-  -H "Content-Type: application/json" \
-  -d '{"query": "test"}'
-```
-
-</details>
-
-<details>
-<summary><strong>❌ SMS nie są wysyłane</strong></summary>
-
-**Checklist:**
-- ✅ `TWILIO_ACCOUNT_SID` i `TWILIO_AUTH_TOKEN` poprawne
-- ✅ `TWILIO_DEFAULT_FROM` w formacie E.164 (`+48123456789`)
-- ✅ Lub `TWILIO_MESSAGING_SERVICE_SID` ustawiony
-- ✅ Sprawdź saldo na [console.twilio.com](https://console.twilio.com)
-
-**Test wysyłki:**
-```bash
-python manage.py send --to +48123456789 --body "Test"
-```
-
-</details>
-
-<details>
-<summary><strong>❌ Baza danych pusta po restarcie Docker</strong></summary>
-
-**Przyczyna:** Wolumeny nie są zamontowane.
-
-**Rozwiązanie:** Dodaj w `docker-compose.yml`:
-```yaml
-volumes:
-  - ./data:/app/data        # Baza SQLite
-  - ./X1_data:/app/X1_data  # Indeks FAISS
-```
-
-</details>
-
-<details>
-<summary><strong>❌ Port 3000 zajęty</strong></summary>
-
-```bash
-# Znajdź proces
-lsof -i :3000
-
-# Lub zmień port w .env
-APP_PORT=3001
-```
-
-</details>
 
 ---
 
