@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.2.7-blue.svg)
+![Version](https://img.shields.io/badge/version-3.2.9-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.12+-green.svg)
 ![Flask](https://img.shields.io/badge/flask-3.x-red.svg)
 ![License](https://img.shields.io/badge/license-MIT-yellow.svg)
@@ -42,9 +42,10 @@
 
 ### 🔒 Enterprise Quality
 - **Type Safety** – zero błędów Pylance w strict mode
-- **Defensive Programming** – walidacja na każdym poziomie
+- **Design Patterns** – Railway-Oriented Programming, Circuit Breaker, Command Pattern
+- **Defensive Programming** – walidacja na każdym poziomie z Composable Validators
 - **Professional Docstrings** – pełna dokumentacja kodu
-- **Error Handling** – graceful degradation bez crashy
+- **Error Handling** – graceful degradation bez crashy z Result Type
 
 </td>
 <td width="50%">
@@ -71,9 +72,10 @@
 
 ### 📊 Operacyjna gotowość
 - **Healthcheck API** – monitoring stanu systemu
+- **Performance Monitoring** – @timed decorator, MetricsCollector, RateLimiter
 - **Backup/Restore** – export ZIP z manifestem
 - **Logging** – strukturalne logi z poziomami
-- **Metrics** – statystyki w real-time
+- **Metrics** – statystyki w real-time z agregacją (avg, p50, p95)
 
 </td>
 </tr>
@@ -241,13 +243,16 @@ Aplikacja realizuje kompletny „hub SMS" dla konta Twilio: przyjmuje webhooki, 
 Najważniejsze moduły:
 
 - `app/__init__.py` – fabryka Flask (`create_app`): ładuje konfigurację z `.env`, inicjalizuje klienta Twilio, bazę SQLite i uruchamia workery (auto‑reply, przypomnienia, **multi‑sms**).
+- `app/patterns.py` – **Railway-Oriented Programming**: Result Type (Success/Failure), Retry z exponential backoff, Circuit Breaker, TTL Cache, Processor Chain.
+- `app/message_handler.py` – **Clean Architecture**: Command Pattern, Strategy Pattern, Value Objects (PhoneNumber, InboundMessage, ReplyResult), Composable Validators, Dependency Injection.
+- `app/performance.py` – **Monitoring & Profiling**: @timed decorator, MetricsCollector, RateLimiter (token bucket), Lazy initialization, timed_block context manager.
 - `app/webhooks.py` – główny blueprint HTTP:
   - webhooki Twilio (`/twilio/inbound`, `/twilio/status`),
   - REST API do wiadomości, AI, auto‑reply,
   - API News/FAISS (scraping, budowa indeksu, test zapytań, lista oraz wysyłka do odbiorców),
   - operacje na plikach scrapów i indeksie (delete, wybór aktywnego indeksu).
 - `app/ui.py` + `templates/` + `static/` – panel www (dashboard, czat, zakładki AI, Auto‑reply, News/FAISS).
-- `app/database.py` – definicje tabel (wiadomości, konfiguracja AI/auto‑reply, scheduler przypomnień) oraz helpery do zapisu/odczytu.
+- `app/database.py` – definicje tabel (wiadomości, konfiguracja AI/auto‑reply, scheduler przypomnień) oraz helpery do zapisu/odczytu. **Optymalizacje v3.2.9**: WAL Mode, Query Cache, Transaction Context Manager, @db_operation decorator.
 - `app/twilio_client.py` – cienka warstwa nad `twilio.rest.Client` (wysyłka SMS, odpowiedzi na inbound, integracja z Messaging Service).
 - `app/ai_service.py` + `app/chat_logic.py` – generowanie odpowiedzi AI (OpenAI) oraz fallbackowy silnik „echo / keywords”.
 - `app/auto_reply.py` – worker, który konsumuje kolejkę auto‑reply i wysyła odpowiedzi (klasyczne lub AI, zależnie od konfiguracji).
@@ -257,7 +262,9 @@ Najważniejsze moduły:
   - budowa indeksu z plików scrapów,
   - wyszukiwanie semantyczne,
   - odpowiedzi RAG z użyciem `NewsOpenAIService` (OpenAI, modele z `SECOND_MODEL`).
+  - **Optymalizacje v3.2.9**: Embedding Cache (LRU + TTL 1h), Batched Embeddings, Cache Stats.
 - `app/scraper_service.py` – scraper wybranych serwisów newsowych, generujący teksty wejściowe do FAISS.
+- `app/validators.py` – **walidacja wejść v3.2.9**: ValidationResult Type (Success/Failure), Composable Validator (fluent API), validate_json_payload, batch validation z skip_invalid.
 
 Dane:
 
@@ -587,7 +594,15 @@ CLI korzysta z pełnej konfiguracji aplikacji (Flask app context), więc działa
 
 ### Struktura projektu
 
-- `app/` – kod aplikacji Flask (blueprinty, serwisy, integracje),
+- `app/` – kod aplikacji Flask (blueprinty, serwisy, integracje):
+  - **Nowe w v3.2.9**:
+    - `patterns.py` – Railway-Oriented Programming, Result Type, Retry, Circuit Breaker
+    - `message_handler.py` – Clean Architecture, Command Pattern, Strategy Pattern
+    - `performance.py` – monitoring wydajności (@timed, MetricsCollector, RateLimiter)
+  - **Zoptymalizowane w v3.2.9**:
+    - `database.py` – WAL Mode, Query Cache, Transaction Context Manager
+    - `faiss_service.py` – Embedding Cache (LRU + TTL), Batched Embeddings
+    - `validators.py` – ValidationResult Type, Composable Validator (fluent API)
 - `templates/` – widoki Jinja2,
 - `static/` – JS + CSS (dashboard, chat, news manager),
 - `data/` – baza SQLite,
@@ -773,6 +788,13 @@ Szczegółowa dokumentacja API: [docs/developer-guide.md](docs/developer-guide.m
 │    └─────────┴───────────┴───────────┴───────────┘             │
 │                          │                                      │
 │  ┌───────────────────────┴────────────────────────────────────┐│
+│  │              Design Patterns & Core Services               ││
+│  │  • patterns.py (Result, Retry, Circuit Breaker)           ││
+│  │  • message_handler.py (Command, Strategy, Value Objects)  ││
+│  │  • performance.py (@timed, Metrics, RateLimiter)          ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                          │                                      │
+│  ┌───────────────────────┴────────────────────────────────────┐│
 │  │                    twilio_client.py                        ││
 │  │  send_message()  │  send_chunked_sms()  │  send_reply()   ││
 │  └─────────────────────────────────────────────────────────────┘│
@@ -784,7 +806,7 @@ Szczegółowa dokumentacja API: [docs/developer-guide.md](docs/developer-guide.m
 │  ├── messages       │      │  ├── index.faiss       │
 │  ├── ai_config      │      │  ├── documents.jsonl   │
 │  ├── listeners      │      │  └── articles.jsonl    │
-│  └── multi_sms      │      │                        │
+│  └── multi_sms      │      │  + Embedding Cache     │
 └─────────────────────┘      └────────────────────────┘
 ```
 
