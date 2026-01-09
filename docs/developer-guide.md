@@ -1,6 +1,6 @@
-# Developer Guide – v3.2.6
+# Developer Guide – v3.2.9
 
-> 🏷️ **Wersja**: 3.2.6 (2025-12-27) • **SCHEMA_VERSION**: 9 • **Chunked SMS**: ✅ • **FAISS All-Categories**: ✅
+> 🏷️ **Wersja**: 3.2.9 (2025-01-09) • **SCHEMA_VERSION**: 9 • **Chunked SMS**: ✅ • **FAISS All-Categories**: ✅ • **Design Patterns**: ✅
 
 Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak działa przepływ
 żądania, jakie są granice modułów i jak testować funkcje ręcznie.
@@ -8,6 +8,9 @@ Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak 
 ## Spis treści
 - [Architektura i odpowiedzialności katalogów](#architektura-i-odpowiedzialności-katalogów)
 - [Przepływ żądania: inbound → DB → worker → outbound](#przepływ-żądania-inbound--db--worker--outbound)
+- [Design Patterns (v3.2.9)](#design-patterns-v329)
+- [Performance Monitoring (v3.2.9)](#performance-monitoring-v329)
+- [Validation (v3.2.9)](#validation-v329)
 - [UI/Frontend: gdzie dodać nową funkcję](#uifrontend-gdzie-dodać-nową-funkcję)
 - [Baza danych i migracje](#baza-danych-i-migracje)
 - [Dodawanie nowych endpointów](#dodawanie-nowych-endpointów)
@@ -22,11 +25,18 @@ Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak 
 - `app/` – logika aplikacji Flask, serwisy, integracje:
   - `webhooks.py` – REST API + webhooki Twilio.
   - `ui.py` – routing widoków HTML (dashboard, chat).
+  - **Nowe w v3.2.9**:
+    - `patterns.py` – Railway-Oriented Programming (Result Type, Retry, Circuit Breaker, TTL Cache, Processor Chain).
+    - `message_handler.py` – Clean Architecture (Command Pattern, Strategy Pattern, Value Objects, Dependency Injection).
+    - `performance.py` – Monitoring & Profiling (@timed, MetricsCollector, RateLimiter, Lazy, timed_block).
+  - **Zoptymalizowane w v3.2.9**:
+    - `database.py` – WAL Mode, Query Cache, Transaction Context Manager, @db_operation decorator.
+    - `faiss_service.py` – Embedding Cache (LRU + TTL), Batched Embeddings, Cache Stats.
+    - `validators.py` – ValidationResult Type, Composable Validator (fluent API), validate_json_payload, batch validation.
   - `twilio_client.py` – wysyłka SMS (Messaging Service / default_from) + `send_chunked_sms`.
   - `ai_service.py`, `chat_logic.py` – generowanie odpowiedzi AI i fallbackowy bot.
   - `auto_reply.py`, `reminder.py`, `news_scheduler.py`, `multi_sms.py` – workery w tle.
   - `faiss_service.py`, `scraper_service.py` – RAG/FAISS i scraping newsów.
-  - `database.py` – SQLite + migracje `SCHEMA_VERSION`.
   - `message_utils.py` – wspólne utilsy SMS (limit znaków `MAX_SMS_CHARS=1500`, dzielenie na części).
 - `templates/`, `static/js/`, `static/css/` – UI (Jinja2 + Bootstrap 5 + JS bez bundlera).
 - `data/` – baza SQLite (nie trafia do publicznych paczek release).
@@ -45,6 +55,481 @@ Przewodnik dla osób rozwijających Twilio Chat App: gdzie dopinać zmiany, jak 
 4. Wysyłka korzysta z `send_message` lub, dla długich treści (>1500 znaków), z `send_chunked_sms`
    (limit 1500 znaków na część; kilka SID-ów na jedną logiczną odpowiedź).
 5. Statusy dostarczenia trafiają do `/twilio/status` i aktualizują rekordy w `messages`.
+
+## Design Patterns (v3.2.9)
+
+Wersja 3.2.9 wprowadza zaawansowane wzorce projektowe na poziomie enterprise. Oto jak z nich korzystać:
+
+### Result Type - Railway-Oriented Programming
+
+Zamiast wyjątków używamy explicytnego typu `Result[T, E]` dla operacji, które mogą się nie powieść:
+
+```python
+from app.patterns import Success, Failure, Result, result_from_exception
+
+# Automatyczna konwersja wyjątków na Result
+@result_from_exception
+def risky_operation() -> Result[dict, Exception]:
+    response = requests.get("https://api.example.com/data", timeout=5)
+    response.raise_for_status()
+    return response.json()
+
+# Obsługa wyniku
+result = risky_operation()
+if result.is_success():
+    data = result.unwrap()
+    logger.info(f"Received data: {data}")
+else:
+    logger.error(f"API call failed: {result.error}")
+    # Graceful degradation - użyj cache lub fallback
+    data = get_cached_data()
+
+# Chainowanie operacji (Railway metaphor)
+result = (risky_operation()
+    .map(lambda data: data["items"])
+    .map(lambda items: [item for item in items if item["active"]])
+    .unwrap_or([]))  # Domyślna wartość jeśli failed
+```
+
+**Kiedy używać:**
+- Operacje z external services (Twilio, OpenAI, scraping)
+- File I/O, które może się nie powieść
+- Walidacja danych z niepewnych źródeł
+- Wszędzie, gdzie "błąd nie jest wyjątkiem" (expected failure)
+
+### Retry with Exponential Backoff
+
+Automatyczne ponawianie operacji z inteligentnym opóźnieniem:
+
+```python
+from app.patterns import retry, RetryConfig, RetryStrategy
+
+# Podstawowe użycie - domyślne wartości
+@retry()
+def send_notification():
+    return twilio_client.messages.create(...)
+
+# Zaawansowana konfiguracja
+@retry(RetryConfig(
+    max_attempts=5,                    # Maksymalnie 5 prób
+    strategy=RetryStrategy.EXPONENTIAL, # 1s, 2s, 4s, 8s, 16s
+    base_delay_seconds=1.0,
+    max_delay_seconds=30.0,            # Cap na 30s
+    jitter=True,                       # Randomizacja ±10%
+    retry_on=(requests.Timeout, requests.ConnectionError)
+))
+def call_external_api():
+    response = requests.get(api_url, timeout=5)
+    response.raise_for_status()
+    return response.json()
+
+# Retry z custom logic
+@retry(RetryConfig(
+    max_attempts=3,
+    should_retry=lambda exc: isinstance(exc, RateLimitError) and exc.retry_after < 60
+))
+def rate_limited_operation():
+    return api.call()
+```
+
+**Best practices:**
+- Używaj `jitter=True` dla uniknięcia thundering herd
+- Ustaw `max_delay_seconds` aby zapobiec zbyt długiemu czekaniu
+- Definiuj `retry_on` tylko dla transient errors (timeout, network)
+- NIE retry'uj błędów walidacji lub authentication errors
+
+### Circuit Breaker
+
+Ochrona przed kaskadowymi awariami zewnętrznych serwisów:
+
+```python
+from app.patterns import circuit_breaker, CircuitState
+
+# Podstawowe użycie
+@circuit_breaker("twilio_api")
+def send_sms(to: str, body: str):
+    return twilio_client.messages.create(to=to, body=body)
+
+# Zaawansowana konfiguracja
+@circuit_breaker(
+    name="openai_embeddings",
+    failure_threshold=10,     # Otwórz po 10 błędach
+    timeout_seconds=120,      # Czekaj 2 min przed próbą recovery
+    expected_exception=OpenAIError
+)
+def get_embeddings(texts: list[str]):
+    return openai_client.embeddings.create(input=texts)
+
+# Sprawdzanie stanu circuit breakera
+from app.patterns import get_circuit_breaker_state
+
+state = get_circuit_breaker_state("twilio_api")
+if state == CircuitState.OPEN:
+    logger.warning("Twilio API circuit breaker is OPEN - using fallback")
+    return use_fallback_sms_provider()
+```
+
+**Stany:**
+- **CLOSED** – normalna praca, wszystkie requesty przechodzą
+- **OPEN** – zablokowany, wszystkie requesty fail-fast bez wywołania funkcji
+- **HALF_OPEN** – test recovery, jeden request przechodzi aby sprawdzić czy serwis wrócił
+
+**Kiedy używać:**
+- External API calls (Twilio, OpenAI, scraping)
+- Database connections jeśli używasz remote DB
+- Mikroserwisy i REST APIs
+- Wszystkie I/O operations z timeoutem
+
+### TTL Cache
+
+Thread-safe caching z automatyczną ewolucją:
+
+```python
+from app.patterns import ttl_cache, get_cache_stats
+
+# Domyślny TTL (1 godzina)
+@ttl_cache()
+def expensive_computation(key: str) -> dict:
+    # Ten kod wykona się tylko przy cache miss
+    return perform_heavy_operation(key)
+
+# Custom TTL i max size
+@ttl_cache(ttl_seconds=300, max_size=1000)
+def get_user_profile(user_id: int) -> dict:
+    return db.query(f"SELECT * FROM users WHERE id = {user_id}")
+
+# Cache stats
+stats = get_cache_stats("expensive_computation")
+logger.info(f"Cache hit rate: {stats['hit_rate']:.1%}")
+# → "Cache hit rate: 87.5%"
+
+# Manual cache invalidation
+from app.patterns import clear_cache
+
+clear_cache("expensive_computation")  # Wyczyść specific cache
+clear_cache()                         # Wyczyść wszystkie cache
+```
+
+**Best practices:**
+- Używaj dla operacji >100ms execution time
+- Ustaw `max_size` aby zapobiec memory leaks
+- Monitoruj `hit_rate` – jeśli <50%, TTL może być za krótki
+- Pamiętaj o invalidation po UPDATE operations
+
+### Lazy Initialization
+
+Thread-safe lazy loading expensive resources:
+
+```python
+from app.performance import Lazy
+
+# Expensive client initialized only on first use
+openai_client = Lazy(lambda: OpenAI(api_key=settings.OPENAI_API_KEY))
+twilio_client = Lazy(lambda: Client(settings.TWILIO_SID, settings.TWILIO_TOKEN))
+
+# First call creates the client
+response = openai_client.get().chat.completions.create(...)
+
+# Subsequent calls reuse the same instance
+response2 = openai_client.get().chat.completions.create(...)
+
+# Lazy with error handling
+db_connection = Lazy(lambda: psycopg2.connect(settings.DATABASE_URL))
+
+try:
+    conn = db_connection.get()
+except Exception as e:
+    logger.error(f"Database connection failed: {e}")
+    # Fallback to SQLite
+    conn = sqlite3.connect(":memory:")
+```
+
+**Kiedy używać:**
+- Expensive clients (OpenAI, Twilio, database connections)
+- Resources które mogą nie być potrzebne (optional features)
+- Startup optimization – opóźnij init do pierwszego użycia
+- Testing – łatwe mockowanie przez podmianę factory function
+
+## Performance Monitoring (v3.2.9)
+
+Narzędzia do mierzenia i optymalizacji wydajności:
+
+### @timed Decorator
+
+Automatyczne profilowanie funkcji z alertami na slow queries:
+
+```python
+from app.performance import timed
+
+# Domyślny threshold (0ms = wszystkie wywołania logowane)
+@timed()
+def process_message(message: dict):
+    # Automatyczne logowanie execution time
+    return handle_message(message)
+
+# Custom threshold - loguj tylko jeśli >100ms
+@timed(threshold_ms=100)
+def slow_database_query(user_id: int):
+    # Log tylko jeśli query >100ms
+    return db.execute(f"SELECT * FROM users WHERE id = {user_id}")
+
+# Logi:
+# INFO: Function 'slow_database_query' took 156.7ms (threshold: 100ms)
+
+# Nested timing - każdy poziom mierzony osobno
+@timed(threshold_ms=50)
+def parent_function():
+    child_function_1()  # Zmierzone osobno
+    child_function_2()  # Zmierzone osobno
+    return result
+```
+
+**Best practices:**
+- Używaj threshold_ms aby ograniczyć noise w logach
+- Dodaj @timed do wszystkich DB queries (threshold=50-100ms)
+- Profile external API calls (threshold=200-500ms)
+- Monitoruj workery (auto_reply, reminder) – threshold=1000ms
+
+### MetricsCollector
+
+Zbieranie i agregacja metryk wykonania:
+
+```python
+from app.performance import MetricsCollector, get_global_collector
+
+# @timed automatycznie zapisuje do global collector
+@timed()
+def my_function():
+    pass
+
+# Pobierz statystyki dla konkretnej funkcji
+collector = get_global_collector()
+stats = collector.get_stats("my_function")
+
+print(f"""
+Performance stats for my_function:
+  Count: {stats['count']}
+  Average: {stats['avg_ms']:.1f}ms
+  Min: {stats['min_ms']:.1f}ms
+  Max: {stats['max_ms']:.1f}ms
+  p50: {stats['p50_ms']:.1f}ms
+  p95: {stats['p95_ms']:.1f}ms
+  p99: {stats['p99_ms']:.1f}ms
+  Success rate: {stats['success_rate']:.1%}
+""")
+
+# Statystyki dla wszystkich funkcji
+all_stats = collector.get_stats()
+for func_name, stats in all_stats.items():
+    if stats['avg_ms'] > 100:
+        logger.warning(f"Slow function: {func_name} avg={stats['avg_ms']:.1f}ms")
+```
+
+**Monitoring dashboard example:**
+```python
+# Endpoint dla monitoring dashboard
+@app.route("/api/metrics")
+def metrics():
+    collector = get_global_collector()
+    return jsonify({
+        "functions": collector.get_stats(),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+```
+
+### RateLimiter (Token Bucket)
+
+Throttling dla external API calls:
+
+```python
+from app.performance import RateLimiter
+
+# 10 requests per second, burst do 20
+openai_limiter = RateLimiter(rate=10.0, capacity=20)
+
+@openai_limiter.throttle
+def call_openai_api(prompt: str):
+    # Automatycznie throttled do 10 req/s
+    return openai_client.chat.completions.create(...)
+
+# Ręczne acquire
+limiter = RateLimiter(rate=5.0, capacity=10)
+
+for message in messages:
+    limiter.acquire()  # Czeka jeśli rate exceeded
+    send_sms(message)
+
+# Non-blocking try_acquire
+if limiter.try_acquire():
+    send_sms(message)
+else:
+    logger.warning("Rate limit exceeded, skipping message")
+    queue.put(message)  # Queue for later
+```
+
+**Typowe konfiguracje:**
+- **Twilio**: 10 req/s (free tier), 100 req/s (paid)
+- **OpenAI**: 60 req/min = 1 req/s (free tier), 3500 req/min (paid)
+- **Internal APIs**: 100-1000 req/s zależnie od capacity
+
+### timed_block Context Manager
+
+Timing dla bloków kodu zamiast całych funkcji:
+
+```python
+from app.performance import timed_block
+
+def complex_operation():
+    # Measure specific sections
+    with timed_block("database_transaction"):
+        conn.execute("BEGIN")
+        conn.execute("INSERT INTO ...")
+        conn.execute("UPDATE ...")
+        conn.execute("COMMIT")
+    
+    with timed_block("external_api_call"):
+        response = requests.post(api_url, json=data)
+    
+    with timed_block("data_processing"):
+        result = process_large_dataset(response.json())
+    
+    return result
+
+# Logi:
+# INFO: Block 'database_transaction' took 45.2ms
+# INFO: Block 'external_api_call' took 234.5ms
+# INFO: Block 'data_processing' took 189.3ms
+```
+
+## Validation (v3.2.9)
+
+Composable validators z fluent API:
+
+### ValidationResult Type
+
+Type-safe validation results zamiast wyjątków:
+
+```python
+from app.validators import (
+    validate_e164_phone,
+    ValidationSuccess,
+    ValidationFailure,
+    ValidationResult
+)
+
+# Validacja zwraca Result type
+result: ValidationResult[str] = validate_e164_phone("+48732070140")
+
+if result.is_valid():
+    phone = result.get_value()
+    logger.info(f"Valid phone: {phone}")
+else:
+    error = result.get_error()
+    logger.error(f"Validation failed: {error}")
+    return {"error": error}, 400
+```
+
+### Composable Validator (Fluent API)
+
+Chainowanie reguł walidacji z builder pattern:
+
+```python
+from app.validators import Validator, E164_PATTERN
+
+# Podstawowa walidacja
+result = (Validator(phone_input, "phone")
+    .strip()                    # Usuń whitespace
+    .not_empty()                # Nie może być puste
+    .matches(E164_PATTERN, "Invalid E.164 format")
+    .validate())
+
+if not result.is_valid():
+    return {"error": result.get_error()}, 400
+
+# Złożona walidacja z custom rules
+result = (Validator(message_body, "body")
+    .strip()
+    .not_empty("Message body is required")
+    .min_length(1, "Body must be at least 1 character")
+    .max_length(1600, "Body exceeds SMS limit")
+    .custom(lambda s: not s.startswith("/admin"), "Admin commands not allowed")
+    .validate())
+
+# Walidacja numerów w batch
+numbers = ["+48123456789", "+48987654321", "invalid"]
+result = (Validator(numbers, "recipients")
+    .not_empty()
+    .all_match(E164_PATTERN, "All numbers must be valid E.164")
+    .validate())
+```
+
+**Dostępne metody:**
+- `.strip()` – usuń whitespace
+- `.not_empty(msg?)` – nie może być puste
+- `.matches(pattern, msg)` – regex match
+- `.min_length(n, msg?)` – minimum length
+- `.max_length(n, msg?)` – maximum length
+- `.custom(fn, msg)` – custom validation function
+- `.all_match(pattern, msg)` – wszystkie elementy listy muszą matchować
+- `.validate()` – finalize i zwróć ValidationResult
+
+### validate_json_payload
+
+Schema validation dla JSON payloads:
+
+```python
+from app.validators import validate_json_payload
+
+# Definicja schema
+schema = {
+    "to": {"type": "string", "required": True},
+    "body": {"type": "string", "required": True},
+    "priority": {"type": "int", "required": False, "default": 0},
+    "metadata": {"type": "dict", "required": False}
+}
+
+# Walidacja
+payload = request.get_json()
+result = validate_json_payload(payload, schema)
+
+if not result.is_valid():
+    return {"error": result.get_error()}, 400
+
+validated = result.get_value()  # Dict z filled defaults
+```
+
+### Batch Validation z skip_invalid
+
+Walidacja wielu wartości z partial success:
+
+```python
+from app.validators import validate_phone_numbers
+
+# Lista numerów (niektóre invalid)
+numbers = [
+    "+48732070140",  # Valid
+    "+48123",        # Invalid - za krótki
+    "+48987654321",  # Valid
+    "invalid"        # Invalid - nie E.164
+]
+
+# Walidacja z skip_invalid=True
+result = validate_phone_numbers(numbers, skip_invalid=True)
+
+# Zwraca dict z podziałem
+valid = result["valid"]      # ["+48732070140", "+48987654321"]
+invalid = result["invalid"]  # [("+48123", "Too short"), ("invalid", "Not E.164")]
+
+logger.info(f"Valid: {len(valid)}, Invalid: {len(invalid)}")
+
+# Kontynuuj z valid numbers
+for number in valid:
+    send_sms(number, "Your message")
+
+# Raportuj invalid
+for number, error in invalid:
+    logger.warning(f"Skipped {number}: {error}")
+```
 
 ## Chunked SMS – wysyłka długich wiadomości
 
